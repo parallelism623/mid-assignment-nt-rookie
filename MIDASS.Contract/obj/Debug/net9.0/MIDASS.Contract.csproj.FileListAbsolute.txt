@@ -1,0 +1,13 @@
+C:\Users\hieud\source\repos\mid-assigment\MIDASS.Contract\bin\Debug\net9.0\MIDASS.Contract.deps.json
+C:\Users\hieud\source\repos\mid-assigment\MIDASS.Contract\bin\Debug\net9.0\MIDASS.Contract.dll
+C:\Users\hieud\source\repos\mid-assigment\MIDASS.Contract\bin\Debug\net9.0\MIDASS.Contract.pdb
+C:\Users\hieud\source\repos\mid-assigment\MIDASS.Contract\obj\Debug\net9.0\MIDASS.Contract.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\hieud\source\repos\mid-assigment\MIDASS.Contract\obj\Debug\net9.0\MIDASS.Contract.AssemblyInfoInputs.cache
+C:\Users\hieud\source\repos\mid-assigment\MIDASS.Contract\obj\Debug\net9.0\MIDASS.Contract.AssemblyInfo.cs
+C:\Users\hieud\source\repos\mid-assigment\MIDASS.Contract\obj\Debug\net9.0\MIDASS.Contract.csproj.CoreCompileInputs.cache
+C:\Users\hieud\source\repos\mid-assigment\MIDASS.Contract\obj\Debug\net9.0\MIDASS.Contract.dll
+C:\Users\hieud\source\repos\mid-assigment\MIDASS.Contract\obj\Debug\net9.0\refint\MIDASS.Contract.dll
+C:\Users\hieud\source\repos\mid-assigment\MIDASS.Contract\obj\Debug\net9.0\MIDASS.Contract.pdb
+C:\Users\hieud\source\repos\mid-assigment\MIDASS.Contract\obj\Debug\net9.0\ref\MIDASS.Contract.dll
+C:\Users\hieud\source\repos\mid-assigment\MIDASS.Contract\obj\Debug\net9.0\MIDASS.Contract.csproj.AssemblyReference.cache
+C:\Users\hieud\source\repos\mid-assigment\MIDASS.Contract\obj\Debug\net9.0\MIDASS.Contract.sourcelink.json
