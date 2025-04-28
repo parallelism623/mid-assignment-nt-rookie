@@ -1,6 +1,6 @@
 ﻿namespace MIDASS.Application.Commons.Models;
 
-public abstract class QueryParameters
+public class QueryParameters
 {
     public int PageIndex { get; set; } = 1;
     public int PageSize { get; set; } = 10;

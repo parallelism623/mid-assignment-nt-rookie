@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using MIDASS.Contract.Constrants;
 using MIDASS.Contract.Messages.Validations;
+using MIDASS.Domain.Constrants;
 using System.Text.RegularExpressions;
 
 namespace MIDASS.Application.Commons.Models.Authentication;
@@ -36,7 +37,7 @@ public class LoginRequestValidator : AbstractValidator<LoginRequest>
             .LessThanOrEqualTo(ValidationData.MaxLengthPassword).WithMessage(_validationMessagePasswordLength);
 
         RuleFor(x => x.Email)
-            .Must(e => Regex.IsMatch(e!, ValidationData.EmailRegexPattern))
+            .Must(e => Regex.IsMatch(e!, UserValidationRules.RegexPatternEmail))
             .When(x => !string.IsNullOrEmpty(x.Email));
     }
 }

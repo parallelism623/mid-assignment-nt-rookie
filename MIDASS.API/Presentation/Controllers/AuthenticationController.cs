@@ -50,4 +50,23 @@ public class AuthenticationController : ApiBaseController
 
         return ProcessResult(result);
     }
+
+    [HttpPost]
+    [Route("email-confirm")]
+    public async Task<IActionResult> CreateVerifyCode([FromBody] EmailConfirmRequest creatVerifyCodeRequset)
+    {
+        var result = await _applicationAuthentication.ConfirmEmailAsync(creatVerifyCodeRequset);
+
+        return ProcessResult(result);
+    }
+    [HttpPost]
+    [Route("email-confirm-refresh")]
+    public async Task<IActionResult> RefreshEmailConfirm([FromBody] RefreshEmailConfirmTokenRequest refreshEmailConfirm)
+    {
+        var result = await _applicationAuthentication.RefreshEmailConfirmAsync(refreshEmailConfirm);
+
+        return ProcessResult(result);
+    }
+
+
 }

@@ -5,7 +5,8 @@ public class UserExecutionContext
 {
     public Guid Id { get; set; }
     public string Username { get; set; } = default!;
-    public UserRoleExecutionContext Role { get; set; }
+    public string Email { get; set; } = default!;
+    public UserRoleExecutionContext? Role { get; set; }
     public int BookBorrowingLimit { get; set; }
     
 }

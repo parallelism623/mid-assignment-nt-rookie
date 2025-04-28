@@ -1,0 +1,30 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .header {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .content {
+            margin-top: 10px;
+        }
+
+        .footer {
+            margin-top: 20px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">Xin chào @Model.Name,</div>
+    <div class="content">
+        Trạng thái yêu cầu mượn sách của bạn đã được <strong>@Model.Status</strong>.<br />
+        Ngày yêu cầu: @Model.RequestDate<br />
+    </div>
+    <div class="footer">
+        Thư tự động, vui lòng không trả lời.
+    </div>
+</body>
+</html>

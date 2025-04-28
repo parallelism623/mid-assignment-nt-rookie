@@ -18,6 +18,7 @@ public class User : AuditableEntity, IEntity<Guid>
     public DateOnly LastUpdateLimit { get; set; } = DateOnly.MinValue;
     public string? RefreshToken { get; set; } = default;
     public DateTime RefreshTokenExpireTime { get; set; }
+    public bool IsVerifyCode { get; set; } = false;
     public Guid RoleId { get; set; }
     [JsonIgnore]
     public virtual Role Role { get; set; } = default!;

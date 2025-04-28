@@ -31,4 +31,12 @@ public class BookBorrowingRequestsController : ApiBaseController
 
         return ProcessResult(result);
     }
+    [HttpGet]
+    [Route("{id:guid}/detail")]
+    [Authorize(Roles = "Admin, User")]
+    public async Task<IActionResult> GetDetailByIdAsync(Guid id)
+    {
+        var result = await _bookBorrowingRequestServices.GetDetailAsync(id);
+        return ProcessResult(result);
+    }
 }

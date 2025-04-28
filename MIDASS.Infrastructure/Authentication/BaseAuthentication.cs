@@ -21,6 +21,7 @@ public abstract class BaseAuthentication : IBaseAuthentication
     private readonly JwtTokenOptions _jwtTokenOptions;
     private readonly IUserRepository _userRepository;
     private readonly IExecutionContext _executionContext;
+
     protected BaseAuthentication(IJwtTokenServices jwtTokenServices,
         ICryptoServiceFactory cryptoServiceFactory,
         IOptions<JwtTokenOptions> jwtTokenOptions,
@@ -37,6 +38,10 @@ public abstract class BaseAuthentication : IBaseAuthentication
     public async Task<Result<LoginResponse>> LoginAsync(LoginRequest loginRequest)
     {
         User user = await ProcessLogIn(loginRequest);
+        if(!user.IsVerifyCode)
+        {
+            return new LoginResponse() { AccessToken = "", RefreshToken = "" };
+        }
         string token = _jwtTokenServices.GenerateAccessToken(user);
         string refreshToken = _jwtTokenServices.GenerateRefreshToken();
         await SaveUserRefreshToken(user, refreshToken);
@@ -61,14 +66,10 @@ public abstract class BaseAuthentication : IBaseAuthentication
         await _userRepository.SaveChangesAsync();
         return AuthenticationMessages.LogoutSuccessfully;
     }
-    public async Task<Result<RegisterResponse>> RegisterAsync(RegisterRequest registerRequest)
+    public async Task<Result<string>> RegisterAsync(RegisterRequest registerRequest)
     {
         await ProcessRegister(registerRequest);
-        User user = await ProcessLogIn(registerRequest.Adapt<LoginRequest>());
-        string token = _jwtTokenServices.GenerateAccessToken(user);
-        string refreshToken = _jwtTokenServices.GenerateRefreshToken();
-        await SaveUserRefreshToken(user, refreshToken);
-        return new RegisterResponse{ AccessToken = token, RefreshToken = refreshToken };
+        return AuthenticationMessages.RegisterSuccess;
     }
 
     public abstract Task<User> ProcessLogIn(LoginRequest loginRequest);

@@ -30,7 +30,7 @@ public class UsersController : ApiBaseController
     [HttpGet]
     [Route("{id:guid}/book-borrowing-requests")]
     [Authorize(Roles = "User")]
-    public async Task<IActionResult> GetBookBorrowingRequestByIdAsync(Guid id, QueryParameters queryParameters)
+    public async Task<IActionResult> GetBookBorrowingRequestByIdAsync(Guid id, [FromQuery] QueryParameters queryParameters)
     {
         var result = await _userServices.GetBookBorrowingRequestByIdAsync(id, queryParameters);
 

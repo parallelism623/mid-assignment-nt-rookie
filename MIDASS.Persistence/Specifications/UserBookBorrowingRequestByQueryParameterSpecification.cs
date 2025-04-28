@@ -9,6 +9,7 @@ public class UserBookBorrowingRequestByQueryParameterSpecification : Specificati
 {
     public UserBookBorrowingRequestByQueryParameterSpecification(Guid userId, QueryParameters queryParameters) : base(b => b.RequesterId == userId)
     {
-        AddInclude(b => b.Approver);
+        AddInclude(b => b.Approver!);
+        AddInclude(b => b.BookBorrowingRequestDetails);
     }
 }

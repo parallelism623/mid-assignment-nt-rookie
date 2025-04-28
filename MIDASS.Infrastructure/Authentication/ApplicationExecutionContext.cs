@@ -32,11 +32,16 @@ public class ApplicationExecutionContext : IExecutionContext
 
     public string GetAccessToken()
     {
-        return _accessToken;
+        return _accessToken ?? string.Empty;
     }
 
     public void SetAccessToken(string token)
     {
         _accessToken = token;
+    }
+
+    public string GetUserMail()
+    {
+        return _userExecutionContext?.Email ?? string.Empty;
     }
 }

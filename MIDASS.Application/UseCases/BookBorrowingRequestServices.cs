@@ -8,4 +8,5 @@ public interface IBookBorrowingRequestServices
 {
     Task<Result<PaginationResult<BookBorrowingRequestData>>> GetsAsync(BookBorrowingRequestQueryParameters queryParameters);
     Task<Result<string>> ChangeStatusAsync(BookBorrowingStatusUpdateRequest statusUpdateRequest);
+    Task<Result<BookBorrowingRequestDetailResponse>> GetDetailAsync(Guid id);
 }

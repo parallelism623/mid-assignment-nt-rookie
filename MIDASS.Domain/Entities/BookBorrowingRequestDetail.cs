@@ -19,6 +19,7 @@ public class BookBorrowingRequestDetail : AuditableEntity, IEntity<Guid>
     public bool IsExtend { get; set; }
     public bool IsDeleted { get; set; }
     public string? Noted { get; set; }
+    public int ExtendDueDateTimes { get; set; }
 
     public static BookBorrowingRequestDetail Create(Guid bookId, DateOnly dueDate, string? noted)
     {

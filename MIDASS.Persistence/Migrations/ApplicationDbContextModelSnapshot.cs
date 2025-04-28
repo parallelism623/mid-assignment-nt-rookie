@@ -152,6 +152,9 @@ namespace MIDASS.Persistence.Migrations
                     b.Property<DateOnly>("DueDate")
                         .HasColumnType("date");
 
+                    b.Property<int>("ExtendDueDateTimes")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -256,6 +259,9 @@ namespace MIDASS.Persistence.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsVerifyCode")
                         .HasColumnType("bit");
 
                     b.Property<string>("LastName")

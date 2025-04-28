@@ -2,6 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using MIDASS.Contract.Messages.Validations;
+using MIDASS.Domain.Constrants;
 using MIDASS.Domain.Entities;
 
 namespace MIDASS.Persistence.Configuration;
@@ -18,11 +20,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasQueryFilter(b => !b.IsDeleted);
         builder.Property(u => u.BookBorrowingLimit)
             .HasDefaultValue(3);
-        builder.Property(x => x.Email).HasMaxLength(100);
-        builder.Property(x => x.FirstName).HasMaxLength(100);
-        builder.Property(x => x.LastName).HasMaxLength(100);
-        builder.Property(x => x.PhoneNumber).HasMaxLength(20);
-        builder.Property(x => x.Username).HasMaxLength(32);
-        builder.Property(x => x.Password).HasMaxLength(500);
+        builder.Property(x => x.Email).HasMaxLength(UserValidationRules.MaxLengthEmail);
+        builder.Property(x => x.FirstName).HasMaxLength(UserValidationRules.MaxLengthFirstName);
+        builder.Property(x => x.LastName).HasMaxLength(UserValidationRules.MaxLengthLastName);
+        builder.Property(x => x.PhoneNumber).HasMaxLength(UserValidationRules.MaxLengthPhoneNumber);
+        builder.Property(x => x.Username).HasMaxLength(UserValidationRules.MaxLengthUsername);
+        builder.Property(x => x.Password).HasMaxLength(UserValidationRules.MaxLengthHashPassword);
     }
 }

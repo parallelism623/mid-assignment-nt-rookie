@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using MIDASS.Contract.Constrants;
 using MIDASS.Contract.Messages.Validations;
+using MIDASS.Domain.Constrants;
 
 namespace MIDASS.Application.Commons.Models.Authentication;
 
@@ -13,27 +14,32 @@ public class RegisterRequest
     public string LastName { get; set; } = default!;
     public string FirstName { get; set; } = default!;
     public string? PhoneNumber { get; set; } = default;
-    public string? OAuthAccessToken = default;
 }
 
 public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
 {
     public RegisterRequestValidator()
     {
+        RuleFor(x => x.Password)
+            .NotEmpty()
+            .WithMessage(AuthenticationValidationMessages.PasswordMustBeNotEmpty)
+            .Matches(UserValidationRules.RegexPatternPassword)
+            .WithMessage(string.Format(AuthenticationValidationMessages.PasswordMustMatcheRegexPattern,
+                                       UserValidationRules.MinLengthPassword, UserValidationRules.MaxLengthPassword));
         RuleFor(x => x.Email)
             .NotEmpty()
             .WithMessage(AuthenticationValidationMessages.EmailShouldBeNotEmpty)
-            .Matches(ValidationData.EmailRegexPattern)
+            .Matches(UserValidationRules.RegexPatternEmail)
             .WithMessage(AuthenticationValidationMessages.EmailInvalid)
-            .Must(x => x.Length <= ValidationData.MaxLengthEmail)
+            .Must(x => x.Length <= UserValidationRules.MaxLengthEmail)
             .WithMessage(string.Format(AuthenticationValidationMessages.EmailShouldBeLessThanOrEqualMaxLength,
-                ValidationData.MaxLengthEmail));
+                UserValidationRules.MaxLengthEmail));
         RuleFor(x => x.Username)
             .NotEmpty()
             .WithMessage(AuthenticationValidationMessages.UsernameShouldBeNotEmpty)
-            .Must(x => x.Length <= ValidationData.MaxLengthUsername)
-            .WithMessage(string.Format(AuthenticationValidationMessages.UsernameShouldBeLessThanOrEqualMaxLength,
-                ValidationData.MaxLengthUsername));
+            .Matches(UserValidationRules.RegexPatternUsername)
+            .WithMessage(string.Format(AuthenticationValidationMessages.UsernameShouldMatchesRegexPattern, 
+                                       UserValidationRules.MaxLengthUsername));
 
         RuleFor(x => x.LastName)
             .NotEmpty()
@@ -49,7 +55,7 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
                 ValidationData.MaxLengthFirstName));
 
         RuleFor(x => x.PhoneNumber)
-            .Must(x => x.Length <= ValidationData.MaxLengthPhoneNumber)
+            .Must(x => x == null || x.Length <= ValidationData.MaxLengthPhoneNumber)
             .When(x => !string.IsNullOrEmpty(x.PhoneNumber))
             .WithMessage(string.Format(AuthenticationValidationMessages.PhoneNumberShouldBeLessThanOrEqualMaxLength,
                 ValidationData.MaxLengthPhoneNumber));

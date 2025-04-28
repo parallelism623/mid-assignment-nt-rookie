@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using MIDASS.Domain.Constrants;
 using MIDASS.Domain.Entities;
 using System.Reflection.Emit;
 
@@ -14,12 +15,13 @@ public class BookConfiguration : IEntityTypeConfiguration<Book>
             .WithMany(c => c.Books)
             .HasForeignKey(b => b.CategoryId);
         builder.HasQueryFilter(b => !b.IsDeleted);
+        builder.HasIndex(b => b.CategoryId);
         builder.Property(b => b.Title)
-            .HasMaxLength(100);
+            .HasMaxLength(BookValidationRules.MaxLengthTitle);
         builder.Property(b => b.Description)
-            .HasMaxLength(2000);
+            .HasMaxLength(BookValidationRules.MaxLengthDescription);
         builder.Property(b => b.Author)
-            .HasMaxLength(100);
+            .HasMaxLength(BookValidationRules.MaxLengthAuthor);
         builder.HasIndex(b => b.CategoryId);
     }
 }

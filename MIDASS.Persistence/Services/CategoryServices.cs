@@ -1,17 +1,20 @@
 ﻿using Mapster;
 using Microsoft.EntityFrameworkCore;
+using MIDASS.Application.Commons.Mapping;
 using MIDASS.Application.Commons.Models.Categories;
 using MIDASS.Application.UseCases;
 using MIDASS.Contract.Errors;
 using MIDASS.Contract.Messages.Commands;
 using MIDASS.Contract.SharedKernel;
+using MIDASS.Domain.Abstract;
 using MIDASS.Domain.Entities;
 using MIDASS.Domain.Repositories;
 using MIDASS.Persistence.Specifications;
-
+using System.Transactions;
 namespace MIDASS.Persistence.Services;
 
-public class CategoryServices(ICategoryRepository categoryRepository)
+public class CategoryServices(ICategoryRepository categoryRepository, IBookRepository bookRepository,
+    ITransactionManager transactionManager)
     : ICategoryServices
 {
     public async Task<Result<PaginationResult<CategoryResponse>>> GetCategoriesAsync(CategoriesQueryParameters queryParameters)
@@ -23,10 +26,13 @@ public class CategoryServices(ICategoryRepository categoryRepository)
         
         var totalCount = await query.CountAsync();
 
-        var data = await query.Skip(queryParameters.PageSize * (queryParameters.PageIndex - 1))
-            .Take(queryParameters.PageSize).ToListAsync();
+        var data = await query
+            .Skip(queryParameters.PageSize * (queryParameters.PageIndex - 1))
+            .Take(queryParameters.PageSize)
+            .Select(c => c.ToCategoryResponse())
+            .ToListAsync();
         return PaginationResult<CategoryResponse>.Create(queryParameters.PageSize,
-            queryParameters.PageIndex, totalCount, data.Adapt<List<CategoryResponse>>());
+            queryParameters.PageIndex, totalCount, data);
     }
 
     public async Task<Result<CategoryResponse>> GetCategoryByIdAsync(Guid id)
@@ -42,7 +48,7 @@ public class CategoryServices(ICategoryRepository categoryRepository)
         {
             return Result<string>.Failure(400, CategoryErrors.CategoryNameExists);
         }
-        var category = createRequest.Adapt<Category>();
+        var category = Category.Create(createRequest.Name, createRequest.Description);
         categoryRepository.Add(category);
         await categoryRepository.SaveChangesAsync();
 
@@ -58,7 +64,7 @@ public class CategoryServices(ICategoryRepository categoryRepository)
             return Result<string>.Failure(400, CategoryErrors.CategoryNotFound);
         }
 
-        updateRequest.Adapt(category);
+        Category.Update(category, updateRequest.Name, updateRequest.Description);
 
         await categoryRepository.SaveChangesAsync();
 
@@ -67,7 +73,7 @@ public class CategoryServices(ICategoryRepository categoryRepository)
 
     public async Task<Result<string>> DeleteCategoryAsync(Guid id)
     {
-        var category = await categoryRepository.GetByIdAsync(id, c => c.Books!.Where(b => b.BookBorrowingRequestDetails!.Any()));
+        var category = await categoryRepository.GetByIdAsync(id, c => c.Books!.Where(b => b.Quantity > b.Available));
 
         if (category == null)
         {
@@ -78,12 +84,24 @@ public class CategoryServices(ICategoryRepository categoryRepository)
         {
             return Result<string>.Failure(400, CategoryErrors.CategoryCanNotDelete);
         }
+        try
+        {
+            await transactionManager.BeginTransactionAsync();
+            await DeleteBookOfCategory(category);
+            category.IsDeleted = true;
+            categoryRepository.Update(category);
+            await categoryRepository.SaveChangesAsync();
 
-        category.IsDeleted = true;
-        categoryRepository.Update(category);
-        await categoryRepository.SaveChangesAsync();
-
-        return CategoryCommandMessages.CategoryDeletedSuccess;
+            await transactionManager.CommitTransactionAsync();
+            transactionManager.DisposeTransaction();
+            return CategoryCommandMessages.CategoryDeletedSuccess;
+        }
+        catch
+        {
+            await transactionManager.RollbackAsync();
+            transactionManager.DisposeTransaction();
+            return Result<string>.Failure(400, CategoryErrors.CategoryDeleteFail);
+        }
     }
 
 
@@ -91,5 +109,12 @@ public class CategoryServices(ICategoryRepository categoryRepository)
     {
         var category = await categoryRepository.GetByNameAsync(categoryName);
         return category != null;
+    }
+    private async Task DeleteBookOfCategory(Category category)
+    {
+        var books = await bookRepository.GetQueryable().Where(b => b.CategoryId == category.Id).ToListAsync();
+        books.ForEach(book => book.IsDeleted = true);
+        bookRepository.UpdateRange(books);
+        await bookRepository.SaveChangesAsync();
     }
 }

@@ -2,26 +2,58 @@
 using MIDASS.Application.Commons.Options;
 using MIDASS.Application.Services.Authentication;
 using MIDASS.Application.Services.Crypto;
+using MIDASS.Application.Services.Mail;
+using MIDASS.Contract.SharedKernel;
 using MIDASS.Domain.Entities;
 using MIDASS.Domain.Enums;
 using MIDASS.Domain.Repositories;
 using Rookies.Contract.Exceptions;
 using LoginRequest = MIDASS.Application.Commons.Models.Authentication.LoginRequest;
 using RegisterRequest = MIDASS.Application.Commons.Models.Authentication.RegisterRequest;
-
+using System.Security.Cryptography;
+using Microsoft.AspNetCore.Hosting;
+using MIDASS.Contract.Messages.Commands;
+using Microsoft.Extensions.Caching.Memory;
+using MIDASS.Contract.Constants;
+using MIDASS.Application.Commons.Models.Authentication;
 namespace MIDASS.Infrastructure.Authentication;
 
 public class ApplicationAuthentication : BaseAuthentication, IApplicationAuthentication
 {
     private readonly IUserRepository _userRepository;
     private readonly IRoleRepository _roleRepository;
+    private readonly IMailServices _mailServices;
+    private readonly IWebHostEnvironment _env;
+    private readonly IMemoryCache _memoryCache;
     public ApplicationAuthentication(IJwtTokenServices jwtTokenServices, ICryptoServiceFactory cryptoServiceFactory,
-        IOptions<JwtTokenOptions> jwtTokenOptions, IUserRepository userRepository,
-        IExecutionContext executionContext, IRoleRepository roleRepository) : base(jwtTokenServices, cryptoServiceFactory, jwtTokenOptions,
+        IOptions<JwtTokenOptions> jwtTokenOptions, IWebHostEnvironment env, IUserRepository userRepository,
+        IExecutionContext executionContext, IRoleRepository roleRepository,
+        IMailServices mailServices, IMemoryCache memoryCache) : base(jwtTokenServices, cryptoServiceFactory, jwtTokenOptions,
         userRepository, executionContext)
     {
+        _env = env;
+        _mailServices = mailServices;
+        _memoryCache = memoryCache;
         _userRepository = userRepository;
         _roleRepository = roleRepository;
+    }
+
+    public async Task<Result<string>> ConfirmEmailAsync(EmailConfirmRequest emailConfirmRequest)
+    {
+        var user = await _userRepository.GetByUsernameAsync(emailConfirmRequest.Username);
+        if (user == null || user.Email == null)
+        {
+            throw new BadRequestException("Username invalid");
+        }
+        var codeInMem = _memoryCache.Get(string.Format(CacheKey.RegisterVerifyCode, user.Id))?.ToString() ?? string.Empty;
+        if(string.IsNullOrEmpty(codeInMem) || codeInMem != emailConfirmRequest.Code)
+        {
+            throw new BadRequestException("Email confirm code invalid");
+        }
+        user.IsVerifyCode = true;
+        _userRepository.Update(user);
+        await _userRepository.SaveChangesAsync();
+        return AuthenticationMessages.SendVerifyCodeSuccess;
     }
 
     public override async Task<User> ProcessLogIn(LoginRequest loginRequest)
@@ -37,7 +69,10 @@ public class ApplicationAuthentication : BaseAuthentication, IApplicationAuthent
         {
             throw new BadRequestException("Password incorrect");
         }
-
+        if(!user.IsVerifyCode)
+        {
+            SendEmailConfirmCode(user);
+        }
         return user;
     }
 
@@ -67,9 +102,20 @@ public class ApplicationAuthentication : BaseAuthentication, IApplicationAuthent
 
         _userRepository.Add(newUser);
         await _userRepository.SaveChangesAsync();
+ 
+        SendEmailConfirmCode(user);
+        
         return newUser;
     }
 
+    private async Task SendEmailConfirmCode(User user)
+    {
+        var code = GenerateVerificationCode();
+        var body = await GetMailVerifyCodeTemplate(user, code);
+        var subject = $"Verify account #{user.Username}";
+        await HandleSendVerifyCodeMail(user.Email, subject, body);
+        _memoryCache.Set(string.Format(CacheKey.RegisterVerifyCode, user.Id), code, absoluteExpiration: DateTimeOffset.Now.AddMinutes(5));
+    }
     private Task<User?> GetUserOfLoginRequestAsync(LoginRequest loginRequest)
     {
         if (!string.IsNullOrEmpty(loginRequest.Username))
@@ -78,5 +124,37 @@ public class ApplicationAuthentication : BaseAuthentication, IApplicationAuthent
         }
 
         throw new BadRequestException("Username or email should be provided");
+    }
+
+    private static string GenerateVerificationCode()
+    {
+        int code = RandomNumberGenerator.GetInt32(0, 1_000_000);
+        return code.ToString("D6");
+    }
+
+    private async Task<string> GetMailVerifyCodeTemplate(User user, string code)
+    {
+        var templatePath = Path.Combine(_env.ContentRootPath, "EmailTemplates", "VerifyCode.html");
+        string content = await System.IO.File.ReadAllTextAsync(templatePath) ?? "";
+
+        return content.Replace("<<<FullName>>>", user.FirstName + " " + user.LastName)
+                      .Replace("<<<Code>>>", code)
+                      .Replace("<<<ExpiryMinutes>>>", "5");
+    }
+
+    private async Task HandleSendVerifyCodeMail(string toEmail, string subject, string body)
+    {
+        await _mailServices.SendMailAsync(toEmail, subject, body);
+    }
+
+    public async Task<Result<string>> RefreshEmailConfirmAsync(RefreshEmailConfirmTokenRequest refreshEmailConfirm)
+    {
+        var user = await _userRepository.GetByUsernameAsync(refreshEmailConfirm.Username);
+        if(user == null || user.Email == null)
+        {
+            throw new BadRequestException("User invalid");
+        }
+        SendEmailConfirmCode(user);
+        return AuthenticationMessages.RefreshEmailConfirmSuccess;
     }
 }

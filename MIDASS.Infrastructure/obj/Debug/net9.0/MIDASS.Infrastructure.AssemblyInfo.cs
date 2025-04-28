@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MIDASS.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7a212397ff4bab6dba33de2183849c9ffc9f72d4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+eed2bcc6a6966076d5aab90fdf7b6cfa0ce93a35")]
 [assembly: System.Reflection.AssemblyProductAttribute("MIDASS.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MIDASS.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

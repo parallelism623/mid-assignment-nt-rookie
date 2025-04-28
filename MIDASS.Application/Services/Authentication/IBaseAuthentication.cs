@@ -7,7 +7,7 @@ public interface IBaseAuthentication
 {
     Task<Result<LoginResponse>> LoginAsync(LoginRequest loginRequest);
     Task<Result<string>> LogoutAsync();
-    Task<Result<RegisterResponse>> RegisterAsync(RegisterRequest registerRequest);
+    Task<Result<string>> RegisterAsync(RegisterRequest registerRequest);
 
     Task<Result<RefreshTokenResponse>> RefreshTokenAsync(RefreshTokenRequest refreshTokenRequest);
 }

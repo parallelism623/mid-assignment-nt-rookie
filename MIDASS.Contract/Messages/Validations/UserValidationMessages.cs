@@ -9,7 +9,7 @@ public static class UserValidationMessages
     public const string BookBorrowingDetailDueDateInvalid = "Book borrowing detail due date invalid";
 
     public const string BookBorrowingDetailNotedInvalidLength =
-        "Book borrowing detail noted should not be greater than 2000";
+        "Book borrowing detail noted should not be greater than {0}";
 
     public const string BooksBorrowingInSingleRequestShouldInRange = "Books borrowing should be in range 1 - 5";
 

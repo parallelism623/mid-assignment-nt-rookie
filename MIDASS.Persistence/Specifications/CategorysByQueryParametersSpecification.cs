@@ -9,5 +9,6 @@ public class CategoryByQueryParametersSpecification : Specification<Category, Gu
         : base(c => c.Name.Contains(queryParameters.Search) ||
                     (!string.IsNullOrEmpty(c.Description) && c.Description.Contains(queryParameters.Search)))
     {
+        AddInclude(c => c.Books!);
     }
 }

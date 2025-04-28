@@ -1,7 +1,7 @@
 ﻿
 using FluentValidation;
-using Microsoft.AspNetCore.Http;
 using MIDASS.Contract.Messages.Validations;
+using MIDASS.Domain.Constrants;
 
 namespace MIDASS.Application.Commons.Models.Books;
 
@@ -21,20 +21,24 @@ public class BookCreateRequestValidator : AbstractValidator<BookCreateRequest>
 {
     public BookCreateRequestValidator()
     {
+        RuleFor(b => b.CategoryId).NotEmpty()
+            .WithMessage(BookValidationMessages.BookMustHaveCategory);
         RuleFor(b => b.Title)
             .NotEmpty().WithMessage(BookValidationMessages.TitleShouldNotBeEmpty)
-            .MaximumLength(100).WithMessage(BookValidationMessages.TitleShouldLessEqualThanMaxLength);
+            .MaximumLength(BookValidationRules.MaxLengthTitle)
+            .WithMessage(string.Format(BookValidationMessages.TitleShouldLessEqualThanMaxLength, BookValidationRules.MaxLengthTitle));
         RuleFor(b => b.Description)
-            .MaximumLength(2000).WithMessage(BookValidationMessages.DescriptionShouldLessEqualThanMaxLength);
+            .MaximumLength(BookValidationRules.MaxLengthDescription)
+            .WithMessage(string.Format(BookValidationMessages.DescriptionShouldLessEqualThanMaxLength, BookValidationRules.MaxLengthDescription));
         RuleFor(b => b.Author)
             .NotEmpty().WithMessage(BookValidationMessages.AuthorShouldNotBeEmpty)
-            .MaximumLength(100).WithMessage(BookValidationMessages.AuthorShouldLessEqualThanMaxLength);
+            .MaximumLength(BookValidationRules.MaxLengthAuthor)
+            .WithMessage(string.Format(BookValidationMessages.AuthorShouldLessEqualThanMaxLength, BookValidationRules.MaxLengthAuthor));
         RuleFor(b => b.Available).LessThanOrEqualTo(p => p.Quantity)
             .WithMessage(BookValidationMessages.BookAvailableShouldLessThanOrEqualQuantity);
         RuleFor(x => x.Quantity)
             .GreaterThanOrEqualTo(0)
             .WithMessage(BookValidationMessages.BookQuantityShouldGreaterThanZero);
-
         RuleFor(x => x.Available)
             .GreaterThanOrEqualTo(0)
             .WithMessage(BookValidationMessages.BookAvailableShouldGreaterThanZero);

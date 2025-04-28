@@ -7,6 +7,7 @@ public interface IExecutionContext
     public void SetUser(UserExecutionContext user);
     public string GetRole();
     public string GetUserName();
+    public string GetUserMail();
     public Guid GetUserId();
     public Guid GetJti();
     public void SetJti(Guid jti);

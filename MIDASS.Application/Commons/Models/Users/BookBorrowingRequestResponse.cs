@@ -6,7 +6,8 @@ public class BookBorrowingRequestResponse
     public BookBorrowingRequestUserResponse? Approver { get; set; } = default;
     public DateOnly DateRequested { get; set; }
     public DateOnly? DateApproved { get; set; }
-    public string Status { get; set; } = default!;
+    public int Status { get; set; } = default!;
+    public int BooksBorrowingNumber { get; set; }
 }
 
 public class BookBorrowingRequestUserResponse

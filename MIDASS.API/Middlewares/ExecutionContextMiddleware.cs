@@ -57,7 +57,8 @@ public class ExecutionContextMiddleware
             {
                 Id = user!.Id,
                 BookBorrowingLimit = user.BookBorrowingLimit,
-                Role = new UserRoleExecutionContext { Name = user.Role.Name }
+                Role = new UserRoleExecutionContext { Name = user.Role.Name },
+                Email = user.Email
             };
             executionContext.SetJti(jti);
             executionContext.SetAccessToken(accessToken!);

@@ -1,6 +1,7 @@
 ﻿
 using FluentValidation;
 using MIDASS.Contract.Messages.Validations;
+using MIDASS.Domain.Constrants;
 using MIDASS.Domain.Entities;
 
 namespace MIDASS.Application.Commons.Models.Users;
@@ -30,7 +31,9 @@ public class BookBorrowingRequestDetailCreateDetailValidator : AbstractValidator
             .NotEmpty().WithMessage(UserValidationMessages.BookBorrowingDetailDueDateEmpty)
             .GreaterThanOrEqualTo(DateOnly.FromDateTime(DateTime.UtcNow)).WithMessage(UserValidationMessages.BookBorrowingDetailDueDateInvalid);
         RuleFor(bd => bd.Noted)
-            .MaximumLength(2000).WithMessage(UserValidationMessages.BookBorrowingDetailNotedInvalidLength);
+            .MaximumLength(BookBorrowingRequestDetailValidationRules.MaxLengthNoted)
+            .WithMessage(string.Format(UserValidationMessages.BookBorrowingDetailNotedInvalidLength, 
+                                       BookBorrowingRequestDetailValidationRules.MaxLengthNoted));
     }
 }
 
