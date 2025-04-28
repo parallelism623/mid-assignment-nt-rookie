@@ -4,6 +4,7 @@ using System.Net.Mail;
 using System.Net;
 using MIDASS.Infrastructure.Options;
 using Microsoft.Extensions.Options;
+using System.Threading;
 
 namespace MIDASS.Infrastructure.Mail;
 
@@ -14,7 +15,7 @@ public class MailServices : IMailServices
     {
         _emailSettingsOptions = emailSettingsOptions.Value;
     }
-    public Task SendMailAsync(string toEmail, string subject, string body, bool isBodyHtml = true)
+    public Task SendMailAsync(string toEmail, string subject, string body, bool isBodyHtml = true, CancellationToken cancellationToken = default)
     {
         var mailServer = _emailSettingsOptions.MailServer;
         var fromEmail = _emailSettingsOptions.FromEmail;
@@ -38,6 +39,6 @@ public class MailServices : IMailServices
 
         mailMessage.To.Add(toEmail);
 
-        return client.SendMailAsync(mailMessage);
+        return client.SendMailAsync(mailMessage, cancellationToken);
     }
 }

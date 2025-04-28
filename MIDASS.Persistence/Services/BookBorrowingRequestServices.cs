@@ -1,11 +1,9 @@
-﻿
-using Azure.Core;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Routing.Template;
+﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using MIDASS.Application.Commons.Mapping;
 using MIDASS.Application.Commons.Models.BookBorrowingRequests;
 using MIDASS.Application.Services.Authentication;
+using MIDASS.Application.Services.BackgroundJobs.MailSenderBackgroundJob;
 using MIDASS.Application.Services.Mail;
 using MIDASS.Application.UseCases;
 using MIDASS.Contract.Errors;
@@ -15,7 +13,6 @@ using MIDASS.Domain.Entities;
 using MIDASS.Domain.Enums;
 using MIDASS.Domain.Repositories;
 using MIDASS.Persistence.Specifications;
-using System.IO;
 
 namespace MIDASS.Persistence.Services;
 
@@ -25,6 +22,7 @@ public class BookBorrowingRequestServices(
     IBookRepository bookRepository,
     IUserRepository userRepository,
     IMailServices mailServices,
+    IMailSenderBackgroundService mailSenderBackgroundService,
     IWebHostEnvironment env)
     : IBookBorrowingRequestServices
 {
@@ -90,7 +88,7 @@ public class BookBorrowingRequestServices(
         bookRepository.UpdateRange(books);
         await bookRepository.SaveChangesAsync();
     }
-    private async Task HandleSendMailChangeStatusRequest(BookBorrowingRequest bookBorrowingRequest)
+    private async ValueTask HandleSendMailChangeStatusRequest(BookBorrowingRequest bookBorrowingRequest)
     {
         var user = await userRepository.GetByIdAsync(bookBorrowingRequest.RequesterId);
         if(user != null)
@@ -105,7 +103,11 @@ public class BookBorrowingRequestServices(
                             .Replace("@Model.Status", status)?
                             .Replace("@Model.RequestDate", bookBorrowingRequest.DateRequested.ToString("dd/MM/yyyy"));
 
-            await mailServices.SendMailAsync(toEmail, subject, body ?? "");
+
+            await mailSenderBackgroundService.QueueSendMailRequestAsync(async (c) =>
+            {
+                await mailServices.SendMailAsync(toEmail, subject, body ?? "", cancellationToken: c);
+            });
         }
     }
 }

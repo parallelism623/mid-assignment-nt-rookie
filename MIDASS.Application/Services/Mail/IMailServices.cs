@@ -2,5 +2,5 @@
 
 public interface IMailServices
 {
-    public Task SendMailAsync(string toEmail, string subject, string body, bool isBodyHtml = true);
+    public Task SendMailAsync(string toEmail, string subject, string body, bool isBodyHtml = true, CancellationToken cancellationToken = default);
 }
