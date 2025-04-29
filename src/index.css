@@ -1,0 +1,155 @@
+@import "tailwindcss";
+body {
+  margin: 0;
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-style: normal;
+  box-sizing: border-box;
+  
+  padding: 0;
+  background-color: var(--background-color-dark-mode);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  --background-color-dark-mode: #23272F;
+  --font-color-dark-mode: #EBECF0;
+  --border-color-dark-mode: #393E49;
+  --font-color-opposite-dark-mode: #404756;
+  --background-color-active-dark-mode: #2A3542;
+  --font-color-on-selected-dark-mode: #57C4DC;
+  --background-content-dark-mode: #1D2027;
+  --table-border-color-dark-mode: #E6F7FF;
+
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.be-vietnam-pro-thin {
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-weight: 100;
+  font-style: normal;
+}
+
+.be-vietnam-pro-extralight {
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-weight: 200;
+  font-style: normal;
+}
+
+.be-vietnam-pro-light {
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-weight: 300;
+  font-style: normal;
+}
+
+.be-vietnam-pro-regular {
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.be-vietnam-pro-medium {
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-weight: 500;
+  font-style: normal;
+}
+
+.be-vietnam-pro-semibold {
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.be-vietnam-pro-bold {
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.be-vietnam-pro-extrabold {
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-weight: 800;
+  font-style: normal;
+}
+
+.be-vietnam-pro-black {
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-weight: 900;
+  font-style: normal;
+}
+
+.be-vietnam-pro-thin-italic {
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-weight: 100;
+  font-style: italic;
+}
+
+.be-vietnam-pro-extralight-italic {
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-weight: 200;
+  font-style: italic;
+}
+
+.be-vietnam-pro-light-italic {
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-weight: 300;
+  font-style: italic;
+}
+
+.be-vietnam-pro-regular-italic {
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.be-vietnam-pro-medium-italic {
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.be-vietnam-pro-semibold-italic {
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-weight: 600;
+  font-style: italic;
+}
+
+.be-vietnam-pro-bold-italic {
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-weight: 700;
+  font-style: italic;
+}
+
+.be-vietnam-pro-extrabold-italic {
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-weight: 800;
+  font-style: italic;
+}
+
+.be-vietnam-pro-black-italic {
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-weight: 900;
+  font-style: italic;
+}
+
+
+.icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 35px;
+  height: 35px;
+  background-color: var(--background-color-active-dark-mode);
+  border-radius: 50%;
+}
+
+
+.icon-wrapper svg {
+  color: var(--font-color-dark-mode);
+  width: 35px;
+  height: 35px;
+}
+.icon-wrapper svg:hover {
+  color: var(--font-color-on-selected-dark-mode); 
+}

@@ -1,0 +1,74 @@
+.header-nav-item{
+    font-weight: bold;        
+    color: var(--font-color-dark-mode) !important;
+    font-size: 1.2em;
+    padding: 0  0.5em !important;
+    text-align: center;
+    background-color: var(--background-color-dark-mode) !important;
+}
+.header-nav-item > .ant-menu-title-content,
+.header-nav-item > .ant-menu-title-content{
+    background-color: var(--background-color-dark-mode) !important;
+    text-decoration: none !important;
+    border-radius: 10px !important;
+    height: fit-content !important;
+    padding: 1em;
+}
+.header-nav-item.ant-menu-item::after{
+    border-bottom: none !important;
+    transform: none !important;
+    opacity: 0 !important;
+}
+.header-nav-item.ant-menu-item-selected > .ant-menu-title-content,
+.header-nav-item.ant-menu-item-active > .ant-menu-title-content{
+    background-color: var(--background-color-active-dark-mode) !important;
+    text-decoration: none !important;
+    border-radius: 15px !important;
+    height: fit-content !important;
+    padding: 1em;
+    
+}
+.header-nav-item.ant-menu-item-selected > .ant-menu-title-content{
+    color: var(--font-color-on-selected-dark-mode);
+}
+.ant-menu-light.ant-menu-horizontal > .header-nav-item.ant-menu-item-selected::after
+{
+    border-bottom: none;
+}
+.ant-menu-light.ant-menu-horizontal > .header-nav-item.ant-menu-item-active::after
+{
+    border-bottom: none;
+}
+.header-logo{
+    width: 50px;
+}
+.app-header{
+    display: flex;
+    align-items: center;
+    background-color: var(--background-color-dark-mode) !important;
+    height: 6em;
+    border-bottom: 2px solid var(--border-color-dark-mode);
+}
+.row-container-flex-sub-nav{
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+.col-container-flex-sub-nav{
+    display: flex;
+    align-items: center;
+    height: 100%;
+    justify-content: center;
+}
+.header-logo{
+    display: flex;
+    align-items: center;
+    width: fit-content;
+    height: fit-content;
+    padding: 1em;
+}
+.header-logo :nth-child(1){
+    width: 2.5em;
+    height:  2.5em;
+    color: var(--font-color-dark-mode);
+}

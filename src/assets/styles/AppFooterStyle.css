@@ -1,0 +1,9 @@
+.app-footer{
+    background: var(--background-color-dark-mode) !important;
+    border-top: 1px solid var(--border-color-dark-mode) !important;
+    height: 2em !important;
+    max-height: 2em !important;
+    position: float !important;
+    bottom: 0;
+    width: 100%;
+}

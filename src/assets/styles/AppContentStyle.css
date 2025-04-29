@@ -1,0 +1,4 @@
+.app-content{
+    background: var(--background-content-dark-mode) !important;
+padding: 4em;
+}

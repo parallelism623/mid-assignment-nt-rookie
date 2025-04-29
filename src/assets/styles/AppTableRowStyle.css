@@ -1,0 +1,19 @@
+.first-app-table-column{
+    border-left: 1px var(--border-color-dark-mode) solid;
+}
+.app-table-column{
+    border-right: 1px var(--border-color-dark-mode) solid;
+    border-top: 1px var(--border-color-dark-mode) solid;
+    border-bottom: 1px var(--border-color-dark-mode) solid;
+    background-color: inherit;
+    color: var(--font-color-dark-mode);
+    align-content: center;
+    justify-content: center;
+}
+.app-table-row:hover{ 
+    background-color: var(--font-color-opposite-dark-mode)  !important;
+
+}
+.app-table-row{ 
+    background-color: var(--background-color-dark-mode);
+}

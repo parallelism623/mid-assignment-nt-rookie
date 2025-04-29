@@ -1,0 +1,15 @@
+export const routesPath = {
+  home: "/",
+  signIn: "/signin",
+  register: "/register",
+  book: "books",
+  category: "categories",
+  dashBoard: "dashboard",
+  user: "users",
+  bookEdit: "books/:id/edit",
+  bookCreate: "books/create",
+  bookBorrowing: "books-borrowing",
+  userProfile: "users/profile",
+  emailConfirm: "/email-confirm",
+  bookBorrowed: "/book-borrowed",
+};
