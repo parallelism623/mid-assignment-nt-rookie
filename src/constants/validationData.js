@@ -15,4 +15,6 @@ export const validationData = {
   userPasswordRegexPattern:
     /^(?=.{8,32}$)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/,
   bookBorrowedExtendDueDate: 1,
+  bookReviewTitleMaxLength: 100,
+  bookReviewContentMaxLength: 2000,
 };

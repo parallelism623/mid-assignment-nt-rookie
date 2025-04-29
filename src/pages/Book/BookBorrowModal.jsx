@@ -6,28 +6,20 @@ import { useUserContext } from "../../routes/ProtectedRoute";
 import { userServices } from "../../services/userServices";
 import { validationData } from "../../constants/validationData";
 const { Column } = Table;
-const BookBorrowModal = ({
-  isModalOpen,
-  setIsModalOpen,
-  bookIds,
-  setSelectBookIds,
-  onSubmit,
-}) => {
+const BookBorrowModal = ({ isModalOpen, bookIds, onSubmit, onCancel }) => {
   const [booksBorrow, setBooksBorrow] = useState([]);
   const [loading, setLoading] = useState(false);
   const { id, bookBorrowingLimit } = useUserContext();
   const handleOk = () => {
     const bookBorrowingRequest = getBookBorrowingRequest(id, booksBorrow);
     userServices.createBookBorrowingRequest(bookBorrowingRequest).then(() => {
-      setIsModalOpen(false);
-      setSelectBookIds([]);
       onSubmit();
+      onCancel();
     });
   };
 
   const handleCancel = () => {
-    setIsModalOpen(false);
-    setSelectBookIds([]);
+    onCancel();
   };
   useEffect(() => {
     setLoading(true);

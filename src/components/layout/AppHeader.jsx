@@ -1,11 +1,10 @@
 import { Layout, Menu, Row, Col } from "antd";
-import { UserOutlined, MenuOutlined } from "@ant-design/icons";
-import { FaBook } from "react-icons/fa";
+import { MenuOutlined } from "@ant-design/icons";
+import { FaBook, FaClipboardList, FaHistory } from "react-icons/fa";
 import { useNavigate } from "react-router";
 import "../../assets/styles/AppHeaderStyle.css";
 import AccountMenu from "./../ui/AccountMenu";
-import Notification from "./../ui/Notification";
-import { IoMdBasket } from "react-icons/io";
+
 const { Header } = Layout;
 const headerNav = [
   {
@@ -22,16 +21,15 @@ const headerNav = [
     key: "books",
     label: "Book",
     className: "be-vietnam-pro-light header-nav-item",
-  },
-  {
-    key: "books-borrowing",
-    label: "Books borrowing",
-    className: "be-vietnam-pro-light header-nav-item",
-  },
-  {
-    key: "book-borrowed",
-    label: "Book borrowed",
-    className: "be-vietnam-pro-light header-nav-item",
+    children: [
+      { key: "/books", label: "All Books", icon: <FaBook /> },
+      {
+        key: "/books-borrowing",
+        label: "Books Borrowing Request",
+        icon: <FaClipboardList />,
+      },
+      { key: "/book-borrowed", label: "Book Borrowed", icon: <FaHistory /> },
+    ],
   },
   {
     key: "users",
@@ -93,29 +91,6 @@ const AppHeader = () => {
               gutter={[8, 8]}
               className="row-container-flex-sub-nav"
             >
-              {/* <Col
-                xs={12}
-                sm={8}
-                md={6}
-                lg={5}
-                xl={4}
-                xxl={4}
-                className="col-container-flex-sub-nav"
-              >
-                <IoMdBasket className="w-5 h-5 text-[#EBECF0]"></IoMdBasket>
-              </Col>
-              <Col
-                xs={12}
-                sm={8}
-                md={6}
-                lg={5}
-                xl={4}
-                xxl={4}
-                className="col-container-flex-sub-nav"
-              >
-                <Notification />
-              </Col> */}
-
               <Col
                 xs={12}
                 sm={8}

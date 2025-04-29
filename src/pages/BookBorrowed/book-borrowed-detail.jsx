@@ -142,9 +142,13 @@ const BookBorrowedDetail = ({
               Extended Due Date:
             </div>
             <div className="text-gray-800">
-              <Tag color="yellow">
-                {extendDueDate ? dayjs(extendDueDate).format("DD/MM/YYYY") : ""}
-              </Tag>
+              {extendDueDate ? (
+                <Tag color="yellow">
+                  {dayjs(extendDueDate).format("DD/MM/YYYY")}
+                </Tag>
+              ) : (
+                ""
+              )}
             </div>
             <div className="flex items-center text-gray-600">
               <FiRepeat className="mr-2 text-lg" />
@@ -155,7 +159,7 @@ const BookBorrowedDetail = ({
               validationData.bookBorrowedExtendDueDate ? (
                 <Tag color="red">Max</Tag>
               ) : (
-                <Tag color="blue">{extendDueDateTimes}</Tag>
+                <Tag color="green">{extendDueDateTimes}</Tag>
               )}
             </div>
 

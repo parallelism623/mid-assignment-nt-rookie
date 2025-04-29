@@ -113,7 +113,7 @@ const BookBorrowingRequest = () => {
         />
       )}
       <Card
-        title="Books borrowing"
+        title="Books borrowing request"
         className="book-list-card be-vietnam-pro-regular"
       >
         <Table

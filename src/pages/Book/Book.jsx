@@ -1,365 +1,388 @@
 import {
-  Space,
-  Table,
-  Tag,
   Card,
-  Popconfirm,
   Row,
   Col,
   Button,
   Input,
+  Tag,
+  Checkbox,
+  Pagination,
+  Space,
+  Popconfirm,
+  Rate,
   Tooltip,
 } from "antd";
-import { FiEdit, FiTrash2, FiEye } from "react-icons/fi";
-import BookItemView from "../../components/ui/BookItemView";
 
-import { defaultQueryParameters } from "../../constants/queryParameters";
+import {
+  FiStar,
+  FiEdit,
+  FiTrash2,
+  FiEye,
+  FiTag,
+  FiLayers,
+  FiXCircle,
+  FiCheckCircle,
+} from "react-icons/fi";
 import { ExclamationCircleOutlined } from "@ant-design/icons";
-import { useEffect, useState } from "react";
-import { bookServices } from "../../services/bookServices";
-import { Navigate, useNavigate } from "react-router";
 import { IoFilterSharp } from "react-icons/io5";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router";
+import FractionalStar from "../../components/ui/Icons/FractionalStar";
+import { bookServices } from "../../services/bookServices";
+import BookBorrowModal from "../Book/BookBorrowModal";
 import BookFilter from "./BookFilters";
 import "../../assets/styles/BookStyle.css";
+import { defaultQueryParameters } from "../../constants/queryParameters";
 import { environment } from "../../constants/environment";
-import BookBorrowModal from "../Book/BookBorrowModal";
 import { useMessageContext } from "../../components/context/MessageContext";
-
+import ReviewButton from "../../components/ui/Buttons/ReviewButton";
+import EditButton from "../../components/ui/Buttons/EditButton";
+import DeleteButton from "../../components/ui/Buttons/DeleteButton";
+import ViewDetailButton from "../../components/ui/Buttons/ViewDetailButton";
+import BookReviewCardModal from "./BookReviewCardModal";
+import { useUserContext } from "../../routes/ProtectedRoute";
 const { Search } = Input;
 const MAX = environment.limit_books_per_request;
-const columns = (onDelete, onEdit, onViewDetail) => [
-  { key: "title", title: "Title", dataIndex: "title" },
-  { key: "author", title: "Author", dataIndex: "author" },
-  {
-    key: "category",
-    title: "Category",
-    dataIndex: ["category", "name"],
-    render: (value) => <Tag color="blue">{value}</Tag>,
-    align: "center",
-  },
-  {
-    key: "quantity",
-    title: "Quantity",
-    dataIndex: "quantity",
-    render: (value) => <Tag color="yellow">{value}</Tag>,
-    align: "center",
-  },
-  {
-    key: "available",
-    title: "Available",
-    dataIndex: "available",
-    render: (value) => {
-      const isAvailable = value > 0;
-      const style = {
-        display: "inline-block",
-        background: isAvailable ? "#F6FFEC" : "#FFF1F0",
-        color: isAvailable ? "#52C41A" : "#FF4D4F",
-        padding: "2px 8px",
-        borderRadius: "5px",
-        fontSize: "12px",
-        fontWeight: 500,
-        minWidth: "24px",
-        textAlign: "center",
-      };
-      return (
-        <div>
-          <span style={style}>{isAvailable ? value : "Invailable"}</span>
-        </div>
-      );
-    },
-    align: "center",
-  },
-  {
-    key: "action",
-    title: "Action",
-    dataIndex: "action",
-    width: "1%",
-    onHeaderCell: () => ({
-      className: "be-vietnam-pro-medium",
-    }),
-    render: (_, record) => (
-      <Space size="middle" className="!flex justify-center items-center">
-        <Tooltip title="Edit">
-          <button
-            onClick={() => onEdit(record)}
-            className="p-2 rounded-lg bg-blue-200 text-blue-800 hover:bg-blue-300 transition cursor-pointer"
-          >
-            <FiEdit size={18} />
-          </button>
-        </Tooltip>
-
-        <Popconfirm
-          placement="topRight"
-          title="Are you sure to delete this book?"
-          description="Once deleted, you will not be able to recover this book!"
-          icon={<ExclamationCircleOutlined className="text-red-500 text-xl" />}
-          overlayClassName="bg-white shadow-lg rounded-lg p-4 border border-gray-200"
-          okText="Yes"
-          cancelText="No"
-          okButtonProps={{
-            className:
-              "bg-red-500 hover:bg-red-600 focus:ring-4 focus:ring-red-300 text-white font-medium rounded-lg text-sm px-4 py-2",
-          }}
-          cancelButtonProps={{
-            className:
-              "bg-gray-200 hover:bg-gray-300 focus:ring-4 focus:ring-gray-300 text-gray-700 font-medium rounded-lg text-sm px-4 py-2",
-          }}
-          onConfirm={() => onDelete(record)}
-        >
-          <Tooltip title="Delete">
-            <button className="p-2 rounded-lg bg-red-300 text-red-800 hover:bg-red-400 transition cursor-pointer">
-              <FiTrash2 size={18} />
-            </button>
-          </Tooltip>
-        </Popconfirm>
-
-        <Tooltip title="Detail">
-          <button
-            onClick={() => onViewDetail(record)}
-            className="p-2 rounded-lg bg-emerald-300 text-emerald-800 hover:bg-emerald-400 transition cursor-pointer"
-          >
-            <FiEye size={18} />
-          </button>
-        </Tooltip>
-      </Space>
-    ),
-    align: "center",
-  },
-];
 
 const Book = () => {
-  const [queryParameters, setQueryParameters] = useState(
-    defaultQueryParameters
-  );
-  const [data, setData] = useState();
-  const [bookId, setIsEdit] = useState(null);
+  const [queryParameters, setQueryParameters] = useState({
+    ...defaultQueryParameters,
+    pageSize: 8,
+  });
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [openFilter, setOpenFilter] = useState(false);
   const [borrowMode, setBorrowMode] = useState(false);
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const { message } = useMessageContext();
+  const selectedRowKeysRef = useRef([]);
+  const [selectedRowKeys, setSelectedRowKeys] = useState(
+    selectedRowKeysRef.current
+  );
+
   const [openBorrowBookModal, setOpenBorrowBookModal] = useState(false);
+  const [openBookReview, setOpenBookReview] = useState(false);
+  const [selectedBook, setSelectedBook] = useState(null);
+  const { message } = useMessageContext();
+  const { id, roleName, refreshUser } = useUserContext();
   const navigate = useNavigate();
+
+  const fetchData = (isSetData = true) => {
+    setLoading(true);
+    bookServices
+      .gets({
+        pageSize: queryParameters.pageSize,
+        pageIndex: queryParameters.pageIndex,
+        search: queryParameters.search,
+      })
+      .then((res) => {
+        if (isSetData) {
+          setData(res.items);
+          setQueryParameters({
+            ...queryParameters,
+            pageIndex: res.pageIndex,
+            pageSize: res.pageSize,
+            totalCount: res.totalCount,
+          });
+        }
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  };
+  useEffect(() => {
+    let isActive = true;
+    fetchData(isActive);
+    return () => {
+      isActive = false;
+    };
+  }, [
+    queryParameters.pageIndex,
+    queryParameters.pageSize,
+    queryParameters.search,
+  ]);
+  const actionOfBookItemsUser = [
+    <ReviewButton
+      size={15}
+      onClick={(record) => {
+        handleOnClickReviewBookButton(record);
+      }}
+    />,
+    <ViewDetailButton size={15} onClick={(record) => onViewDetail(record)} />,
+  ];
+  const actionOfBookItemsAdmin = [
+    <EditButton
+      size={15}
+      onClick={(record) => navigate(`${record.id}/edit`)}
+    />,
+    <Popconfirm
+      key="delete"
+      centered
+      title="Are you sure to delete?"
+      icon={<ExclamationCircleOutlined />}
+      onConfirm={(record) => onDelete(record)}
+    >
+      <DeleteButton size={15} />
+    </Popconfirm>,
+    <ViewDetailButton size={15} onClick={(record) => onViewDetail(record)} />,
+  ];
+
+  const handleChange = (page, pageSize) => {
+    setQueryParameters({ ...queryParameters, pageIndex: page, pageSize });
+  };
+
+  const onSearch = (value) => {
+    setQueryParameters({ ...queryParameters, search: value });
+  };
+
   const onDelete = (record) => {
     setLoading(true);
     bookServices
       .deleteById(record.id)
       .then(() => {
+        const newTotal = queryParameters.totalCount - 1;
         setQueryParameters({
           ...queryParameters,
-          totalCount: queryParameters.totalCount - 1,
+          totalCount: newTotal,
           pageIndex:
-            (queryParameters.totalCount - 1) % queryParameters.pageSize === 0
-              ? queryParameters.pageIndex - 1 < 1
-                ? 1
-                : queryParameters.pageIndex - 1
+            newTotal % queryParameters.pageSize === 0
+              ? Math.max(1, queryParameters.pageIndex - 1)
               : queryParameters.pageIndex,
         });
         setLoading(false);
       })
-      .catch(() => {
-        setLoading(false);
-      });
+      .catch(() => setLoading(false));
   };
-  const onSubmitFilter = (values) => {
-    setQueryParameters(...queryParameters, values);
-  };
-  const onEdit = (record) => {
-    setIsEdit(record.id);
-  };
-  const onSearch = (value) => {
-    setQueryParameters({
-      ...queryParameters,
-      search: value,
-    });
-  };
-  var columnsData = columns(onDelete, onEdit);
-  const fetchData = (isSetData = true) => {
-    setLoading(true);
-    bookServices
-      .gets(getBooksQueryParameters(queryParameters))
-      .then((res) => {
-        if (isSetData) {
-          setData(res.items);
-          setQueryParameters({
-            pageIndex: res.pageIndex,
-            pageSize: res.pageSize,
-            totalCount: res.totalCount,
-            search: queryParameters.search,
-          });
-        }
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-      });
-  };
-  useEffect(() => {
-    let isSetData = true;
-    fetchData(isSetData);
-    return () => {
-      isSetData = false;
-    };
-  }, [
-    queryParameters.pageIndex,
-    queryParameters.pageSize,
-    queryParameters.totalCount,
-    queryParameters.search,
-  ]);
-  function handleChange(page, pageSize) {
-    setQueryParameters({
-      ...queryParameters,
-      pageIndex: page,
-      pageSize: pageSize,
-    });
-  }
-  const handleOnClickBorrowBooks = () => {
+
+  const toggleBorrowMode = () => {
     setBorrowMode(!borrowMode);
-  };
-  const handleOnSubmitBorrowBooks = () => {
-    setBorrowMode(!borrowMode);
-    if (selectedRowKeys.length > 0) {
-      setOpenBorrowBookModal(true);
+    if (borrowMode) {
+      setSelectedRowKeys([]);
+      selectedRowKeysRef.current = [];
     }
   };
-  const handleOnBorrowBooksChange = (selectedRowKeys) => {
-    setSelectedRowKeys(selectedRowKeys);
-    if (selectedRowKeys.length >= MAX) {
-      message.info("You reach the limit of books you can borrow.");
+  const handleSubmitBorrow = () => {
+    if (selectedRowKeys.length) setOpenBorrowBookModal(true);
+    else setBorrowMode(false);
+  };
+  const handleOnBorrowBooksChange = (newKeys) => {
+    setSelectedRowKeys(newKeys);
+    selectedRowKeysRef.current = newKeys;
+    if (newKeys.length >= MAX) {
+      message.info("You reach limit books per request");
     }
   };
+
+  const toggleSelect = (id) => {
+    const isSel = selectedRowKeys.includes(id);
+    const newKeys = isSel
+      ? selectedRowKeys.filter((k) => k !== id)
+      : [...selectedRowKeys, id];
+    handleOnBorrowBooksChange(newKeys);
+  };
+  const handleOnCancelBookReview = () => {
+    setOpenBookReview(false);
+    setSelectedBook(null);
+  };
+  const handleOnClickReviewBookButton = (book) => {
+    setOpenBookReview(true);
+    setSelectedBook(book);
+  };
+
   return (
     <>
-      {setOpenBorrowBookModal && (
-        <BookBorrowModal
-          onSubmit={() => {
-            fetchData();
-          }}
-          isModalOpen={openBorrowBookModal}
-          setIsModalOpen={setOpenBorrowBookModal}
-          bookIds={selectedRowKeys}
-          setSelectBookIds={setSelectedRowKeys}
-        />
-      )}
       <BookFilter
         open={openFilter}
         onClose={() => setOpenFilter(false)}
-        onSubmit={(value) => {
-          onSubmitFilter(value);
+        onSubmit={(vals) => setQueryParameters({ ...queryParameters, ...vals })}
+      />
+      <BookBorrowModal
+        isModalOpen={openBorrowBookModal}
+        bookIds={selectedRowKeys}
+        onSubmit={() => {
+          fetchData();
+          refreshUser();
+        }}
+        onCancel={() => {
+          setSelectedRowKeys([]);
+          selectedRowKeysRef.current = [];
+          setBorrowMode(false);
+          setOpenBorrowBookModal(false);
         }}
       />
-      {/* <BookItemView></BookItemView> */}
-      {!!bookId && <Navigate to={`${bookId}/edit`} />}
-      <div className="book-list-container">
-        <Card
-          extra={
-            <Row className="flex items-center justify-between gap-1.5 overflow-x-hidden">
-              <Col className="overflow-x-hidden">
-                <Search
-                  placeholder="Search book by title, author, or category"
-                  onSearch={onSearch}
-                  className="overflow-x-hidden"
-                  style={{ width: 200 }}
-                  defaultValue={queryParameters.search}
-                />
-              </Col>
-              <Col>
-                <Button
-                  className="create-book-button"
-                  onClick={() => navigate("/books/create")}
-                >
-                  Create Book
+      {openBookReview && (
+        <BookReviewCardModal
+          visible={openBookReview}
+          onCancel={handleOnCancelBookReview}
+          onSubmit={() => {
+            fetchData();
+          }}
+          book={selectedBook}
+          reviewerId={id}
+        />
+      )}
+      <Card
+        loading={loading}
+        title="Book List"
+        extra={
+          <Row className="flex items-center gap-2">
+            <Col>
+              <Search
+                placeholder="Search by title/author/category"
+                onSearch={onSearch}
+                style={{ width: 240 }}
+                defaultValue={queryParameters.search}
+                loading={loading}
+              />
+            </Col>
+            <Col>
+              <Button onClick={() => navigate("/books/create")}>
+                Create Book
+              </Button>
+            </Col>
+            <Col>
+              {!borrowMode ? (
+                <Button onClick={toggleBorrowMode}>Borrow Books</Button>
+              ) : (
+                <Button onClick={handleSubmitBorrow}>
+                  {selectedRowKeys.length ? "Submit Borrow" : "Cancel Borrow"}
                 </Button>
-              </Col>
-              <Col>
-                {!borrowMode && (
-                  <Button
-                    onClick={handleOnClickBorrowBooks}
-                    className="borrow-book-button hover:bg-"
-                  >
-                    Borrow Books
-                  </Button>
-                )}
-                {borrowMode && (
-                  <Button
-                    className="submit-borrow-book-button"
-                    onClick={handleOnSubmitBorrowBooks}
-                  >
-                    {selectedRowKeys.length === 0
-                      ? "Cancel Borrow"
-                      : "Submit Borrow"}
-                  </Button>
-                )}
-              </Col>
-              <Col
-                className="flex items-center cursor-pointer p-2 hover:bg-gray-300 rounded-md"
-                onClick={() => setOpenFilter(true)}
-              >
-                <span className="block mr-1">Filters</span>
-                <IoFilterSharp className="text-lg text-gray-600 hover:text-gray-800 transition-colors cursor-pointer" />
-              </Col>
-            </Row>
-          }
-          title="Book List"
-          className="book-list-card be-vietnam-pro-regular"
-        >
-          <Table
-            rowSelection={
-              borrowMode
-                ? {
-                    selectedRowKeys,
-                    onChange: handleOnBorrowBooksChange,
-                    hideSelectAll: true,
-                    getCheckboxProps: (record) => {
-                      const isSelected = selectedRowKeys.includes(record.id);
-                      const reachedMax = selectedRowKeys.length >= MAX;
+              )}
+            </Col>
+            <Col
+              className="flex items-center cursor-pointer"
+              onClick={() => setOpenFilter(true)}
+            >
+              Filters <IoFilterSharp className="ml-1" />
+            </Col>
+          </Row>
+        }
+        className="book-list-card"
+      >
+        <Row gutter={[16, 16]}>
+          {data.map((record) => {
+            const isAvailable = record?.available > 0;
+            const isSelected = selectedRowKeys?.includes(record.id);
+            const reachedMax = selectedRowKeys?.length >= MAX && !isSelected;
+            const disabled = reachedMax || !isAvailable;
+            const availStyle = {
+              display: "inline-block",
+              background: isAvailable ? "#F6FFEC" : "#FFF1F0",
+              color: isAvailable ? "#52C41A" : "#FF4D4F",
+              padding: "2px 8px",
+              borderRadius: "5px",
+              fontSize: "12px",
+              minWidth: "24px",
+              textAlign: "center",
+            };
 
-                      return {
-                        disabled:
-                          (reachedMax && !isSelected) || record.available === 0,
-                      };
-                    },
+            return (
+              <Col key={record.id} xs={24} sm={12} md={8} lg={6}>
+                <Card
+                  hoverable
+                  cover={
+                    <img
+                      alt={record.title}
+                      src={
+                        record.coverUrl ||
+                        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2gtz3pCsopRPlbimr8KOduu3nnEFxAzTdHw&s"
+                      }
+                      className="h-48 w-full object-cover"
+                    />
                   }
-                : undefined
-            }
-            loading={loading}
-            bordered
-            className="book-list-table overflow-x-scroll"
-            columns={columnsData.map((col) => {
-              return {
-                ...col,
-                onHeaderCell: () => ({
-                  className: "be-vietnam-pro-medium",
-                }),
-              };
-            })}
-            dataSource={data}
-            rowKey={(record) => record.id}
-            pagination={{
-              current: queryParameters.pageIndex,
-              total: queryParameters.totalCount,
-              pageSize: queryParameters.pageSize,
-              showSizeChanger: true,
-              pageSizeOptions: [5, 10, 20, 50],
-              showTotal: (total, [start, end]) =>
-                `From ${start} to ${end} items of ${total}`,
-              onChange: (p, ps) => {
-                handleChange(p, ps);
-              },
-            }}
+                  title={
+                    <>
+                      <h3>{record.title}</h3>
+                      <p className="text-sm text-gray-600">
+                        by {record.author}
+                      </p>
+                    </>
+                  }
+                  extra={
+                    borrowMode && (
+                      <Checkbox
+                        checked={isSelected}
+                        disabled={disabled}
+                        onChange={() => toggleSelect(record.id)}
+                      />
+                    )
+                  }
+                  actions={
+                    roleName === environment.adminRole
+                      ? actionOfBookItemsAdmin
+                      : actionOfBookItemsUser
+                  }
+                  className={isSelected ? "ring-2 ring-blue-400" : ""}
+                >
+                  <Card.Meta
+                    description={
+                      <>
+                        <div className="text-gray-700">
+                          {record.description}
+                        </div>
+                      </>
+                    }
+                  />
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <FiTag className="text-gray-500" />
+                      <span className="font-medium text-gray-700">
+                        Category:
+                      </span>
+                      <Tag color="blue">{record.category.name}</Tag>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <FiLayers className="text-gray-500" />
+                      <span className="font-medium text-gray-700">
+                        Quantity:
+                      </span>
+                      <Tag color="yellow">{record.quantity}</Tag>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      {isAvailable ? (
+                        <FiCheckCircle className="text-green-500" />
+                      ) : (
+                        <FiXCircle className="text-red-500" />
+                      )}
+                      <span className="font-medium text-gray-700">
+                        Available:
+                      </span>
+                      <span style={availStyle}>
+                        {isAvailable ? record.available : "Invailable"}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <FractionalStar
+                        rating={record.averageRating.toFixed(1)}
+                        size={18}
+                      ></FractionalStar>
+                      <span className="font-medium text-gray-700">
+                        Average rating:
+                      </span>
+                      <span className="text-gray-800 font-semibold">
+                        {record.averageRating.toFixed(1)} (
+                        {record.numberOfReview} reviews)
+                      </span>
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+            );
+          })}
+        </Row>
+        <div className="mt-6 flex justify-end">
+          <Pagination
+            current={queryParameters.pageIndex}
+            pageSize={queryParameters.pageSize}
+            total={queryParameters.totalCount}
+            showSizeChanger
+            pageSizeOptions={[4, 8, 12, 20, 40, 100]}
+            onChange={handleChange}
+            showTotal={(t, [start, end]) => `From ${start} to ${end} of ${t}`}
           />
-        </Card>
-      </div>
+        </div>
+      </Card>
     </>
   );
 };
 
 export default Book;
-
-const getBooksQueryParameters = (queryParameters) => {
-  return {
-    pageSize: queryParameters.pageSize,
-    pageIndex: queryParameters.pageIndex,
-    search: queryParameters.search,
-  };
-};

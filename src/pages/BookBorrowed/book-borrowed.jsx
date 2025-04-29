@@ -249,7 +249,6 @@ const BookBorrowed = () => {
                         </button>
                       </Tooltip>
                     )}
-
                   <Tooltip title="Detail" className="cursor-pointer">
                     <button
                       onClick={() => {

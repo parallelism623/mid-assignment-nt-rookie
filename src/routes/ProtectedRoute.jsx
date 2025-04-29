@@ -15,6 +15,7 @@ const UserContext = React.createContext({
   lastName: "",
   useName: "",
   email: "",
+  refreshUser: () => {},
 });
 
 export const useUserContext = () => {
@@ -30,8 +31,7 @@ const ProtectedRoutes = (props) => {
   );
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
+  const refreshUser = () => {
     const tokenDecode = jwtServices.decode(accessToken);
     const sid = tokenDecode?.sid;
     if (!sid) {
@@ -48,11 +48,14 @@ const ProtectedRoutes = (props) => {
         localStorage.removeItem("access_token");
         return navigate("/signin");
       });
+  };
+  useEffect(() => {
+    refreshUser();
   }, [accessToken]);
 
   return (
     <>
-      <UserContext.Provider value={{ ...user }}>
+      <UserContext.Provider value={{ ...user, refreshUser: refreshUser }}>
         {loading && <LoadingPage />}
         {!loading && user && children}
       </UserContext.Provider>
