@@ -1,4 +1,5 @@
 ﻿using MIDASS.Application.Commons.Models;
+using MIDASS.Application.Commons.Models.BookBorrowingRequestDetails;
 using MIDASS.Application.Commons.Models.Users;
 using MIDASS.Contract.SharedKernel;
 
@@ -9,4 +10,6 @@ public interface IUserServices
     Task<Result<string>> CreateBookBorrowingRequestAsync(BookBorrowingRequestCreate bookBorrowingRequest);
     Task<Result<PaginationResult<BookBorrowingRequestResponse>>> GetBookBorrowingRequestByIdAsync(Guid id, QueryParameters queryParameters);
     Task<Result<UserDetailResponse>> GetByIdAsync(Guid id);
+    Task<Result<PaginationResult<BookBorrowedRequestDetailResponse>>> GetBookBorrowedRequestDetailByIdAsync(Guid id, QueryParameters queryParameters);
+    Task<Result<string>> ExtendDueDateBookBorrowed(DueDatedExtendRequest dueDatedExtendRequest);
 }

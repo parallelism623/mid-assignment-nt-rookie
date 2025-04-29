@@ -9,7 +9,7 @@ public class BackgroundTaskQueue<T> : IBackgroundTaskQueue<T>
 
     private readonly Channel<T> _queue;
     private const int Default_Capacity = 100;
-    protected BackgroundTaskQueue()
+    public BackgroundTaskQueue()
     {
         var options = new BoundedChannelOptions(Default_Capacity)
         {

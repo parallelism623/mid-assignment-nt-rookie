@@ -152,13 +152,13 @@ namespace MIDASS.Persistence.Migrations
                     b.Property<DateOnly>("DueDate")
                         .HasColumnType("date");
 
+                    b.Property<DateOnly?>("ExtendDueDate")
+                        .HasColumnType("date");
+
                     b.Property<int>("ExtendDueDateTimes")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsExtend")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("ModifiedAt")
@@ -178,6 +178,51 @@ namespace MIDASS.Persistence.Migrations
                     b.HasIndex("BookId");
 
                     b.ToTable("BookBorrowingRequestDetails");
+                });
+
+            modelBuilder.Entity("MIDASS.Domain.Entities.BookReview", b =>
+                {
+                    b.Property<Guid>("ReviewerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BookId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Content")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.HasKey("ReviewerId");
+
+                    b.HasIndex("BookId");
+
+                    b.ToTable("BookReviews");
                 });
 
             modelBuilder.Entity("MIDASS.Domain.Entities.Category", b =>
@@ -356,6 +401,25 @@ namespace MIDASS.Persistence.Migrations
                     b.Navigation("BookBorrowingRequest");
                 });
 
+            modelBuilder.Entity("MIDASS.Domain.Entities.BookReview", b =>
+                {
+                    b.HasOne("MIDASS.Domain.Entities.Book", "Book")
+                        .WithMany("BookReviews")
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MIDASS.Domain.Entities.User", "Reviewer")
+                        .WithMany("BookReviews")
+                        .HasForeignKey("ReviewerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("Reviewer");
+                });
+
             modelBuilder.Entity("MIDASS.Domain.Entities.User", b =>
                 {
                     b.HasOne("MIDASS.Domain.Entities.Role", "Role")
@@ -370,6 +434,8 @@ namespace MIDASS.Persistence.Migrations
             modelBuilder.Entity("MIDASS.Domain.Entities.Book", b =>
                 {
                     b.Navigation("BookBorrowingRequestDetails");
+
+                    b.Navigation("BookReviews");
                 });
 
             modelBuilder.Entity("MIDASS.Domain.Entities.BookBorrowingRequest", b =>
@@ -392,6 +458,8 @@ namespace MIDASS.Persistence.Migrations
                     b.Navigation("BookBorrowingApproves");
 
                     b.Navigation("BookBorrowingRequests");
+
+                    b.Navigation("BookReviews");
                 });
 #pragma warning restore 612, 618
         }

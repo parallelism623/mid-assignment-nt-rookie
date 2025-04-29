@@ -17,6 +17,10 @@ public static class UserErrorMessages
     public const string ErrorOccurWhenCreateBookBorrowingRequest = "Error occurr when create book borrowing, please try again";
     public const string ErrorOccurWhenUpdateBookBorrowingRequest = "Error occurr when update book borrowing, please try again";
 
+    public const string BookBorrowedNotExistsCanNotExtendDueDate = "Book borrowed not exists can not extend due date";
+    public const string BookBorrowRejectCanNotExtendDueDate = "Book borrowing request status is rejected, can not extend due date";
+    public const string BookBorrowedExtendDueDateTimesReachLimit = "Book borrowed extend due date times reach limit";
+    public const string BookBorrowedNewExtendDueDateInValid = "Book borrowed new extend due date in valid";
 }
 public static class UserErrors
 {
@@ -41,4 +45,10 @@ public static class UserErrors
 
     public static Error ErrorOccurWhenUpdateBookBorrowingRequest { get; set; } = new("ErrorOccurWhenUpdateBookBorrowingRequest",
         UserErrorMessages.ErrorOccurWhenUpdateBookBorrowingRequest);
+
+    public static Error BookBorrowedNotExistsCanNotExtendDueDate => new(nameof(BookBorrowedNotExistsCanNotExtendDueDate), UserErrorMessages.BookBorrowedNotExistsCanNotExtendDueDate);
+    public static Error BookBorrowRejectCanNotExtendDueDate => new(nameof(BookBorrowRejectCanNotExtendDueDate), UserErrorMessages.BookBorrowRejectCanNotExtendDueDate);
+    public static Error BookBorrowedExtendDueDateTimesReachLimit => new(nameof(BookBorrowedExtendDueDateTimesReachLimit), UserErrorMessages.BookBorrowedNewExtendDueDateInValid);
+    public static Error BookBorrowedNewExtendDueDateInValid => new(nameof(BookBorrowedNewExtendDueDateInValid), UserErrorMessages.BookBorrowedNewExtendDueDateInValid);
+
 }

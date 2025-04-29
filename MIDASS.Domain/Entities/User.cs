@@ -27,6 +27,9 @@ public class User : AuditableEntity, IEntity<Guid>
     [JsonIgnore]
     public ICollection<BookBorrowingRequest>? BookBorrowingApproves { get; set; }
 
+    [JsonIgnore]
+    public ICollection<BookReview>? BookReviews { get; set; }
+
     public static User Create(string email, string username, string password, string firstName, string lastName, string? phoneNumber, Guid roleId)
     {
         return new()

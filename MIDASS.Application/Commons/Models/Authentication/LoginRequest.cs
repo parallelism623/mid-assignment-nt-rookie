@@ -1,5 +1,4 @@
 ﻿using FluentValidation;
-using MIDASS.Contract.Constrants;
 using MIDASS.Contract.Messages.Validations;
 using MIDASS.Domain.Constrants;
 using System.Text.RegularExpressions;
@@ -16,8 +15,8 @@ public class LoginRequest
 public class LoginRequestValidator : AbstractValidator<LoginRequest>
 {
     private readonly string _validationMessagePasswordLength =
-        string.Format(AuthenticationValidationMessages.PasswordShouldBeInRange, ValidationData.MinLengthPassword,
-            ValidationData.MaxLengthPassword);
+        string.Format(AuthenticationValidationMessages.PasswordShouldBeInRange, UserValidationRules.MinLengthPassword,
+            UserValidationRules.MaxLengthPassword);
 
     public LoginRequestValidator()
     {
@@ -33,8 +32,8 @@ public class LoginRequestValidator : AbstractValidator<LoginRequest>
             .NotEmpty().WithMessage(AuthenticationValidationMessages.PasswordShouldNotBeEmpty);
 
         RuleFor(x => x.Password.Length)
-            .GreaterThanOrEqualTo(ValidationData.MinLengthPassword).WithMessage(_validationMessagePasswordLength)
-            .LessThanOrEqualTo(ValidationData.MaxLengthPassword).WithMessage(_validationMessagePasswordLength);
+            .GreaterThanOrEqualTo(UserValidationRules.MinLengthPassword).WithMessage(_validationMessagePasswordLength)
+            .LessThanOrEqualTo(UserValidationRules.MaxLengthPassword).WithMessage(_validationMessagePasswordLength);
 
         RuleFor(x => x.Email)
             .Must(e => Regex.IsMatch(e!, UserValidationRules.RegexPatternEmail))

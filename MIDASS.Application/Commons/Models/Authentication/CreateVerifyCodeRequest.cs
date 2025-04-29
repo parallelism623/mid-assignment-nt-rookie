@@ -1,6 +1,7 @@
 ﻿
 using FluentValidation;
 using MIDASS.Contract.Messages.Validations;
+using MIDASS.Domain.Constrants;
 
 namespace MIDASS.Application.Commons.Models.Authentication;
 
@@ -14,7 +15,13 @@ public class EmailConfirmRequestValidator : AbstractValidator<EmailConfirmReques
 {
     public EmailConfirmRequestValidator()
     {
-        RuleFor(x => x.Username).NotEmpty().WithMessage(AuthenticationValidationMessages.UsernameShouldBeNotEmpty);
+        RuleFor(x => x.Username)
+            .NotEmpty()
+            .WithMessage(AuthenticationValidationMessages.UsernameShouldBeNotEmpty)
+            .Matches(UserValidationRules.RegexPatternUsername)
+            .WithMessage(string.Format(AuthenticationValidationMessages.UsernameShouldMatchesRegexPattern,
+                                       UserValidationRules.MaxLengthUsername));
+
         RuleFor(x => x.Code).NotEmpty().WithMessage(AuthenticationValidationMessages.EmailConfirmCodeShouldNotBeEmpty)
                             .Must(x => x.Length == 6).WithMessage(AuthenticationValidationMessages.EmailConfirmCodeInvalid);
     }

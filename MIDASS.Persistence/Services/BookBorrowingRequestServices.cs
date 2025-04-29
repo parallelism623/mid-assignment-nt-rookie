@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using MIDASS.Application.Commons.Mapping;
 using MIDASS.Application.Commons.Models.BookBorrowingRequests;
 using MIDASS.Application.Services.Authentication;
-using MIDASS.Application.Services.BackgroundJobs.MailSenderBackgroundJob;
+using MIDASS.Application.Services.HostedServices.Abstract;
 using MIDASS.Application.Services.Mail;
 using MIDASS.Application.UseCases;
 using MIDASS.Contract.Errors;
@@ -21,8 +22,7 @@ public class BookBorrowingRequestServices(
     IExecutionContext executionContext,
     IBookRepository bookRepository,
     IUserRepository userRepository,
-    IMailServices mailServices,
-    IMailSenderBackgroundService mailSenderBackgroundService,
+    IBackgroundTaskQueue<Func<IServiceProvider, CancellationToken,ValueTask>> mailSenderBackgroundService,
     IWebHostEnvironment env)
     : IBookBorrowingRequestServices
 {
@@ -104,8 +104,9 @@ public class BookBorrowingRequestServices(
                             .Replace("@Model.RequestDate", bookBorrowingRequest.DateRequested.ToString("dd/MM/yyyy"));
 
 
-            await mailSenderBackgroundService.QueueSendMailRequestAsync(async (c) =>
+            await mailSenderBackgroundService.QueueBackgroundWorkItemAsync(async (serviceProvider, c) =>
             {
+                var mailServices = serviceProvider.GetRequiredService<IMailServices>();
                 await mailServices.SendMailAsync(toEmail, subject, body ?? "", cancellationToken: c);
             });
         }

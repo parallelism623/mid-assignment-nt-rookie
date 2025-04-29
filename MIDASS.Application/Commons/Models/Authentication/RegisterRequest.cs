@@ -1,5 +1,4 @@
 ﻿using FluentValidation;
-using MIDASS.Contract.Constrants;
 using MIDASS.Contract.Messages.Validations;
 using MIDASS.Domain.Constrants;
 
@@ -44,20 +43,20 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
         RuleFor(x => x.LastName)
             .NotEmpty()
             .WithMessage(AuthenticationValidationMessages.LastNameShouldBeNotEmpty)
-            .Must(x => x.Length <= ValidationData.MaxLengthLastName)
+            .Must(x => x.Length <= UserValidationRules.MaxLengthLastName)
             .WithMessage(string.Format(AuthenticationValidationMessages.LastNameShouldBeLessThanOrEqualMaxLength,
-                ValidationData.MaxLengthLastName));
+                UserValidationRules.MaxLengthLastName));
         RuleFor(x => x.FirstName)
             .NotEmpty()
             .WithMessage(AuthenticationValidationMessages.FirstNameShouldBeNotEmpty)
-            .Must(x => x.Length <= ValidationData.MaxLengthFirstName)
+            .Must(x => x.Length <= UserValidationRules.MaxLengthFirstName)
             .WithMessage(string.Format(AuthenticationValidationMessages.FirstNameShouldBeLessThanOrEqualMaxLength,
-                ValidationData.MaxLengthFirstName));
+                UserValidationRules.MaxLengthFirstName));
 
         RuleFor(x => x.PhoneNumber)
-            .Must(x => x == null || x.Length <= ValidationData.MaxLengthPhoneNumber)
+            .Must(x => x == null || x.Length <= UserValidationRules.MaxLengthPhoneNumber)
             .When(x => !string.IsNullOrEmpty(x.PhoneNumber))
             .WithMessage(string.Format(AuthenticationValidationMessages.PhoneNumberShouldBeLessThanOrEqualMaxLength,
-                ValidationData.MaxLengthPhoneNumber));
+                UserValidationRules.MaxLengthPhoneNumber));
     }
 }

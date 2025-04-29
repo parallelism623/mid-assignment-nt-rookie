@@ -1,7 +1,7 @@
 ﻿
 using FluentValidation;
-using MIDASS.Contract.Messages.Commands;
 using MIDASS.Contract.Messages.Validations;
+using MIDASS.Domain.Constrants;
 
 namespace MIDASS.Application.Commons.Models.Authentication;
 
@@ -15,6 +15,12 @@ public class RefreshEmailConfirmTokenRequestValidator : AbstractValidator<Refres
 {
     public RefreshEmailConfirmTokenRequestValidator()
     {
-        RuleFor(x => x.Username).NotEmpty().WithMessage(AuthenticationValidationMessages.UsernameShouldBeNotEmpty);
+        RuleFor(x => x.Username)
+            .NotEmpty()
+            .WithMessage(AuthenticationValidationMessages.UsernameShouldBeNotEmpty)
+            .Matches(UserValidationRules.RegexPatternUsername)
+            .WithMessage(string.Format(AuthenticationValidationMessages.UsernameShouldMatchesRegexPattern,
+                                       UserValidationRules.MaxLengthUsername));
+
     }
 }

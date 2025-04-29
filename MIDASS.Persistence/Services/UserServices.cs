@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using MIDASS.Application.Commons.Mapping;
 using MIDASS.Application.Commons.Models;
+using MIDASS.Application.Commons.Models.BookBorrowingRequestDetails;
 using MIDASS.Application.Commons.Models.Users;
 using MIDASS.Application.Services.Authentication;
 using MIDASS.Application.UseCases;
@@ -9,7 +10,9 @@ using MIDASS.Contract.Errors;
 using MIDASS.Contract.Messages.Commands;
 using MIDASS.Contract.SharedKernel;
 using MIDASS.Domain.Abstract;
+using MIDASS.Domain.Constrants;
 using MIDASS.Domain.Entities;
+using MIDASS.Domain.Enums;
 using MIDASS.Domain.Repositories;
 using MIDASS.Persistence.Specifications;
 
@@ -19,7 +22,8 @@ public class UserServices(IUserRepository userRepository,
                             IBookBorrowingRequestRepository bookBorrowingRequestRepository,
                             IExecutionContext executionContext,
                             IBookRepository bookRepository,
-                            ITransactionManager transactionManager) : IUserServices
+                            ITransactionManager transactionManager, 
+                            IBookBorrowingRequestDetailRepository bookBorrowingRequestDetailRepository) : IUserServices
 {
     public async Task<Result<string>> CreateBookBorrowingRequestAsync(BookBorrowingRequestCreate bookBorrowingRequest)
     {
@@ -160,5 +164,91 @@ public class UserServices(IUserRepository userRepository,
         var user = await userRepository.GetByIdAsync(id);
 
         return user?.ToUserDetailResponse() ?? default!; 
+    }
+
+    public async Task<Result<PaginationResult<BookBorrowedRequestDetailResponse>>> GetBookBorrowedRequestDetailByIdAsync(Guid id, QueryParameters queryParameters)
+    {
+        var userId = executionContext.GetUserId();
+        if(userId != id)
+        {
+            return Result<PaginationResult<BookBorrowedRequestDetailResponse>>.Failure(400, UserErrors.UserCannotBeInCurrentSession);
+        }
+        var pageSize = queryParameters.PageSize;
+        var pageIndex = queryParameters.PageIndex;
+        var query = bookBorrowingRequestDetailRepository
+            .GetQueryable()
+            .Where(bd => bd.BookBorrowingRequest.RequesterId == id 
+            && (bd.BookBorrowingRequest.Status == (int)BookBorrowingStatus.Approved));
+
+        int totalCount = await query.CountAsync();
+
+        var data = await query
+                .OrderByDescending (b => b.CreatedAt)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .Select(bd => new BookBorrowedRequestDetailResponse()
+                {
+                    Id = bd.Id,
+                    DueDate = bd.DueDate,
+                    BookBorrowingRequestId = bd.BookBorrowingRequestId,
+                    BookId = bd.BookId,
+                    RequesterName = bd.BookBorrowingRequest.Requester.FirstName
+                                    + bd.BookBorrowingRequest.Requester.LastName,
+                    ApproverName = bd.BookBorrowingRequest == null
+                    ? default
+                    : bd.BookBorrowingRequest.Approver!.FirstName + bd.BookBorrowingRequest.Approver.LastName,
+                    Book = new Application.Commons.Models.Books.BookResponse
+                    {
+                        Id = bd.Book.Id,
+                        Title = bd.Book.Title,
+                        Author = bd.Book.Author,
+                        Category = new()
+                        {
+                            Id = bd.Book.Category.Id,   
+                            Name = bd.Book.Category.Name
+                        }
+                    },
+                    Noted = bd.Noted,
+                    ExtendDueDateTimes = bd.ExtendDueDateTimes,
+                    ExtendDueDate = bd.ExtendDueDate,
+                })
+                .ToListAsync();
+
+
+        return PaginationResult<BookBorrowedRequestDetailResponse>.Create(pageSize, pageIndex, totalCount, data);
+
+    }
+
+    public async Task<Result<string>> ExtendDueDateBookBorrowed(DueDatedExtendRequest dueDatedExtendRequest)
+    {
+        var bookBorrowedDetail = await bookBorrowingRequestDetailRepository
+                                    .GetByIdAsync(dueDatedExtendRequest.BookBorrowedDetailId, "BookBorrowingRequest");
+        if(bookBorrowedDetail == null)
+        {
+            return Result<string>.Failure(400, UserErrors.BookBorrowedNotExistsCanNotExtendDueDate);
+        }
+
+        if(bookBorrowedDetail.BookBorrowingRequest.Status == (int)BookBorrowingStatus.Rejected)
+        {
+            return Result<string>.Failure(400, UserErrors.BookBorrowRejectCanNotExtendDueDate);
+        }
+
+        if(bookBorrowedDetail.ExtendDueDateTimes == BookBorrowingRequestDetailValidationRules.MaxExtendDueDateTimes)
+        {
+            return Result<string>.Failure(400, UserErrors.BookBorrowedExtendDueDateTimesReachLimit);
+        }
+
+        if(bookBorrowedDetail.DueDate > dueDatedExtendRequest.ExtendDueDate)
+        {
+            return Result<string>.Failure(400, UserErrors.BookBorrowedNewExtendDueDateInValid);
+        }
+
+        bookBorrowedDetail.ExtendDueDate = dueDatedExtendRequest.ExtendDueDate;
+        bookBorrowedDetail.ExtendDueDateTimes += 1;
+
+        bookBorrowingRequestDetailRepository.Update(bookBorrowedDetail);
+        await bookBorrowingRequestDetailRepository.SaveChangesAsync();
+
+        return UserCommandMessages.BookBorrowedExtendDueDateSuccess;
     }
 }

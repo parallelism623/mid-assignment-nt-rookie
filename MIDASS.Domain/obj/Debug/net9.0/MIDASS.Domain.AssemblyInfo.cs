@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MIDASS.Domain")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+eed2bcc6a6966076d5aab90fdf7b6cfa0ce93a35")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8ce0822f3b6abe7ce13c179767e674a9d6006a0b")]
 [assembly: System.Reflection.AssemblyProductAttribute("MIDASS.Domain")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MIDASS.Domain")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

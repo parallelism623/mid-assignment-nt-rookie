@@ -15,4 +15,7 @@ public static class UserValidationMessages
 
     public const string BooksBorrowingShouldHaveDistinctBookId =
         "Books id in borrowing request should be distinct with other";
+
+    public const string BookBorrowedExtendDueDateIdMustNotEmpty = "Book borrowed extend due date id must not empty";
+    public const string BookBorrowedExtendDueDateExtendDateMustNotEmpty = "Book borrowed extend due date extend date must not empty";
 }

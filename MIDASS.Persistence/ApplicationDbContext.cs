@@ -20,6 +20,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<BookBorrowingRequest> BookBorrowingRequests { get; set; }
     public DbSet<BookBorrowingRequestDetail> BookBorrowingRequestDetails { get; set; }
     public DbSet<Category> Categories { get; set; }
+    public DbSet<BookReview> BookReviews { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());

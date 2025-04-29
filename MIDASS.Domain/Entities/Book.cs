@@ -22,6 +22,7 @@ public class Book : AuditableEntity, IEntity<Guid>
     [Timestamp]
     public byte[] TimeStamp { get; set; } = default;
     public virtual ICollection<BookBorrowingRequestDetail>? BookBorrowingRequestDetails { get; set; }
+    public virtual ICollection<BookReview>? BookReviews { get; set; }
 
     public static Book Create(string title, string description, string author, int quantity, int available, Guid categoryId)
     {

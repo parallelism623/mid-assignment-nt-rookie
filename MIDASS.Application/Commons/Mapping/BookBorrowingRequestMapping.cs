@@ -4,6 +4,7 @@ using Microsoft.VisualBasic;
 using MIDASS.Application.Commons.Models.BookBorrowingRequests;
 using MIDASS.Application.Commons.Models.Users;
 using MIDASS.Domain.Entities;
+using MIDASS.Domain.Enums;
 
 namespace MIDASS.Application.Commons.Mapping;
 
@@ -47,7 +48,7 @@ public static class BookBorrowingRequestMapping
         {
             Id = bookBorrowingRequest.Id,
             DateApproved = bookBorrowingRequest.DateApproved,
-            Status = bookBorrowingRequest.Status,
+            Status = GetStatusOfBookBorrowingRequest(bookBorrowingRequest),
             DateRequested = bookBorrowingRequest.DateRequested,
             Approver =
                 bookBorrowingRequest.Approver == null
@@ -98,5 +99,15 @@ public static class BookBorrowingRequestMapping
             DueDate = bookBorrowingRequestDetail.DueDate,
             Noted = bookBorrowingRequestDetail.Noted
         };
+    }
+
+    public static int GetStatusOfBookBorrowingRequest(BookBorrowingRequest bookBorrowingRequest)
+    {
+        if(bookBorrowingRequest.BookBorrowingRequestDetails == null || bookBorrowingRequest.Status == (int)BookBorrowingStatus.Rejected)
+        {
+            return bookBorrowingRequest.Status;
+        }
+        return bookBorrowingRequest.BookBorrowingRequestDetails!.Any(bd => bd.DueDate < DateOnly.FromDateTime(DateTime.Now)) 
+            ? (int)BookBorrowingStatus.DueDated : bookBorrowingRequest.Status;
     }
 }

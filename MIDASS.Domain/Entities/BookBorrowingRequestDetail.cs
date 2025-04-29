@@ -16,11 +16,10 @@ public class BookBorrowingRequestDetail : AuditableEntity, IEntity<Guid>
     public Book Book { get; set; } = default!;
 
     public DateOnly DueDate { get; set; }
-    public bool IsExtend { get; set; }
     public bool IsDeleted { get; set; }
     public string? Noted { get; set; }
     public int ExtendDueDateTimes { get; set; }
-
+    public DateOnly? ExtendDueDate { get; set; } = default!;
     public static BookBorrowingRequestDetail Create(Guid bookId, DateOnly dueDate, string? noted)
     {
         return new() { BookId = bookId, DueDate = dueDate, Noted = noted };

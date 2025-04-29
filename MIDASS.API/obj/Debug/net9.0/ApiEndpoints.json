@@ -90,6 +90,53 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "MIDASS.API.Presentation.Controllers.BookBorrowingRequestDetailsController",
+    "Method": "GetsAsync",
+    "RelativePath": "api/book-borrowing-request-details",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "PageIndex",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "PageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "Search",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MIDASS.API.Presentation.Controllers.BookBorrowingRequestDetailsController",
+    "Method": "AdjustDueDateExtendAsync",
+    "RelativePath": "api/book-borrowing-request-details/{id}/due-date-extend",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "bookBorrowedExtendDueDateRequest",
+        "Type": "MIDASS.Application.Commons.Models.BookBorrowingRequestDetails.BookBorrowedExtendDueDateRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "MIDASS.API.Presentation.Controllers.BookBorrowingRequestsController",
     "Method": "GetsAsync",
     "RelativePath": "api/book-borrowing-requests",
@@ -363,6 +410,58 @@
       {
         "Name": "id",
         "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MIDASS.API.Presentation.Controllers.UsersController",
+    "Method": "GetBookBorrowedRequestDetailByIdAsync",
+    "RelativePath": "api/Users/{id}/book-borrowed",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "PageIndex",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "PageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "Search",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MIDASS.API.Presentation.Controllers.UsersController",
+    "Method": "ExtendDueDateAsync",
+    "RelativePath": "api/Users/{id}/book-borrowed/due-date-extend",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "dueDatedExtendRequest",
+        "Type": "MIDASS.Application.Commons.Models.Users.DueDatedExtendRequest",
         "IsRequired": true
       }
     ],

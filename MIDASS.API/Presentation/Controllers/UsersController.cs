@@ -37,6 +37,24 @@ public class UsersController : ApiBaseController
         return ProcessResult(result);
     }
     [HttpGet]
+    [Route("{id:guid}/book-borrowed")]
+    [Authorize(Roles = "User")]
+    public async Task<IActionResult> GetBookBorrowedRequestDetailByIdAsync(Guid id, [FromQuery] QueryParameters queryParameters)
+    {
+        var result = await _userServices.GetBookBorrowedRequestDetailByIdAsync(id, queryParameters);
+
+        return ProcessResult(result);
+    }
+    [HttpPut]
+    [Route("{id:guid}/book-borrowed/due-date-extend")]
+    [Authorize(Roles = "User")]
+    public async Task<IActionResult> ExtendDueDateAsync (Guid id, [FromBody] DueDatedExtendRequest dueDatedExtendRequest)
+    {
+        var result = await _userServices.ExtendDueDateBookBorrowed(dueDatedExtendRequest);
+            
+        return ProcessResult(result);
+    }
+    [HttpGet]
     [Route("{id:guid}")]
     [Authorize(Roles = "User,Admin")]
     public async Task<IActionResult> GetByIdAsync(Guid id)

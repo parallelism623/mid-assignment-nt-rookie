@@ -16,23 +16,25 @@ using MIDASS.Contract.Messages.Commands;
 using Microsoft.Extensions.Caching.Memory;
 using MIDASS.Contract.Constants;
 using MIDASS.Application.Commons.Models.Authentication;
+using MIDASS.Application.Services.HostedServices.Abstract;
+using MIDASS.Infrastructure.HostedServices.Abstract;
+using Microsoft.Extensions.DependencyInjection;
 namespace MIDASS.Infrastructure.Authentication;
 
 public class ApplicationAuthentication : BaseAuthentication, IApplicationAuthentication
 {
     private readonly IUserRepository _userRepository;
     private readonly IRoleRepository _roleRepository;
-    private readonly IMailServices _mailServices;
     private readonly IWebHostEnvironment _env;
     private readonly IMemoryCache _memoryCache;
+    private readonly IBackgroundTaskQueue<Func<IServiceProvider, CancellationToken, ValueTask>> _backgroundTaskQueue;
     public ApplicationAuthentication(IJwtTokenServices jwtTokenServices, ICryptoServiceFactory cryptoServiceFactory,
         IOptions<JwtTokenOptions> jwtTokenOptions, IWebHostEnvironment env, IUserRepository userRepository,
-        IExecutionContext executionContext, IRoleRepository roleRepository,
-        IMailServices mailServices, IMemoryCache memoryCache) : base(jwtTokenServices, cryptoServiceFactory, jwtTokenOptions,
+        IExecutionContext executionContext, IRoleRepository roleRepository, IMemoryCache memoryCache, IBackgroundTaskQueue<Func<IServiceProvider, CancellationToken, ValueTask>> backgroundTaskQueue) : base(jwtTokenServices, cryptoServiceFactory, jwtTokenOptions,
         userRepository, executionContext)
     {
         _env = env;
-        _mailServices = mailServices;
+        _backgroundTaskQueue = backgroundTaskQueue;
         _memoryCache = memoryCache;
         _userRepository = userRepository;
         _roleRepository = roleRepository;
@@ -71,7 +73,7 @@ public class ApplicationAuthentication : BaseAuthentication, IApplicationAuthent
         }
         if(!user.IsVerifyCode)
         {
-            SendEmailConfirmCode(user);
+            await SendEmailConfirmCode(user);
         }
         return user;
     }
@@ -103,7 +105,7 @@ public class ApplicationAuthentication : BaseAuthentication, IApplicationAuthent
         _userRepository.Add(newUser);
         await _userRepository.SaveChangesAsync();
  
-        SendEmailConfirmCode(user);
+        await SendEmailConfirmCode(user);
         
         return newUser;
     }
@@ -144,7 +146,12 @@ public class ApplicationAuthentication : BaseAuthentication, IApplicationAuthent
 
     private async Task HandleSendVerifyCodeMail(string toEmail, string subject, string body)
     {
-        await _mailServices.SendMailAsync(toEmail, subject, body);
+        await _backgroundTaskQueue.QueueBackgroundWorkItemAsync(async (servicesProvider, cts) =>
+        {
+            var mailServices = servicesProvider.GetRequiredService<IMailServices>();
+
+            await mailServices.SendMailAsync(toEmail, subject, body, cancellationToken: cts);
+        });
     }
 
     public async Task<Result<string>> RefreshEmailConfirmAsync(RefreshEmailConfirmTokenRequest refreshEmailConfirm)
@@ -154,7 +161,7 @@ public class ApplicationAuthentication : BaseAuthentication, IApplicationAuthent
         {
             throw new BadRequestException("User invalid");
         }
-        SendEmailConfirmCode(user);
+        await SendEmailConfirmCode(user);
         return AuthenticationMessages.RefreshEmailConfirmSuccess;
     }
 }

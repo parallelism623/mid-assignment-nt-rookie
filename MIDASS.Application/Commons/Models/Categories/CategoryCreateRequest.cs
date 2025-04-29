@@ -1,6 +1,5 @@
 ﻿
 using FluentValidation;
-using MIDASS.Contract.Constrants;
 using MIDASS.Contract.Messages.Validations;
 using MIDASS.Domain.Constrants;
 
