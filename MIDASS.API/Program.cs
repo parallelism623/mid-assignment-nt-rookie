@@ -73,7 +73,7 @@ builder.Services.AddAuthentication(options =>
                 var refreshTokenHeader = context.Request.Path.Value?.Contains("/token-refresh") ?? false;
                 if (!refreshTokenHeader)
                 {
-                    context.Response?.Headers?.Add("Token-Expired", "true");
+                    context.Response?.Headers?.Append("Token-Expired", "true");
                 }
             }
             return Task.CompletedTask;

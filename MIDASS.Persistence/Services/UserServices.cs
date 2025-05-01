@@ -72,15 +72,19 @@ public class UserServices(IUserRepository userRepository,
        
             try
             {
-            
-                foreach (var entry in exception.Entries)
+
+                var bookEntry = exception.Entries?.Where(entity => entity.Entity is Book)?.ToList();
+                if(bookEntry != null)
                 {
-                    if (entry.Entity is Book)
+                    foreach (var entry in bookEntry)
                     {
+
                         var databaseValues = await entry.GetDatabaseValuesAsync();
-                        entry.OriginalValues.SetValues(databaseValues);
+                        if(databaseValues != null)
+                            entry.OriginalValues.SetValues(databaseValues);
+
                     }
-                }
+                }    
 
                 books = await bookRepository.GetByIdsAsync(booksIdRequest);
 

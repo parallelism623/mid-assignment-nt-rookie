@@ -10,7 +10,7 @@ public class BookBorrowingRequestCreate
 {
     public Guid RequesterId { get; set; }
     public DateOnly DateRequested { get; set; }
-    public List<BookBorrowingRequestDetailCreate> BorrowingRequestDetails { get; set; }
+    public List<BookBorrowingRequestDetailCreate> BorrowingRequestDetails { get; set; } = default!;
 }
 
 

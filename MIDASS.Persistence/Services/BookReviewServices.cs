@@ -56,7 +56,7 @@ public class BookReviewServices(IBookReviewRepository bookReviewRepository,
         var querySpecification = new BookReviewsByQueryParametersSpecification(bookReviewQueryParameters);
 
         query = querySpecification.GetQuery(query);
-
+            
         var totalCount = await query.CountAsync();
 
         var bookReviews = await query.Skip(bookReviewQueryParameters.Skip)

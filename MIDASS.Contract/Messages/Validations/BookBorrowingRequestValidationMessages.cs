@@ -3,5 +3,5 @@ namespace MIDASS.Contract.Messages.Validations;
 
 public static class BookBorrowingRequestValidationMessages
 {
-    public const string IdShouldNotBeEmpty = "Book borrowing request id should not be empty";
+    public const string IdShouldNotBeEmpty = "Book borrowing request ID must not be empty";
 }

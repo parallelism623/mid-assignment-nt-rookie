@@ -14,5 +14,5 @@ public class UserExecutionContext
 
 public class UserRoleExecutionContext
 {
-    public string Name { get; set; }
+    public string Name { get; set; } = default!;
 }
