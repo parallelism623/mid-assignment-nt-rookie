@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MIDASM.Application\MIDASS.Application.csproj" />
+    <ProjectReference Include="..\MIDASM.Infrastructure\MIDASS.Infrastructure.csproj" />
+    <ProjectReference Include="..\MIDASM.Persistence\MIDASS.Persistence.csproj" />
+  </ItemGroup>
+
+</Project>
