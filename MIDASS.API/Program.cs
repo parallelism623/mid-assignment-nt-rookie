@@ -1,17 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using MIDASS.API;
 using MIDASS.API.Middlewares;
 using MIDASS.Application.Commons.Options;
-using MIDASS.Application.Services.Authentication;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var config = builder.Configuration;
+
 builder.Services.AddSwaggerGen();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.ConfigureDependencyLayers();
@@ -61,6 +58,7 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = jwtTokenOptions.ValidateAudience,
         ValidIssuer = jwtTokenOptions.Issuer,
         ValidAudience = jwtTokenOptions.Audience,
+        ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new RsaSecurityKey(rsa),
         ClockSkew = TimeSpan.Zero
@@ -75,7 +73,7 @@ builder.Services.AddAuthentication(options =>
                 var refreshTokenHeader = context.Request.Path.Value?.Contains("/token-refresh") ?? false;
                 if (!refreshTokenHeader)
                 {
-                    context.Response.Headers.Add("Token-Expired", "true");
+                    context.Response?.Headers?.Add("Token-Expired", "true");
                 }
             }
             return Task.CompletedTask;

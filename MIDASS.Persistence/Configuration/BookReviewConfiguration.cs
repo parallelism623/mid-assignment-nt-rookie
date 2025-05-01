@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using MIDASS.Domain.Constrants;
 using MIDASS.Domain.Entities;
 
 namespace MIDASS.Persistence.Configuration;
@@ -9,10 +10,10 @@ public class BookReviewConfiguration : IEntityTypeConfiguration<BookReview>
 {
     public void Configure(EntityTypeBuilder<BookReview> builder)
     {
-        builder.HasKey(b => b.BookId);
-        builder.HasKey(b => b.ReviewerId);
-        builder.Property(b => b.Title).HasMaxLength(255);
-        builder.Property(b => b.Content).HasMaxLength(2000);
+        builder.HasIndex(b => b.BookId);
+        builder.HasIndex(b => b.ReviewerId);
+        builder.Property(b => b.Title).HasMaxLength(BookReviewValidationRules.TitleMaxLength);
+        builder.Property(b => b.Content).HasMaxLength(BookReviewValidationRules.ContentMaxLength);
 
         builder.HasQueryFilter(b => !b.IsDeleted);
 

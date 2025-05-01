@@ -1,6 +1,8 @@
 ﻿using Mapster;
 using Microsoft.EntityFrameworkCore;
+using MIDASS.Application.Commons.Mapping;
 using MIDASS.Application.Commons.Models.Books;
+using MIDASS.Application.Services.FileServices;
 using MIDASS.Application.UseCases;
 using MIDASS.Contract.Errors;
 using MIDASS.Contract.Messages.Commands;
@@ -8,41 +10,80 @@ using MIDASS.Contract.SharedKernel;
 using MIDASS.Domain.Entities;
 using MIDASS.Domain.Repositories;
 using MIDASS.Persistence.Specifications;
-using static System.Reflection.Metadata.BlobBuilder;
-using System.Transactions;
-using MIDASS.Application.Commons.Mapping;
 
 namespace MIDASS.Persistence.Services;
 
 public class BookServices(IBookRepository bookRepository,
-    ICategoryRepository categoryRepository) : IBookServices
+    ICategoryRepository categoryRepository,
+    IBookReviewRepository bookReviewRepository,
+    IImageStorageServices imageStorageServices) : IBookServices
 {
+    private const string DefaultBookImage = "default.jpeg";
     public async Task<Result<PaginationResult<BookResponse>>> GetsAsync(BooksQueryParameters queryParameters)
     {
-        var query = bookRepository.GetQueryable();
+        var queryableBook = bookRepository.GetQueryable();
+        var queryableBookReview = bookReviewRepository.GetQueryable();
         var querySpecification = new BookByQueryParametersSpecification(queryParameters);
+        queryableBook = querySpecification.GetQuery(queryableBook);
 
-        query = querySpecification.GetQuery(query);
 
-        var totalCount = await query.CountAsync();
+        var totalCount = await queryableBook.CountAsync();
+        var query = queryableBook.Skip(queryParameters.PageSize * (queryParameters.PageIndex - 1))
+            .Take(queryParameters.PageSize).GroupJoin(
+            queryableBookReview,                          
+            book => book.Id,          
+            bookReview => bookReview.BookId,        
+            (book, bookReviewGroup) => new BookResponse
+            {
+                Id = book.Id,
+                Description = book.Description,
+                Title  = book.Title,
+                Author = book.Author,
+                Quantity = book.Quantity,
+                Available = book.Available,
+                ImageUrl = book.ImageUrl,
+                Category = new BookCategoryResponse()
+                {
+                    Id = book.Category.Id,
+                    Name = book.Category.Name
+                },
+                NumberOfReview = bookReviewGroup.Count(),
+                AverageRating = !bookReviewGroup.Any() ? 0 : Math.Round((decimal)bookReviewGroup.Sum(br => br.Rating)/bookReviewGroup.Count(), 1)
+            }
+        );
 
-        var data = await query.Skip(queryParameters.PageSize * (queryParameters.PageIndex - 1))
-            .Take(queryParameters.PageSize).ToListAsync();
+
+
+        var data = await query.ToListAsync();
+        var tasks = data.Select(async b =>
+        {
+            if (string.IsNullOrEmpty(b.ImageUrl))
+            {
+                b.ImageUrl = DefaultBookImage;
+            }
+            b.ImageUrlSigned = await imageStorageServices.GetPreSignedUrlImage(b.ImageUrl);
+        });
+
+        await Task.WhenAll(tasks);
         return PaginationResult<BookResponse>.Create(queryParameters.PageSize,
-            queryParameters.PageIndex, totalCount, GetBookResponses(data));
+            queryParameters.PageIndex, totalCount, data);
     }
 
     public async Task<Result<BookDetailResponse>> GetByIdAsync(Guid id)
     {
-        var book = await bookRepository.GetByIdAsync(id, "Category");
-        var bookResponse = new BookDetailResponse();
-
-        if (book != null)
+        var book = await bookRepository.GetByIdAsync(id, "Category", "BookReviews");
+        var bookResponse = book!.ToBookDetailResponse();
+        if(bookResponse.SubImagesUrl != null && bookResponse.SubImagesUrl.Any())
         {
-            bookResponse = book.Adapt<BookDetailResponse>();
-            bookResponse.Category = book.Category.Adapt<BookCategoryResponse>();
+            bookResponse.SubImagesUrlSigned = (await Task
+                .WhenAll(bookResponse.SubImagesUrl.Select(GetSignedUrlSubImage)))
+                .ToList();
         }
-
+        if(string.IsNullOrEmpty(bookResponse.ImageUrl))
+        {
+            bookResponse.ImageUrl = DefaultBookImage;
+        }
+        bookResponse.ImageUrlSigned = await GetSignedUrlSubImage(bookResponse.ImageUrl);
         return bookResponse;
     }
 
@@ -54,9 +95,17 @@ public class BookServices(IBookRepository bookRepository,
         {
             return Result<string>.Failure(400, BookErrors.BookCanNotCreateDueToInvalidCategory);
         }
+        List<string>? imagesSubUrl = new();
+        if(request.SubImagesUrl != null && request.SubImagesUrl.Any())
+        {
+            imagesSubUrl = (await Task.WhenAll(request.SubImagesUrl.Select(b => imageStorageServices.UploadImageAsync(b))))!.ToList();
+        }
+        string? imageUrl = string.Empty;
+        if(request.ImageUrl != null)
+            imageUrl = await imageStorageServices.UploadImageAsync(request.ImageUrl);
 
         var book = Book.Create(request.Title, request.Description, request.Author, request.Quantity, request.Available,
-            request.CategoryId);
+            request.CategoryId, imageUrl, imagesSubUrl);
 
         bookRepository.Add(book);
         await bookRepository.SaveChangesAsync();
@@ -87,58 +136,50 @@ public class BookServices(IBookRepository bookRepository,
             }
         }
 
-        try
+ 
+        Book.Update(book, request.Title, request.Description, request.Author, request.AddedQuantity,
+            request.CategoryId);
+        if(request.NewImage != null)
         {
-            Book.Update(book, request.Title, request.Description, request.Author, request.AddedQuantity,
-                request.CategoryId);
-            bookRepository.Update(book);
-            await bookRepository.SaveChangesAsync();
-            return BookCommandMessages.BookUpdatedSuccess;
+            if(book.ImageUrl != null)
+            {
+                await imageStorageServices.DeleteImageAsync(book.ImageUrl);
+            }
+            var newImageUrl = await imageStorageServices.UploadImageAsync(request.NewImage);
+            Book.UpdateImageUrl(book, newImageUrl);
         }
-        catch (DbUpdateConcurrencyException exception)
+        if(request.SubImagesUrl != null && request.SubImagesUrl.Any())
         {
-            try
-            {
+            var imageDeletedUrl = book.SubImagesUrl!.Where(i => !request.SubImagesUrl?.Contains(i) ?? true).ToList();
+            await Task.WhenAll(imageDeletedUrl.Select(u => imageStorageServices.DeleteImageAsync(u)));
+            Book.UpdateSubImagesUrl(book, request.SubImagesUrl);
+        }   
+        
+        if (request.NewSubImages != null && request.NewSubImages.Any())
+        {
 
-                foreach (var entry in exception.Entries)
-                {
-                    if (entry.Entity is Book)
-                    {
-                        var dbValues = await entry.GetDatabaseValuesAsync();
-                        entry.OriginalValues.SetValues(dbValues);
-                    }
-                }
-                book = await bookRepository.GetByIdAsync(request.Id, "Category");
-                if (book == null)
-                {
-                    return Result<string>.Failure(400, BookErrors.BookCanNotFound);
-                }
-                if (book.Available + request.AddedQuantity < 0)
-                {
-                    return Result<string>.Failure(400, BookErrors.BookQuantityAddedInvalid);
-                }
-                if (book.Category.Id != request.CategoryId)
-                {
-                    var category = await categoryRepository.GetByIdAsync(request.CategoryId);
+            var newSubImagesUrl = (await Task.WhenAll(request.NewSubImages.Select(u => imageStorageServices.UploadImageAsync(u)))).ToList();
 
-                    if (category == null)
-                    {
-                        return Result<string>.Failure(400, BookErrors.BookCanNotUpdateDueToInvalidCategory);
-                    }
-                }
-                Book.Update(book, request.Title, request.Description, request.Author, request.AddedQuantity,
-                    request.CategoryId);
-                bookRepository.Update(book);
-                await bookRepository.SaveChangesAsync();
-                return BookCommandMessages.BookUpdatedSuccess;
+            var totalImage = (request.SubImagesUrl?.Count ?? 0) + (request.NewSubImages.Count);
+            var newPositions = new HashSet<int>(request.NewSubImagesPos!);
 
-            }
-            catch
-            {
-                return Result<string>.Failure(400, UserErrors.ErrorOccurWhenUpdateBookBorrowingRequest);
-            }
+            var finalSubImagesUrl = Enumerable
+                .Range(0, totalImage)
+                .Select(i =>
+                {
+                    var countNewBefore = request.NewSubImagesPos!
+                        .Count(p => p < i);
+                    return newPositions.Contains(i)
+                        ? newSubImagesUrl[countNewBefore]
+                        : book.SubImagesUrl![i - countNewBefore];
+                })
+                .ToList();
+            Book.UpdateSubImagesUrl(book, finalSubImagesUrl);
         }
-
+        bookRepository.Update(book);
+        await bookRepository.SaveChangesAsync();
+        return BookCommandMessages.BookUpdatedSuccess;
+        
         
     }
 
@@ -154,22 +195,12 @@ public class BookServices(IBookRepository bookRepository,
         {
             return Result<string>.Failure(400, BookErrors.BookCanNotDeletedDueToExistsBorrowRequest);
         }
-
         book.IsDeleted = true;
         bookRepository.Update(book);
         await bookRepository.SaveChangesAsync();
         return BookCommandMessages.BookDeletedSuccess;
     }
 
-    private static List<BookResponse> GetBookResponses(List<Book> books)
-    {
-        return books.Select(b =>
-        {
-            var bookResponse = b.Adapt<BookResponse>();
-            bookResponse.Category = b.Category.Adapt<BookCategoryResponse>();
-            return bookResponse;
-        }).ToList();
-    }
 
     public async Task<Result<List<BookDetailResponse>>> GetByIdsAsync(string ids)
     {
@@ -189,6 +220,11 @@ public class BookServices(IBookRepository bookRepository,
         var books = await bookRepository.GetByIdsAsync(bookIds);
 
         return books.ToBookDetailResponses();
+    }
+
+    public Task<string> GetSignedUrlSubImage(string subImageKey)
+    {
+        return imageStorageServices.GetPreSignedUrlImage(subImageKey);
     }
 
 }

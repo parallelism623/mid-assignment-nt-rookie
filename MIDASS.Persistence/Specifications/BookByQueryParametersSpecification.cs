@@ -11,8 +11,13 @@ public class BookByQueryParametersSpecification : Specification<Book, Guid>
                                                                          || b.Author.Contains(queryParameters.Search)
                                                                          || b.Category.Name.Contains(queryParameters.Search))) 
                     && (queryParameters.Ids.Count == 0 
-                    || queryParameters.Ids.Contains(b.Id)))
+                    || queryParameters.Ids.Contains(b.Id))
+                    && (queryParameters.CategoryIds == null || (queryParameters.CategoryIds.Contains(b.CategoryId)))
+                    && ((b.BookReviews!.Any() ? (b.BookReviews!.Sum(br => br.Rating)/ b.BookReviews!.Count) : 0) >= queryParameters.Rating))
     {
         AddInclude(b => b.Category);
+        AddOrderByDescending(b => b.CreatedAt);
+
     }
+
 }

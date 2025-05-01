@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.EntityFrameworkCore;
 using MIDASS.Domain.Entities;
 using MIDASS.Domain.Repositories;
 
@@ -11,4 +12,5 @@ public class BookBorrowingRequestDetailRepository
     public BookBorrowingRequestDetailRepository(ApplicationDbContext context) : base(context)
     {
     }
+
 }

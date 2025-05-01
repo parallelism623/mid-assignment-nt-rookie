@@ -54,7 +54,7 @@ public class Result<T> : Result
         return new(data, statusCode, true);
     }
 
-    public static Result<T> Failure(int statusCode = 400, params Error[] errors)
+    public new static Result<T> Failure(int statusCode = 400, params Error[] errors)
     {
         return new(statusCode, errors);
     }

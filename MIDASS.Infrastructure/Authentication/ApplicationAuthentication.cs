@@ -105,7 +105,7 @@ public class ApplicationAuthentication : BaseAuthentication, IApplicationAuthent
         _userRepository.Add(newUser);
         await _userRepository.SaveChangesAsync();
  
-        await SendEmailConfirmCode(user);
+        await SendEmailConfirmCode(newUser!);
         
         return newUser;
     }

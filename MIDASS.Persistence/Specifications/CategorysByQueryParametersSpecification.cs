@@ -10,5 +10,6 @@ public class CategoryByQueryParametersSpecification : Specification<Category, Gu
                     (!string.IsNullOrEmpty(c.Description) && c.Description.Contains(queryParameters.Search)))
     {
         AddInclude(c => c.Books!);
+        AddOrderByDescending(c => c.CreatedAt);
     }
 }

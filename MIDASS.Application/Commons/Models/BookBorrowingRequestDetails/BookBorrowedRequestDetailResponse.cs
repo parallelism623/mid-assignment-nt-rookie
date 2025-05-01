@@ -15,5 +15,4 @@ public class BookBorrowedRequestDetailResponse
     public string? Noted { get; set; }
     public int ExtendDueDateTimes { get; set; }
     public DateOnly? ExtendDueDate { get; set; }
-
 }

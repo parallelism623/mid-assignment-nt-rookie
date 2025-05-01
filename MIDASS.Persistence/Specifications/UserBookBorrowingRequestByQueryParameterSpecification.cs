@@ -11,5 +11,6 @@ public class UserBookBorrowingRequestByQueryParameterSpecification : Specificati
     {
         AddInclude(b => b.Approver!);
         AddInclude(b => b.BookBorrowingRequestDetails);
+        AddOrderByDescending(b => b.CreatedAt);
     }
 }

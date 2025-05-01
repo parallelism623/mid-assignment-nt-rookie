@@ -17,5 +17,20 @@ public class BookReview : AuditableEntity, IEntity<Guid>
     public int Rating { get; set; }
     public string? Content { get; set; } = default!;
     public string Title { get; set; } = default!;
+    public DateOnly DateReview { get; set; } = default!;
     public bool IsDeleted { get; set; } 
+
+
+    public static BookReview Create(Guid reviewerId, Guid bookId, string title, string? content, DateOnly dateReview, int rating)
+    {
+        return new()
+        {
+            ReviewerId = reviewerId,
+            BookId = bookId,
+            Title = title,
+            Content = content,
+            DateReview = dateReview,
+            Rating = rating
+        };
+    }
 }

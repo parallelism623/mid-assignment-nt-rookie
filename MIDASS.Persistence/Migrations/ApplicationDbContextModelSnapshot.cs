@@ -46,7 +46,6 @@ namespace MIDASS.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
@@ -65,7 +64,7 @@ namespace MIDASS.Persistence.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
-                    b.PrimitiveCollection<string>("SubImagesUrl")
+                    b.Property<string>("SubImagesUrl")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<byte[]>("TimeStamp")
@@ -182,7 +181,8 @@ namespace MIDASS.Persistence.Migrations
 
             modelBuilder.Entity("MIDASS.Domain.Entities.BookReview", b =>
                 {
-                    b.Property<Guid>("ReviewerId")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("BookId")
@@ -198,8 +198,8 @@ namespace MIDASS.Persistence.Migrations
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<DateOnly>("DateReview")
+                        .HasColumnType("date");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -213,14 +213,19 @@ namespace MIDASS.Persistence.Migrations
                     b.Property<int>("Rating")
                         .HasColumnType("int");
 
+                    b.Property<Guid>("ReviewerId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
-                    b.HasKey("ReviewerId");
+                    b.HasKey("Id");
 
                     b.HasIndex("BookId");
+
+                    b.HasIndex("ReviewerId");
 
                     b.ToTable("BookReviews");
                 });

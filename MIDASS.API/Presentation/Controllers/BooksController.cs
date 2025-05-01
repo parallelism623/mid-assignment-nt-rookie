@@ -30,7 +30,7 @@ public class BooksController(IBookServices bookServices)
 
     [HttpPost]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> CreateAsync([FromBody] BookCreateRequest request)
+    public async Task<IActionResult> CreateAsync([FromForm] BookCreateRequest request)
     {
         var result = await bookServices.CreateAsync(request);
 
@@ -39,7 +39,7 @@ public class BooksController(IBookServices bookServices)
 
     [HttpPut]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> UpdateAsync([FromBody] BookUpdateRequest request)
+    public async Task<IActionResult> UpdateAsync([FromForm] BookUpdateRequest request)
     {
         var result = await bookServices.UpdateAsync(request);
 
@@ -55,4 +55,5 @@ public class BooksController(IBookServices bookServices)
 
         return ProcessResult(result);
     }
+
 }

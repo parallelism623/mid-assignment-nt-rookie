@@ -21,6 +21,39 @@
           "MIDASS.API.dll": {}
         }
       },
+      "AWSSDK.Core/4.0.0": {
+        "runtime": {
+          "lib/net8.0/AWSSDK.Core.dll": {
+            "assemblyVersion": "4.0.0.0",
+            "fileVersion": "4.0.0.0"
+          }
+        }
+      },
+      "AWSSDK.Extensions.NETCore.Setup/4.0.0": {
+        "dependencies": {
+          "AWSSDK.Core": "4.0.0",
+          "Microsoft.Extensions.Configuration.Abstractions": "9.0.4",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.4",
+          "Microsoft.Extensions.Logging.Abstractions": "9.0.4"
+        },
+        "runtime": {
+          "lib/net8.0/AWSSDK.Extensions.NETCore.Setup.dll": {
+            "assemblyVersion": "4.0.0.0",
+            "fileVersion": "4.0.0.0"
+          }
+        }
+      },
+      "AWSSDK.S3/4.0.0": {
+        "dependencies": {
+          "AWSSDK.Core": "4.0.0"
+        },
+        "runtime": {
+          "lib/net8.0/AWSSDK.S3.dll": {
+            "assemblyVersion": "4.0.0.0",
+            "fileVersion": "4.0.0.0"
+          }
+        }
+      },
       "Azure.Core/1.38.0": {
         "dependencies": {
           "Microsoft.Bcl.AsyncInterfaces": "7.0.0",
@@ -1589,6 +1622,8 @@
       },
       "MIDASS.Infrastructure/1.0.0": {
         "dependencies": {
+          "AWSSDK.Extensions.NETCore.Setup": "4.0.0",
+          "AWSSDK.S3": "4.0.0",
           "Hangfire.AspNetCore": "1.8.18",
           "Hangfire.Core": "1.8.18",
           "Hangfire.SqlServer": "1.8.18",
@@ -1608,6 +1643,7 @@
       },
       "MIDASS.Persistence/1.0.0": {
         "dependencies": {
+          "AWSSDK.S3": "4.0.0",
           "MIDASS.Application": "1.0.0",
           "MIDASS.Domain": "1.0.0",
           "MIDASS.Infrastructure": "1.0.0",
@@ -1631,6 +1667,27 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "AWSSDK.Core/4.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-fUQeMoO358Gy/XhG7jphvY+ga4gUUonR7qc9rBAU0lXFJmSsaHVXFkhLi7+YxrhqIF/H4lWzr3SQ6rVHhSDM3w==",
+      "path": "awssdk.core/4.0.0",
+      "hashPath": "awssdk.core.4.0.0.nupkg.sha512"
+    },
+    "AWSSDK.Extensions.NETCore.Setup/4.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-VJP+y186CTC8NSadjzLGIjJ2TNUOps9QR9QyWMkPHdmLX8HlMiS8Bp8mESJ+MnZupvZ5z5KB9sF42lSEHo9lgQ==",
+      "path": "awssdk.extensions.netcore.setup/4.0.0",
+      "hashPath": "awssdk.extensions.netcore.setup.4.0.0.nupkg.sha512"
+    },
+    "AWSSDK.S3/4.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-21cGxvFYCrEmlBN2TFWMj2GuuEs9UDmWtpobnfl+4sGWHpEv1ncrbSTtuJPpTzwapU5oW3+GUCQAzczSPlYOSA==",
+      "path": "awssdk.s3/4.0.0",
+      "hashPath": "awssdk.s3.4.0.0.nupkg.sha512"
     },
     "Azure.Core/1.38.0": {
       "type": "package",

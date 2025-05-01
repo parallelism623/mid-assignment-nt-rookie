@@ -38,7 +38,7 @@ public class BookBorrowingRequestServices(
 
         int totalCount = await query.CountAsync();
 
-        List<BookBorrowingRequestData> data = await query.Skip(pageSize * (pageIndex - 1)).Take(pageSize)
+        List<BookBorrowingRequestData> data = await query.OrderByDescending(b => b.DateRequested).Skip(pageSize * (pageIndex - 1)).Take(pageSize)
             .Select(p => p.ToBookBorrowingRequestData())
             .ToListAsync();
 

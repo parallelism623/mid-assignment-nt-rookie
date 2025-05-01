@@ -9,7 +9,7 @@ public class Book : AuditableEntity, IEntity<Guid>
 {
     public Guid Id { get; set; }
     public string Title { get; set; } = default!;
-    public string Description { get; set; } = default!;
+    public string? Description { get; set; } = default!;
     public string Author { get; set; } = default!;
     public int Quantity { get; set; }
     public int Available { get;set; }
@@ -20,11 +20,11 @@ public class Book : AuditableEntity, IEntity<Guid>
     public string? ImageUrl { get; set; }
     public List<string>? SubImagesUrl { get; set; }
     [Timestamp]
-    public byte[] TimeStamp { get; set; } = default;
+    public byte[] TimeStamp { get; set; } = default!;
     public virtual ICollection<BookBorrowingRequestDetail>? BookBorrowingRequestDetails { get; set; }
     public virtual ICollection<BookReview>? BookReviews { get; set; }
 
-    public static Book Create(string title, string description, string author, int quantity, int available, Guid categoryId)
+    public static Book Create(string title, string description, string author, int quantity, int available, Guid categoryId, string? imageUrl, List<string>? subImagesUrl)
     {
         var book = new Book();
         book.Title = title;
@@ -32,6 +32,8 @@ public class Book : AuditableEntity, IEntity<Guid>
         book.Author = author;
         book.Available = available;
         book.Quantity = quantity;
+        book.ImageUrl = imageUrl;
+        book.SubImagesUrl = subImagesUrl;
         book.CategoryId = categoryId;
         return book;
     }
@@ -44,5 +46,14 @@ public class Book : AuditableEntity, IEntity<Guid>
         book.Quantity += addedQuantity;
         book.Available += addedQuantity;
         book.CategoryId = categoryId;
+    }
+
+    public static void UpdateImageUrl(Book book, string imageUrl)
+    {
+        book.ImageUrl = imageUrl;
+    }
+    public static void UpdateSubImagesUrl(Book book, List<string> subImagesUrl)
+    {
+        book.SubImagesUrl = subImagesUrl;
     }
 }

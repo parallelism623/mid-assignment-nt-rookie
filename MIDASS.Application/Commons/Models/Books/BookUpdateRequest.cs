@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Microsoft.AspNetCore.Http;
 using MIDASS.Contract.Messages.Validations;
 using MIDASS.Domain.Constrants;
 
@@ -14,6 +15,9 @@ public class BookUpdateRequest
     public int AddedQuantity { get; set; }
     public string? ImageUrl { get; set; }
     public List<string>? SubImagesUrl { get; set; }
+    public IFormFile? NewImage { get; set; }
+    public List<IFormFile>? NewSubImages { get; set; }
+    public List<int>? NewSubImagesPos { get; set; }
     public Guid CategoryId { get; set; }
 }
 

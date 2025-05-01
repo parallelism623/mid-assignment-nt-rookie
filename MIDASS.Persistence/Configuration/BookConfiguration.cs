@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using MIDASS.Domain.Constrants;
 using MIDASS.Domain.Entities;
-using System.Reflection.Emit;
 
 namespace MIDASS.Persistence.Configuration;
 
@@ -23,5 +22,17 @@ public class BookConfiguration : IEntityTypeConfiguration<Book>
         builder.Property(b => b.Author)
             .HasMaxLength(BookValidationRules.MaxLengthAuthor);
         builder.HasIndex(b => b.CategoryId);
+
+        builder.Property(o => o.SubImagesUrl)
+            .HasConversion(
+                v => v == null
+                    ? null
+                    : string.Join(";-;", v),
+                v => string.IsNullOrEmpty(v)
+                    ? new List<string>()
+                    : v.Split(new[] { ";-;" }, StringSplitOptions.None)
+                .ToList()
+            ); 
+
     }
 }
