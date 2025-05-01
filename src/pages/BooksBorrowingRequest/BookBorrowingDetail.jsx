@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router";
 import { Modal, Table, Tooltip, Tag } from "antd";
 import { FiCheck, FiX, FiSlash } from "react-icons/fi";
 import { booksBorrowingRequestServices } from "../../services/booksBorrowingRequestServices";
 import { booksBorrowingRequestStatus } from "../../constants/booksBorrowingRequestStatus";
 import dayjs from "dayjs";
+import { routesPath } from "../../constants/routesPath";
 const { Column } = Table;
 const BookBorrowingDetail = ({
   bookBorrowingId,
@@ -84,7 +86,22 @@ const BookBorrowingDetail = ({
             setBooksBorrow([...e]);
           }}
         >
-          <Column title="Title" dataIndex="title" key="title" />
+          <Column
+            title="Title"
+            dataIndex="title"
+            key="title"
+            render={(value, record) => {
+              return (
+                <>
+                  <Link
+                    to={routesPath.bookDetail.replace(":id", record.bookId)}
+                  >
+                    {value}
+                  </Link>
+                </>
+              );
+            }}
+          />
           <Column title="Author" dataIndex="author" key="author" />
           <Column
             title="Category"
@@ -100,16 +117,10 @@ const BookBorrowingDetail = ({
               const today = dayjs().startOf("day");
 
               if (date.isBefore(today, "day")) {
-                return (
-                  <span className="bg-gray-200 p-1 rounded-xl">Overdue</span>
-                );
+                return <Tag color="gray">Overdue</Tag>;
               }
 
-              return (
-                <span className="bg-green-200 p-1 rounded-xl">
-                  {date.format("DD/MM/YYYY")}
-                </span>
-              );
+              return <Tag color="green">{date.format("DD/MM/YYYY")}</Tag>;
             }}
           />
           <Column title="Noted" dataIndex="noted" key="noted" ellipsis></Column>

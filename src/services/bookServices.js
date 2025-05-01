@@ -10,11 +10,16 @@ export const bookServices = {
     });
   },
   deleteById: (id) => axiosClient.delete(`/books/${id}`),
-  update: (bookUpdateModel) => {
-    return axiosClient.put(`/books`, bookUpdateModel);
+  update: (formData) => {
+    return axiosClient.put(`/books`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
   },
   getById: (id) => {
     return axiosClient.get(`/books/${id}`);
   },
-  create: (bookCreateModel) => axiosClient.post(`/books`, bookCreateModel),
+  create: (formData) =>
+    axiosClient.post(`/books`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
 };

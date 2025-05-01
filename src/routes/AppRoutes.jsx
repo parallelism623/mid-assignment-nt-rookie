@@ -14,7 +14,9 @@ import UserInfoCard from "../components/ui/UserInfoCard";
 import Register from "../pages/Register/register";
 import EmailConfirm from "../pages/EmailConfirm/email-confirm";
 import BookBorrowed from "../pages/BookBorrowed/book-borrowed";
-
+import BookDetail from "../pages/Book/BookDetail";
+import ForbiddenPage from "../pages/Forbidden/forbidden";
+import AdminRoutes from "./AdminRoutes";
 export const appRoutes = [
   { path: "*", element: <Navigate to={routesPath.home} replace /> },
   { path: routesPath.signIn, element: <Login /> },
@@ -33,13 +35,23 @@ export const appRoutes = [
         path: routesPath.book,
         element: <Book />,
       },
-      { path: routesPath.bookEdit, element: <BookEdit /> },
-      { path: routesPath.bookCreate, element: <BookCreate /> },
-      { path: routesPath.category, element: <Category /> },
-      { path: routesPath.user, element: <User /> },
+      {
+        element: <AdminRoutes />,
+        children: [
+          { path: routesPath.bookEdit, element: <BookEdit /> },
+          { path: routesPath.bookCreate, element: <BookCreate /> },
+          { path: routesPath.user, element: <User /> },
+          { path: routesPath.category, element: <Category /> },
+        ],
+      },
       { path: routesPath.bookBorrowing, element: <BookBorrowingRequest /> },
       { path: routesPath.userProfile, element: <UserInfoCard /> },
       { path: routesPath.bookBorrowed, element: <BookBorrowed /> },
+      { path: routesPath.bookDetail, element: <BookDetail /> },
     ],
+  },
+  {
+    path: routesPath.forbidden,
+    element: <ForbiddenPage />,
   },
 ];

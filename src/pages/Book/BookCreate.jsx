@@ -5,7 +5,8 @@ import { FiBook, FiUser, FiAlignLeft, FiTag, FiHash } from "react-icons/fi";
 import { bookServices } from "../../services/bookServices";
 import { categoryServices } from "../../services/categoryServices";
 import { validationData } from "../../constants/validationData";
-
+import ImageUpload from "../../components/ui/uploads/image-upload";
+import { imageStorageServices } from "../../services/imageStorageServices";
 const { Option } = Select;
 
 const CreateBook = () => {
@@ -23,11 +24,30 @@ const CreateBook = () => {
   }, []);
 
   const onFinish = (values) => {
-    bookServices.create(values).then(() => navigate(-1));
+    const formData = new FormData();
+
+    formData.append("title", values.title);
+    formData.append("author", values.author);
+    formData.append("description", values.description);
+    formData.append("categoryId", values.categoryId);
+
+    if (values.imageUrl) {
+      formData.append("imageUrl", values.imageUrl);
+    }
+
+    if (!!values.subImagesUrl) {
+      values.subImagesUrl?.forEach((file) => {
+        if (file) {
+          formData.append("subImagesUrl", file);
+        }
+      });
+    }
+
+    bookServices.create(formData).then(() => navigate(-1));
   };
 
   return (
-    <div className="h-fit flex justify-center  p-4">
+    <div className="h-fit flex justify-center p-4">
       <Card
         title={<span className="text-2xl font-bold">Create Book</span>}
         className="w-150 min-h-80 rounded-2xl shadow-lg bg-transparent"
@@ -43,7 +63,7 @@ const CreateBook = () => {
             <Col span={12}>
               <Form.Item
                 name="title"
-                label="* Title"
+                label="Title"
                 rules={[
                   { required: true, message: "Title is required" },
                   {
@@ -62,7 +82,7 @@ const CreateBook = () => {
             <Col span={12}>
               <Form.Item
                 name="author"
-                label="* Author"
+                label="Author"
                 rules={[
                   { required: true, message: "Author is required" },
                   {
@@ -102,7 +122,7 @@ const CreateBook = () => {
             <Col span={12}>
               <Form.Item
                 name="categoryId"
-                label="* Category"
+                label="Category"
                 rules={[{ required: true, message: "Category is required" }]}
               >
                 <Select
@@ -122,18 +142,65 @@ const CreateBook = () => {
           </Row>
 
           <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="quantity" label="Quantity">
-                <InputNumber
-                  min={0}
-                  placeholder="Quantity"
-                  className="w-full rounded-lg"
-                  formatter={(value) => `${value}`}
-                  parser={(value) => value?.replace(/\D/g, "") || ""}
+            <Col span={5}>
+              <Form.Item name="imageUrl" label="Image Url">
+                <ImageUpload
+                  setImage={(file) => {
+                    form.setFieldsValue({ imageUrl: file });
+                  }}
                 />
               </Form.Item>
             </Col>
           </Row>
+          <Form.List name="subImagesUrl">
+            {(fields, { add, remove }) => (
+              <Row gutter={[16, 20]}>
+                {fields.map((field) => {
+                  const { key, name, fieldKey, ...restField } = field;
+
+                  return (
+                    <Col key={key} xs={24} sm={12} md={6}>
+                      <Form.Item
+                        key={name}
+                        name={[name]}
+                        fieldKey={[fieldKey]}
+                        {...restField}
+                        label={`Sub Image ${name + 1}`}
+                        rules={[
+                          {
+                            required: true,
+                            message: "Sub image URL is required",
+                          },
+                        ]}
+                      >
+                        <ImageUpload
+                          setImage={(file) => {
+                            const arr =
+                              form.getFieldValue("subImagesUrl") || [];
+                            arr[name] = file;
+                            form.setFieldsValue({ subImagesUrl: arr });
+                          }}
+                        />
+                      </Form.Item>
+                      <Button
+                        type="link"
+                        onClick={() => remove(name)}
+                        className="text-red-500"
+                      >
+                        Remove
+                      </Button>
+                    </Col>
+                  );
+                })}
+
+                <Col span={6} className="mt-4">
+                  <Button type="dashed" onClick={() => add()} block>
+                    Add Sub Image
+                  </Button>
+                </Col>
+              </Row>
+            )}
+          </Form.List>
 
           <Row justify="end" gutter={8} className="mt-4">
             <Col>

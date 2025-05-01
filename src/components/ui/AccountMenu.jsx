@@ -32,12 +32,11 @@ const AccountMenu = () => {
     "access_token",
     ""
   );
-  const onClickLogout = () => {
-    authenServices.logout().then(() => {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
-      navigate("/signin");
-    });
+  const onClickLogout = async () => {
+    await authenServices.logout();
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    navigate("/signin");
   };
   const accountMenuItem = content(onClickLogout);
   return (

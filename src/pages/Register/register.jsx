@@ -8,13 +8,19 @@ import {
 } from "@ant-design/icons";
 import { authenServices } from "../../services/authenServices";
 import { useNavigate } from "react-router";
+import { useLocalStorage } from "../../components/hooks/useStorage";
 import { validationData } from "../../constants/validationData";
 
 const Register = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
+  const [userEmailConfirm, setUserEmailConfirm] = useLocalStorage(
+    "user-email-confirm",
+    {}
+  );
   const onFinish = (values) => {
     authenServices.register(values).then(() => {
+      setUserEmailConfirm({ ...values });
       navigate("/email-confirm");
     });
   };

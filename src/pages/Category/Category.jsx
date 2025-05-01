@@ -6,6 +6,7 @@ import { FiEdit, FiTrash2, FiEye } from "react-icons/fi";
 import CategoryEdit from "./CategoryEdit";
 import CreateCategory from "./CreataCategory";
 import CategoryDetail from "./CategoryDetail";
+import ConfirmModal from "../../components/ui/ConfirmModal";
 const { Column } = Table;
 
 const Category = () => {
@@ -14,6 +15,8 @@ const Category = () => {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [categoryEditingId, setCategoryEditingId] = useState(null);
+  const [openDeleteConfirmModal, setOpenDeleteConfirmModal] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [categoryViewDetailId, setCategoryViewDetailId] = useState(null);
   const [queryParameters, setQueryParameters] = useState({
     ...defaultQueryParameters,
@@ -54,17 +57,6 @@ const Category = () => {
     setCategoryEditingId(id);
     setModalVisible(true);
   };
-  const handleOnDelete = (id) => {
-    categoryServices.delete(id).then((res) => {
-      setQueryParameters({
-        ...queryParameters,
-        totalCount: queryParameters.totalCount - 1,
-      });
-    });
-  };
-  const handleViewDetail = (id) => {
-    setCategoryViewDetailId(id);
-  };
 
   const handlePageChange = (pageIndex, pageSize) => {
     setQueryParameters({
@@ -98,154 +90,181 @@ const Category = () => {
   const onCancelCreateForm = () => {
     setOpenCreateCategoryForm(false);
   };
+  const handleOnClickDeleteButton = (record) => {
+    setSelectedCategory(record);
+    setOpenDeleteConfirmModal(true);
+  };
+  const handleOnCancelDeleteForm = () => {
+    setSelectedCategory(null);
+    setOpenDeleteConfirmModal(false);
+  };
+  const handleOnSubmitDelete = () => {
+    categoryServices.delete(selectedCategory.id).then((res) => {
+      setQueryParameters({
+        ...queryParameters,
+        totalCount: queryParameters.totalCount - 1,
+      });
+    });
+  };
+  const handleViewDetail = (id) => {
+    setCategoryViewDetailId(id);
+  };
   return (
-    <div className="flex gap-4 p-4">
-      <div className="flex-1 overflow">
-        {modalVisible && (
-          <CategoryEdit
-            visible={modalVisible}
-            confirmLoading={saving}
-            onCancel={() => {
-              setModalVisible(false);
-              setCategoryEditingId(null);
-            }}
-            categoryId={categoryEditingId}
-            onSave={handleOnSaveCategory}
-          />
-        )}
-        {openCreateCategoryForm && (
-          <CreateCategory
-            onCancel={onCancelCreateForm}
-            onSubmit={onSubmitCreateForm}
-          />
-        )}
-        {!!categoryViewDetailId && (
-          <CategoryDetail
-            categoryId={categoryViewDetailId}
-            onCancel={() => {
-              setCategoryViewDetailId(null);
-            }}
-          />
-        )}
-        <Card
-          extra={
-            <Row className="flex items-center justify-between gap-1.5 overflow-x-hidden">
-              <Col>
-                <Button
-                  onClick={() => setOpenCreateCategoryForm(true)}
-                  className="create-book-button"
-                >
-                  Create Category
-                </Button>
-              </Col>
-            </Row>
-          }
-          title="Categories"
-          className="book-list-card be-vietnam-pro-regular"
-        >
-          <Table
-            dataSource={categories}
-            rowKey="id"
-            loading={loading}
-            pagination={{
-              current: queryParameters.pageIndex,
-              total: queryParameters.totalCount,
-              pageSize: queryParameters.pageSize,
-              showSizeChanger: true,
-              pageSizeOptions: [5, 10, 20, 50],
-              showTotal: (total, [start, end]) =>
-                `From ${start} to ${end} items of ${total}`,
-              onChange: (pageIndex, pageSize) => {
-                handlePageChange(pageIndex, pageSize);
-              },
-            }}
-            bordered
-          >
-            <Column
-              onHeaderCell={() => ({
-                className: "be-vietnam-pro-medium",
-              })}
-              title="Name"
-              dataIndex="name"
-              key="name"
-              ellipsis
-            />
-            <Column
-              title="Description"
-              dataIndex="description"
-              key="description"
-              ellipsis
-            />
-            <Column
-              onHeaderCell={() => ({
-                className: "be-vietnam-pro-medium",
-              })}
-              title="Quantity"
-              dataIndex="quantityBooks"
-              key="quantityBooks"
-              render={(value) => {
-                return <Tag color="yellow">{value}</Tag>;
+    <>
+      {openDeleteConfirmModal && (
+        <ConfirmModal
+          visitable={openDeleteConfirmModal}
+          title={"Confirm Category Deletion"}
+          message={`Are you sure you want to delete the category ${selectedCategory.name}? This action cannot be undone`}
+          onCancel={handleOnCancelDeleteForm}
+          onSubmit={handleOnSubmitDelete}
+        />
+      )}
+      <div className="flex gap-4 p-4">
+        <div className="flex-1 overflow">
+          {modalVisible && (
+            <CategoryEdit
+              visible={modalVisible}
+              confirmLoading={saving}
+              onCancel={() => {
+                setModalVisible(false);
+                setCategoryEditingId(null);
               }}
-              align="center"
+              categoryId={categoryEditingId}
+              onSave={handleOnSaveCategory}
             />
-            <Column
-              onHeaderCell={() => ({
-                className: "be-vietnam-pro-medium",
-              })}
-              title="Available"
-              dataIndex="availableBooks"
-              key="availableBooks"
-              render={(value) => {
-                return <Tag color="green">{value}</Tag>;
+          )}
+          {openCreateCategoryForm && (
+            <CreateCategory
+              onCancel={onCancelCreateForm}
+              onSubmit={onSubmitCreateForm}
+            />
+          )}
+          {!!categoryViewDetailId && (
+            <CategoryDetail
+              categoryId={categoryViewDetailId}
+              onCancel={() => {
+                setCategoryViewDetailId(null);
               }}
-              align="center"
             />
-            <Column
-              onHeaderCell={() => ({
-                className: "be-vietnam-pro-medium",
-              })}
-              title="Action"
-              key="action"
-              render={(_, record) => (
-                <div className="flex gap-2">
-                  <Tooltip title="Edit">
-                    <button
-                      onClick={() => handleOnEdit(record.id)}
-                      className="p-2 rounded-lg bg-blue-200 text-blue-800 hover:bg-blue-300 transition"
-                    >
-                      <FiEdit size={18} />
-                    </button>
-                  </Tooltip>
-                  <Popconfirm
-                    title="Do you want to delete this category?"
-                    onConfirm={() => handleOnDelete(record.id)}
-                    onCancel={() => {}}
-                    okText="Delete"
-                    cancelText="Cancel"
-                    placement="topRight"
+          )}
+          <Card
+            extra={
+              <Row className="flex items-center justify-between gap-1.5 overflow-x-hidden">
+                <Col>
+                  <Button
+                    onClick={() => setOpenCreateCategoryForm(true)}
+                    className="create-book-button"
                   >
+                    Create Category
+                  </Button>
+                </Col>
+              </Row>
+            }
+            title="Categories"
+            className="book-list-card be-vietnam-pro-regular"
+          >
+            <Table
+              dataSource={categories}
+              rowKey="id"
+              loading={loading}
+              pagination={{
+                current: queryParameters.pageIndex,
+                total: queryParameters.totalCount,
+                pageSize: queryParameters.pageSize,
+                showSizeChanger: true,
+                pageSizeOptions: [5, 10, 20, 50],
+                showTotal: (total, [start, end]) =>
+                  `From ${start} to ${end} items of ${total}`,
+                onChange: (pageIndex, pageSize) => {
+                  handlePageChange(pageIndex, pageSize);
+                },
+              }}
+              bordered
+            >
+              <Column
+                onHeaderCell={() => ({
+                  className: "be-vietnam-pro-medium",
+                })}
+                title="Name"
+                dataIndex="name"
+                key="name"
+                ellipsis
+              />
+              <Column
+                title="Description"
+                dataIndex="description"
+                key="description"
+                ellipsis
+              />
+              <Column
+                onHeaderCell={() => ({
+                  className: "be-vietnam-pro-medium",
+                })}
+                title="Quantity"
+                dataIndex="quantityBooks"
+                key="quantityBooks"
+                render={(value) => {
+                  return <Tag color="yellow">{value}</Tag>;
+                }}
+                align="center"
+              />
+              <Column
+                onHeaderCell={() => ({
+                  className: "be-vietnam-pro-medium",
+                })}
+                title="Available"
+                dataIndex="availableBooks"
+                key="availableBooks"
+                render={(value) => {
+                  return <Tag color="green">{value}</Tag>;
+                }}
+                align="center"
+              />
+              <Column
+                onHeaderCell={() => ({
+                  className: "be-vietnam-pro-medium",
+                })}
+                title="Action"
+                key="action"
+                render={(_, record) => (
+                  <div className="flex gap-2">
+                    <Tooltip title="Edit">
+                      <button
+                        onClick={() => handleOnEdit(record.id)}
+                        className="p-2 rounded-lg bg-blue-200 text-blue-800 hover:bg-blue-300 transition"
+                      >
+                        <FiEdit size={18} />
+                      </button>
+                    </Tooltip>
+
                     <Tooltip title="Delete">
-                      <button className="p-2 rounded-lg bg-red-300 text-red-800 hover:bg-red-400 transition">
+                      <button
+                        onClick={() => {
+                          handleOnClickDeleteButton(record);
+                        }}
+                        className="p-2 rounded-lg bg-red-300 text-red-800 hover:bg-red-400 transition"
+                      >
                         <FiTrash2 size={18} />
                       </button>
                     </Tooltip>
-                  </Popconfirm>
 
-                  <Tooltip title="Detail">
-                    <button
-                      onClick={() => handleViewDetail(record.id)}
-                      className="p-2 rounded-lg bg-emerald-300 text-emerald-800 hover:bg-emerald-400 transition"
-                    >
-                      <FiEye size={18} />
-                    </button>
-                  </Tooltip>
-                </div>
-              )}
-            />
-          </Table>
-        </Card>
+                    <Tooltip title="Detail">
+                      <button
+                        onClick={() => handleViewDetail(record.id)}
+                        className="p-2 rounded-lg bg-emerald-300 text-emerald-800 hover:bg-emerald-400 transition"
+                      >
+                        <FiEye size={18} />
+                      </button>
+                    </Tooltip>
+                  </div>
+                )}
+              />
+            </Table>
+          </Card>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

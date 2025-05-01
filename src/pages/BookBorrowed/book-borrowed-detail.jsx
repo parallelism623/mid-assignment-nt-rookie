@@ -15,7 +15,8 @@ import {
 import dayjs from "dayjs";
 import { environment } from "../../constants/environment";
 import { validationData } from "../../constants/validationData";
-
+import { Link } from "react-router";
+import { routesPath } from "../../constants/routesPath";
 const BookBorrowedDetail = ({
   visible,
   onCancel,
@@ -29,6 +30,7 @@ const BookBorrowedDetail = ({
 
   const {
     book: {
+      id,
       title,
       author,
       category: { name: categoryName },
@@ -97,7 +99,9 @@ const BookBorrowedDetail = ({
               <FiBook className="mr-2 text-lg" />
               Title:
             </div>
-            <div className="text-gray-800">{title}</div>
+            <div className="text-gray-800">
+              <Link to={routesPath.bookDetail.replace(":id", id)}>{title}</Link>
+            </div>
 
             <div className="flex items-center text-gray-600">
               <FiUser className="mr-2 text-lg" />

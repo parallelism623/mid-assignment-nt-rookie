@@ -1,6 +1,6 @@
 import { environment } from "../../constants/environment";
 import { useUserContext } from "../../routes/ProtectedRoute";
-import { Table, Card, Tooltip } from "antd";
+import { Table, Card, Tooltip, Tag } from "antd";
 import { FiCheck, FiX, FiEye } from "react-icons/fi";
 import { useState, useEffect } from "react";
 import { defaultQueryParameters } from "../../constants/queryParameters";
@@ -178,9 +178,7 @@ const BookBorrowingRequest = () => {
             width={170}
             align={"center"}
             render={(booksBorrowingNumber) => (
-              <div className="inline-block px-3 py-1 rounded-lg bg-blue-200 text-blue-800 font-medium">
-                {booksBorrowingNumber}
-              </div>
+              <Tag color="blue">{booksBorrowingNumber}</Tag>
             )}
           />
           <Column
@@ -192,38 +190,29 @@ const BookBorrowingRequest = () => {
               className: "be-vietnam-pro-medium",
             })}
             render={(status) => {
-              let bgClass = "";
-              let text = "";
+              let color = "default";
+              let text = "Unknown";
 
               switch (status) {
                 case 0:
-                  bgClass = "bg-yellow-200 text-yellow-800";
+                  color = "warning";
                   text = "Waiting";
                   break;
                 case 1:
-                  bgClass = "bg-green-300 text-green-800";
+                  color = "success";
                   text = "Approved";
                   break;
                 case 2:
-                  bgClass = "bg-red-300 text-red-800";
+                  color = "error";
                   text = "Rejected";
                   break;
                 case 3:
-                  bgClass = "bg-gray-200 text-gray-800";
+                  color = "gray";
                   text = "Overdue";
                   break;
-                default:
-                  bgClass = "bg-gray-200 text-gray-800";
-                  text = "Unknown";
               }
 
-              return (
-                <div
-                  className={`px-3 py-1 rounded-lg font-medium inline-block ${bgClass}`}
-                >
-                  {text}
-                </div>
-              );
+              return <Tag color={color}>{text}</Tag>;
             }}
           />
 

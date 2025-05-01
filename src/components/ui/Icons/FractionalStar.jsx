@@ -1,6 +1,6 @@
 import React from "react";
 import { FiStar } from "react-icons/fi";
-
+import { FaStar } from "react-icons/fa6";
 const FractionalStar = ({ rating, size = 24 }) => {
   const pct = (Math.max(0, Math.min(5, rating)) / 5) * 100;
 
@@ -15,7 +15,7 @@ const FractionalStar = ({ rating, size = 24 }) => {
         className="absolute top-0 left-0 overflow-hidden"
         style={{ width: `${pct}%`, height: size }}
       >
-        <FiStar size={size} className="text-yellow-400" />
+        <FaStar size={size} className="text-yellow-400" />
       </span>
     </span>
   );

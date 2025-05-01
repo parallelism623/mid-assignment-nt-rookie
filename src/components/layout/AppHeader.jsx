@@ -2,46 +2,55 @@ import { Layout, Menu, Row, Col } from "antd";
 import { MenuOutlined } from "@ant-design/icons";
 import { FaBook, FaClipboardList, FaHistory } from "react-icons/fa";
 import { useNavigate } from "react-router";
+import { TbBasketFilled } from "react-icons/tb";
 import "../../assets/styles/AppHeaderStyle.css";
 import AccountMenu from "./../ui/AccountMenu";
-
+import { useLocalStorage } from "../hooks/useStorage";
+import { useUserContext } from "../../routes/ProtectedRoute";
+import { environment } from "../../constants/environment";
 const { Header } = Layout;
-const headerNav = [
-  {
-    key: "dashboard",
-    label: "Dashboard",
-    className: "header-nav-item be-vietnam-pro-light",
-  },
-  {
-    key: "categories",
-    label: "Category",
-    className: "be-vietnam-pro-light header-nav-item",
-  },
-  {
-    key: "books",
-    label: "Book",
-    className: "be-vietnam-pro-light header-nav-item",
-    children: [
-      { key: "/books", label: "All Books", icon: <FaBook /> },
-      {
-        key: "/books-borrowing",
-        label: "Books Borrowing Request",
-        icon: <FaClipboardList />,
-      },
-      { key: "/book-borrowed", label: "Book Borrowed", icon: <FaHistory /> },
-    ],
-  },
-  {
-    key: "users",
-    label: "User",
-    className: "be-vietnam-pro-light header-nav-item",
-  },
-];
+
 const AppHeader = () => {
   const navigate = useNavigate();
   const handleClickNav = ({ key }) => {
     navigate(key);
   };
+  const { roleName } = useUserContext();
+  const headerNav = [
+    {
+      key: "dashboard",
+      label: "Dashboard",
+      className: "header-nav-item be-vietnam-pro-light",
+      visible: true,
+    },
+    {
+      key: "categories",
+      label: "Category",
+      className: "be-vietnam-pro-light header-nav-item",
+      visible: roleName === environment.adminRole,
+    },
+    {
+      key: "books",
+      label: "Book",
+      className: "be-vietnam-pro-light header-nav-item",
+      children: [
+        { key: "/books", label: "All Books", icon: <FaBook /> },
+        {
+          key: "/books-borrowing",
+          label: "Books Borrowing Request",
+          icon: <FaClipboardList />,
+        },
+        { key: "/book-borrowed", label: "Book Borrowed", icon: <FaHistory /> },
+      ],
+      visible: true,
+    },
+    {
+      key: "users",
+      label: "User",
+      visible: roleName === environment.adminRole,
+      className: "be-vietnam-pro-light header-nav-item",
+    },
+  ];
   return (
     <>
       <Header className="app-header">
@@ -80,7 +89,7 @@ const AppHeader = () => {
               }}
               mode="horizontal"
               defaultSelectedKeys={["home"]}
-              items={headerNav}
+              items={headerNav.filter((hn) => hn.visible === true)}
             />
           </Col>
           <Col span={5}>

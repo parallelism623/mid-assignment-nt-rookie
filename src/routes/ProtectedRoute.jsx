@@ -34,9 +34,8 @@ const ProtectedRoutes = (props) => {
   const refreshUser = () => {
     const tokenDecode = jwtServices.decode(accessToken);
     const sid = tokenDecode?.sid;
-    if (!sid) {
-      localStorage.removeItem("access_token");
-      return navigate("/signin");
+    if (!accessToken || !tokenDecode) {
+      navigate("/signin");
     }
     userServices
       .getById(sid)
@@ -45,8 +44,7 @@ const ProtectedRoutes = (props) => {
         setLoading(false);
       })
       .catch(() => {
-        localStorage.removeItem("access_token");
-        return navigate("/signin");
+        setLoading(false);
       });
   };
   useEffect(() => {
@@ -57,7 +55,7 @@ const ProtectedRoutes = (props) => {
     <>
       <UserContext.Provider value={{ ...user, refreshUser: refreshUser }}>
         {loading && <LoadingPage />}
-        {!loading && user && children}
+        {!loading && children}
       </UserContext.Provider>
     </>
   );

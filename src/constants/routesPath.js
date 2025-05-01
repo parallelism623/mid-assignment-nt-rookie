@@ -12,4 +12,6 @@ export const routesPath = {
   userProfile: "users/profile",
   emailConfirm: "/email-confirm",
   bookBorrowed: "/book-borrowed",
+  bookDetail: "/books/:id/detail",
+  forbidden: "/forbidden",
 };

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Form, Input } from "antd";
+import { Modal, Form, Input, Button } from "antd";
 import { categoryServices } from "../../services/categoryServices";
 
 const CategoryDetail = ({ categoryId, onCancel }) => {
@@ -19,6 +19,11 @@ const CategoryDetail = ({ categoryId, onCancel }) => {
       cancelText="Cancel"
       maskClosable={false}
       destroyOnClose
+      footer={[
+        <Button key="cancel" onClick={onCancel}>
+          Cancel
+        </Button>,
+      ]}
     >
       <Form form={form} layout="vertical">
         <Form.Item name="name" label="Name" disabled>

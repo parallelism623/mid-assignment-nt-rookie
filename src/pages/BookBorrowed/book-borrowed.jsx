@@ -1,6 +1,7 @@
 import { Card, Table, Tooltip, Tag } from "antd";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
+import { Link } from "react-router";
 import { defaultQueryParameters } from "../../constants/queryParameters";
 import { useUserContext } from "../../routes/ProtectedRoute";
 import { environment } from "../../constants/environment";
@@ -10,6 +11,7 @@ import { FiCheck, FiX, FiEye, FiPlusCircle } from "react-icons/fi";
 import ExtendDueDateModal from "../../components/ui/ExtendDueDateModal";
 import { validationData } from "../../constants/validationData";
 import BookBorrowedDetail from "./book-borrowed-detail";
+import { routesPath } from "../../constants/routesPath";
 const { Column } = Table;
 
 const BookBorrowed = () => {
@@ -154,7 +156,18 @@ const BookBorrowed = () => {
             },
           }}
         >
-          <Column title="Title" dataIndex={["book", "title"]} key="bookTitle" />
+          <Column
+            title="Title"
+            dataIndex={["book", "title"]}
+            key="bookTitle"
+            render={(value, record) => {
+              return (
+                <Link to={routesPath.bookDetail.replace(":id", record.bookId)}>
+                  {value}
+                </Link>
+              );
+            }}
+          />
 
           <Column
             title="Author"

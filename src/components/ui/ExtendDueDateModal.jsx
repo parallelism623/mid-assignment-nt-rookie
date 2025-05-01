@@ -12,10 +12,12 @@ export default function ExtendDueDateModal({
   const [newDate, setNewDate] = useState(dayjs());
   useEffect(() => {
     if (visible) {
-      const defaultDate = currentDueDate
+      let defaultDate = currentDueDate
         ? dayjs(currentDueDate).add(1, "day")
         : dayjs().add(1, "day");
-
+      if (defaultDate.isBefore(dayjs())) {
+        defaultDate = dayjs().add(1, "day");
+      }
       setNewDate(defaultDate);
     }
   }, [visible, currentDueDate]);

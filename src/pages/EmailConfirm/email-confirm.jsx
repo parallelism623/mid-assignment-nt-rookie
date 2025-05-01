@@ -15,7 +15,6 @@ const EmailConfirm = () => {
     null
   );
 
-  // Countdown effect
   useEffect(() => {
     if (counter > 0) {
       const timer = setTimeout(() => setCounter(counter - 1), 1000);

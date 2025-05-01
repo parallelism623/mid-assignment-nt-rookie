@@ -1,5 +1,12 @@
 import axios from "axios";
 import { environment } from "../constants/environment";
+import { axiosAuthentication } from "./axiosAuthenticationConfig";
+let notify = null;
+export const setNotifier = (api) => {
+  notify = api;
+};
+let isRefresh = false;
+let queueRequestFailWhenRefreshToken = [];
 
 const axiosClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || environment.host,
@@ -9,11 +16,6 @@ const axiosClient = axios.create({
   timeout: 10_000,
   validateStatus: (status) => status < 400,
 });
-
-let notify = null;
-export const setNotifier = (api) => {
-  notify = api;
-};
 
 axiosClient.interceptors.request.use((config) => {
   const token = JSON.parse(localStorage.getItem(environment.accessToken));
@@ -38,16 +40,17 @@ axiosClient.interceptors.response.use(
   async (error) => {
     if (error.response?.status === 401) {
       const originalRequest = error.config;
-
-      if (!!error.response?.headers["token-expired"]) {
+      const refreshToken = JSON.parse(localStorage.getItem("refresh_token"));
+      if (!!error.response?.headers["token-expired"] && !isRefresh) {
+        isRefresh = true;
         try {
-          const refreshToken = JSON.parse(
-            localStorage.getItem("refresh_token")
-          );
           const accessToken = JSON.parse(localStorage.getItem("access_token"));
-          const refreshResponse = await axiosClient.post(
+          const refreshResponse = await axiosAuthentication.post(
             "/auth/token-refresh",
-            { refreshToken: refreshToken, accessToken: accessToken }
+            {
+              refreshToken: refreshToken,
+              accessToken: accessToken,
+            }
           );
 
           localStorage.setItem(
@@ -60,7 +63,15 @@ axiosClient.interceptors.response.use(
           );
 
           originalRequest.headers.Authorization = `Bearer ${refreshResponse.accessToken}`;
-
+          queueRequestFailWhenRefreshToken.forEach(
+            ({ config, resolve, reject }) => {
+              axiosClient
+                .request(config)
+                .then((response) => resolve(response))
+                .catch((err) => reject(err));
+            }
+          );
+          queueRequestFailWhenRefreshToken.length = 0;
           return axiosClient(originalRequest);
         } catch (refreshError) {
           localStorage.removeItem(environment.accessToken);
@@ -68,8 +79,18 @@ axiosClient.interceptors.response.use(
 
           window.location.href = "/signin";
           return Promise.reject(refreshError);
+        } finally {
+          isRefresh = false;
         }
       }
+
+      return new Promise((resolve, reject) => {
+        queueRequestFailWhenRefreshToken.push({
+          config: originalRequest,
+          resolve,
+          reject,
+        });
+      });
     }
 
     const notiError = error.response?.data?.errors?.[0]?.message;
