@@ -1,18 +1,23 @@
 ﻿using Amazon.S3;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MIDASM.Application.Commons.Options;
 using MIDASM.Application.Services.Authentication;
 using MIDASM.Application.Services.Crypto;
 using MIDASM.Application.Services.FileServices;
 using MIDASM.Application.Services.HostedServices.Abstract;
+using MIDASM.Application.Services.ImportExport;
 using MIDASM.Application.Services.Mail;
 using MIDASM.Infrastructure.Authentication;
 using MIDASM.Infrastructure.Crypto;
 using MIDASM.Infrastructure.Files;
 using MIDASM.Infrastructure.HostedServices.Abstract;
 using MIDASM.Infrastructure.HostedServices.MailSenderBackgroundService;
+using MIDASM.Infrastructure.ImportExport.Export;
 using MIDASM.Infrastructure.Mail;
 using MIDASM.Infrastructure.Options;
+using MIDASM.Infrastructure.ScheduleJobs;
+using Quartz;
 
 namespace MIDASM.Infrastructure;
 
@@ -33,6 +38,9 @@ public static class DependencyInjection
         services.AddSingleton(typeof(IBackgroundTaskQueue<>), typeof(BackgroundTaskQueue<>));
         services.ConfigureAwsS3Services(config);
         services.AddScoped<IImageStorageServices, ImageStorageServices>();
+        services.ConfigureImportExportServices();
+        services.Configure<JwtTokenOptions>(config.GetRequiredSection(nameof(JwtTokenOptions)));
+        services.ConfigureScheduleJobs(config);
         return services;
     }
 
@@ -40,6 +48,45 @@ public static class DependencyInjection
     {
         services.AddDefaultAWSOptions(config.GetAWSOptions());
         services.AddAWSService<IAmazonS3>();
+        return services;
+    }
+    public static IServiceCollection ConfigureImportExportServices(this IServiceCollection services)
+    {
+        services.AddScoped<IExportServices, ExportToExcel>();
+        return services;
+    }
+
+    public static IServiceCollection ConfigureScheduleJobs(this IServiceCollection services, IConfiguration config)
+    {
+        services.Configure<ScheduleJobSettings>(config.GetRequiredSection(nameof(ScheduleJobSettings)));
+        services.AddQuartz(q =>
+        {
+            q.AddJob<SendMailInformDueDateJob>(opts => opts
+                .WithIdentity("sendMailInformDueDateJob", "emailGroup")
+                .StoreDurably()
+            );
+
+            q.AddTrigger(opts => opts
+                .ForJob("sendMailInformDueDateJob", "emailGroup")
+                .WithIdentity("sendMailInformDueDateTrigger", "emailGroup")
+                .WithCronSchedule("0 0 7 * * ?") 
+            );
+
+            q.AddJob<ScanBookBorrowingDueDateJob>(opts => opts
+                .WithIdentity("scanBookBorrowingDueDateJob", "scanDbGroup")
+                .StoreDurably()
+            );
+
+            q.AddTrigger(opts => opts
+                .ForJob("scanBookBorrowingDueDateJob", "scanDbGroup")
+                .WithIdentity("scanBookBorrowingDueDateTrigger", "scanDbGroup")
+                .WithCronSchedule("0 0 0 * * ?") 
+            );
+        });
+        services.AddQuartzHostedService(opt =>
+        {
+            opt.WaitForJobsToComplete = true;
+        });
         return services;
     }
 }

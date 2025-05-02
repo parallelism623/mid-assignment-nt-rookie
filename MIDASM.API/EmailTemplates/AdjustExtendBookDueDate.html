@@ -1,0 +1,87 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .header {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            font-size: 16px;
+        }
+
+        .highlight-approved {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .highlight-rejected {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .details {
+            margin: 20px 0;
+        }
+
+            .details td {
+                padding: 5px 10px;
+                vertical-align: top;
+            }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">Hello {{Name}},</div>
+
+    <div class="message">
+        Your request to extend the due date for your borrowed book has been
+        <span class="highlight-{{StatusClass}}">{{Status}}</span>.
+    </div>
+
+    <table>
+        <tr>
+            <td><strong>Book Title:</strong></td>
+            <td>
+                <a href="http://localhost:5173/books/{{BookId}}/detail"
+                   style="color:#007bff;text-decoration:none;"
+                   target="_blank">
+                    {{BookTitle}}
+                </a>
+            </td>
+        </tr>
+        <tr>
+            <td><strong>Original Due Date:</strong></td>
+            <td>{{OriginalDueDate}}</td>
+        </tr>
+        <tr>
+            <td><strong>New Due Date:</strong></td>
+            <td>{{NewDueDate}}</td>
+        </tr>
+    </table>
+
+
+    <div class="message">
+        Please make sure to return the book on or before the new due date to avoid any late fees.
+    </div>
+    <div class="footer">
+        This is an automated message. Please do not reply to this email.
+    </div>
+
+</body>
+</html>

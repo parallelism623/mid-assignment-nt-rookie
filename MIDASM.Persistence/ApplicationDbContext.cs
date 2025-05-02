@@ -15,6 +15,7 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<User> Users { get; set; }
     public DbSet<Role> Roles { get; set; }
+    public DbSet<EmailRecord> EmailRecords { get; set; }  
 
     public DbSet<Book> Books { get; set; }
     public DbSet<BookBorrowingRequest> BookBorrowingRequests { get; set; }

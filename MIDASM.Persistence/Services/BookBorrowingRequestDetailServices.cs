@@ -1,22 +1,32 @@
 ﻿
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using MIDASM.Application.Commons.Models;
 using MIDASM.Application.Commons.Models.BookBorrowingRequestDetails;
+using MIDASM.Application.Services.HostedServices.Abstract;
+using MIDASM.Application.Services.Mail;
 using MIDASM.Application.UseCases;
 using MIDASM.Contract.Errors;
+using MIDASM.Contract.Helpers;
 using MIDASM.Contract.Messages.Commands;
 using MIDASM.Contract.SharedKernel;
+using MIDASM.Domain.Entities;
 using MIDASM.Domain.Enums;
 using MIDASM.Domain.Repositories;
 
 namespace MIDASM.Persistence.Services;
 
-public class BookBorrowingRequestDetailServices(IBookBorrowingRequestDetailRepository bookBorrowingRequestDetailRepository)
+public class BookBorrowingRequestDetailServices(
+    IBookBorrowingRequestDetailRepository bookBorrowingRequestDetailRepository,
+    IUserRepository userRepository,
+    IBackgroundTaskQueue<Func<IServiceProvider, CancellationToken, ValueTask>> mailSenderBackgroundService
+    )
             : IBookBorrowingRequestDetailServices
 {
-    public async Task<Result<string>> AdjustExtenDueDateAsync(Guid id, int status)
+    public async Task<Result<string>> AdjustExtendDueDateAsync(Guid id, int status)
     {
-        var bookBorrowedDetail = await bookBorrowingRequestDetailRepository.GetByIdAsync(id, "BookBorrowingRequest");
+        var bookBorrowedDetail = await bookBorrowingRequestDetailRepository.GetByIdAsync(id, "BookBorrowingRequest", "Book");
         if(bookBorrowedDetail == null)
         {
             return Result<string>.Failure(400, BookBorrowingRequestDetailErrors.BookBorrowedDetailNotFound);
@@ -33,7 +43,8 @@ public class BookBorrowingRequestDetailServices(IBookBorrowingRequestDetailRepos
         {
             bookBorrowedDetail.DueDate = (DateOnly)bookBorrowedDetail.ExtendDueDate;
         }
-   
+
+        await HandleSendMailExtendDueDateStatusChange(bookBorrowedDetail, status);
         bookBorrowedDetail.ExtendDueDate = null;
         
         bookBorrowingRequestDetailRepository.Update(bookBorrowedDetail);
@@ -90,5 +101,33 @@ public class BookBorrowingRequestDetailServices(IBookBorrowingRequestDetailRepos
         return PaginationResult<BookBorrowedRequestDetailResponse>.Create(pageSize, pageIndex, totalCount, data);
 
     
+    }
+
+    private async Task HandleSendMailExtendDueDateStatusChange(BookBorrowingRequestDetail bd, int status)
+    {
+        var user = await userRepository.GetByIdAsync(bd.BookBorrowingRequest.RequesterId);
+        if (user != null)
+        {
+            var mailContent = await FileHelper.GetMailTemplateFile(MailTemplateHelper.MailTemplateAdjustExtendBookDueDate);
+            var toEmail = user.Email;
+            var statusString = status == 1 ? "Approved" : "Rejected";
+            var subject = $"Book extend due date request #{bd.Id} was {statusString}";
+
+            var body = mailContent?.Replace("{{Name}}", user.FirstName + " " + user.LastName)?
+                            .Replace("{{Status}}", statusString)?
+                            .Replace("{{BookTitle}", bd.Book.Title)
+                            .Replace("{{BookId}}", bd.Book.Id.ToString())
+                            .Replace("{{OriginalDueDate}}", bd.DueDate.ToString())
+                            .Replace("{{NewDueDate}}", bd.ExtendDueDate.ToString());
+
+
+            await mailSenderBackgroundService.QueueBackgroundWorkItemAsync(async (serviceProvider, c) =>
+            {
+                var mailServices = serviceProvider.GetRequiredService<IMailServices>();
+                await mailServices.SendMailAsync(toEmail, subject, body ?? "", cancellationToken: c);
+            });
+        }
+
+
     }
 }

@@ -19,21 +19,20 @@ using MIDASM.Application.Commons.Models.Authentication;
 using MIDASM.Application.Services.HostedServices.Abstract;
 using MIDASM.Infrastructure.HostedServices.Abstract;
 using Microsoft.Extensions.DependencyInjection;
+using MIDASM.Contract.Helpers;
 namespace MIDASM.Infrastructure.Authentication;
 
 public class ApplicationAuthentication : BaseAuthentication, IApplicationAuthentication
 {
     private readonly IUserRepository _userRepository;
     private readonly IRoleRepository _roleRepository;
-    private readonly IWebHostEnvironment _env;
     private readonly IMemoryCache _memoryCache;
     private readonly IBackgroundTaskQueue<Func<IServiceProvider, CancellationToken, ValueTask>> _backgroundTaskQueue;
     public ApplicationAuthentication(IJwtTokenServices jwtTokenServices, ICryptoServiceFactory cryptoServiceFactory,
-        IOptions<JwtTokenOptions> jwtTokenOptions, IWebHostEnvironment env, IUserRepository userRepository,
+        IOptions<JwtTokenOptions> jwtTokenOptions, IUserRepository userRepository,
         IExecutionContext executionContext, IRoleRepository roleRepository, IMemoryCache memoryCache, IBackgroundTaskQueue<Func<IServiceProvider, CancellationToken, ValueTask>> backgroundTaskQueue) : base(jwtTokenServices, cryptoServiceFactory, jwtTokenOptions,
         userRepository, executionContext)
     {
-        _env = env;
         _backgroundTaskQueue = backgroundTaskQueue;
         _memoryCache = memoryCache;
         _userRepository = userRepository;
@@ -136,11 +135,10 @@ public class ApplicationAuthentication : BaseAuthentication, IApplicationAuthent
 
     private async Task<string> GetMailVerifyCodeTemplate(User user, string code)
     {
-        var templatePath = Path.Combine(_env.ContentRootPath, "EmailTemplates", "VerifyCode.html");
-        string content = await System.IO.File.ReadAllTextAsync(templatePath) ?? "";
+        string content = await FileHelper.GetMailTemplateFile(MailTemplateHelper.MailTemplateUpdateBookBorrowingStatus);
 
         return content.Replace("<<<FullName>>>", user.FirstName + " " + user.LastName)
-                      .Replace("<<<Code>>>", code)
+                      .Replace("<<<{{Code}}>>>", code)
                       .Replace("<<<ExpiryMinutes>>>", "5");
     }
 

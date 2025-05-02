@@ -15,16 +15,27 @@
             margin-top: 20px;
             color: #888;
         }
+
+        .status-approved {
+            color: green;
+        }
+
+        .status-rejected {
+            color: red;
+        }
     </style>
 </head>
 <body>
     <div class="header">Hello @Model.Name,</div>
     <div class="content">
-        Status of your books borrowing request has been <strong>@Model.Status</strong>.<br />
+        Status of your books borrowing request has been
+        <strong>
+            @Model.Status
+        </strong>.<br />
         Your date request: @Model.RequestDate<br />
     </div>
     <div class="footer">
-        Thư tự động, vui lòng không trả lời.
+        This is an automated message. Please do not reply to this email.
     </div>
 </body>
 </html>

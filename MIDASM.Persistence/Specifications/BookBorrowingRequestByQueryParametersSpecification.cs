@@ -9,7 +9,10 @@ public class BookBorrowingRequestByQueryParametersSpecification
     public BookBorrowingRequestByQueryParametersSpecification(BookBorrowingRequestQueryParameters queryParameters)
         : base(x => (queryParameters.GetStatus().Contains(x.Status)) 
                     && x.DateRequested >= queryParameters.FromRequestedDate
-                    && x.DateRequested <= queryParameters.ToRequestedDate )
+                    && x.DateRequested <= queryParameters.ToRequestedDate 
+                    && (string.IsNullOrEmpty(queryParameters.Search) 
+                        || (x.Requester.FirstName + " " + x.Requester.LastName).Contains(queryParameters.Search)
+                        || (x.Approver != null && (x.Approver.FirstName + " " + x.Approver.LastName).Contains(queryParameters.Search))))
     {
         AddInclude(x => x.Approver!);
         AddInclude(x => x.BookBorrowingRequestDetails);

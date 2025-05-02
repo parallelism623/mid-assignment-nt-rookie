@@ -130,7 +130,7 @@ public class UserServices(IUserRepository userRepository,
         return UserCommandMessages.BooksBorrowingRequestCreateSuccess;
     }
 
-    public async Task<Result<PaginationResult<BookBorrowingRequestResponse>>> GetBookBorrowingRequestByIdAsync(Guid id, QueryParameters queryParameters)
+    public async Task<Result<PaginationResult<BookBorrowingRequestResponse>>> GetBookBorrowingRequestByIdAsync(Guid id, UserBookBorrowingRequestQueryParameters queryParameters)
     {
         var user = await userRepository.GetByIdAsync(id);
         if (user == null)

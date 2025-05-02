@@ -8,6 +8,7 @@ using MIDASM.Application.Services.HostedServices.Abstract;
 using MIDASM.Application.Services.Mail;
 using MIDASM.Application.UseCases;
 using MIDASM.Contract.Errors;
+using MIDASM.Contract.Helpers;
 using MIDASM.Contract.Messages.Commands;
 using MIDASM.Contract.SharedKernel;
 using MIDASM.Domain.Entities;
@@ -22,8 +23,7 @@ public class BookBorrowingRequestServices(
     IExecutionContext executionContext,
     IBookRepository bookRepository,
     IUserRepository userRepository,
-    IBackgroundTaskQueue<Func<IServiceProvider, CancellationToken,ValueTask>> mailSenderBackgroundService,
-    IWebHostEnvironment env)
+    IBackgroundTaskQueue<Func<IServiceProvider, CancellationToken,ValueTask>> mailSenderBackgroundService)
     : IBookBorrowingRequestServices
 {
     public async Task<Result<PaginationResult<BookBorrowingRequestData>>> GetsAsync(BookBorrowingRequestQueryParameters queryParameters)
@@ -96,15 +96,15 @@ public class BookBorrowingRequestServices(
             var toEmail = user.Email;
             var status = Enum.GetName(typeof(BookBorrowingStatus), bookBorrowingRequest.Status);
             var subject = $"Book borrowing request #{bookBorrowingRequest.Id} was {status}";
-            var templatePath = Path.Combine(env.ContentRootPath, "EmailTemplates", "RequestStatusChanged.html");
-            string content = await System.IO.File.ReadAllTextAsync(templatePath) ?? "";
 
-            var body = content?.Replace("@Model.Name", user.FirstName + user.LastName)?
+            string content = await FileHelper.GetMailTemplateFile(MailTemplateHelper.MailTemplateUpdateBookBorrowingStatus);
+
+            var body = content?.Replace("@Model.Name", user.FirstName + " " + user.LastName)?
                             .Replace("@Model.Status", status)?
                             .Replace("@Model.RequestDate", bookBorrowingRequest.DateRequested.ToString("dd/MM/yyyy"));
 
 
-            await mailSenderBackgroundService.QueueBackgroundWorkItemAsync(async (serviceProvider, c) =>
+                await mailSenderBackgroundService.QueueBackgroundWorkItemAsync(async (serviceProvider, c) =>
             {
                 var mailServices = serviceProvider.GetRequiredService<IMailServices>();
                 await mailServices.SendMailAsync(toEmail, subject, body ?? "", cancellationToken: c);

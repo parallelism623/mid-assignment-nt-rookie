@@ -34,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<IBookBorrowingRequestDetailServices, BookBorrowingRequestDetailServices>();
         services.AddScoped<IBookReviewRepository, BookReviewRepository>();
         services.AddScoped<IBookReviewServices, BookReviewServices>();
+        services.AddScoped<IEmailRecordRepository, EmailRecordRepository>();
         return services;
     }
 

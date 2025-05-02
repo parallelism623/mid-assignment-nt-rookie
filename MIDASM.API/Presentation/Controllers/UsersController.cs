@@ -30,7 +30,7 @@ public class UsersController : ApiBaseController
     [HttpGet]
     [Route("{id:guid}/book-borrowing-requests")]
     [Authorize(Roles = "User")]
-    public async Task<IActionResult> GetBookBorrowingRequestByIdAsync(Guid id, [FromQuery] QueryParameters queryParameters)
+    public async Task<IActionResult> GetBookBorrowingRequestByIdAsync(Guid id, [FromQuery] UserBookBorrowingRequestQueryParameters queryParameters)
     {
         var result = await _userServices.GetBookBorrowingRequestByIdAsync(id, queryParameters);
 
@@ -62,5 +62,11 @@ public class UsersController : ApiBaseController
         var result = await _userServices.GetByIdAsync(id);
 
         return ProcessResult(result);
+    }
+    [HttpGet]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetAsync([FromQuery] UserQueryParameters queryParameters)
+    {
+
     }
 }

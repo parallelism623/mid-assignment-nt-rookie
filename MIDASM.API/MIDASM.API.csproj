@@ -25,7 +25,6 @@
 
   <ItemGroup>
     <Folder Include="Media\Books\" />
-    <Folder Include="Presentation\Contracts\" />
   </ItemGroup>
 
 </Project>

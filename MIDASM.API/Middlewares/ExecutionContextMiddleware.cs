@@ -43,6 +43,10 @@ public class ExecutionContextMiddleware
             {
                 throw new BadRequestException("User does not exists");
             }
+            if(!user.IsVerifyCode)
+            {
+                throw new UnAuthorizedException("User has not been verified code");
+            }    
 
             DateTime dateTimeNow = DateTime.UtcNow;
             if (user!.LastUpdateLimit.Month < dateTimeNow.Month || user!.LastUpdateLimit.Year < dateTimeNow.Year)

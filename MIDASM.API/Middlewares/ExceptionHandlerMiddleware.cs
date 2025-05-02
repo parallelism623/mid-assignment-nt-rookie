@@ -14,15 +14,15 @@ public class ExceptionHandlerMiddleware : IExceptionHandler
         _logger = logger;
     }
 
-    public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception, CancellationToken cancellationToken)
+    public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
         _logger.LogError(exception, exception.Message);
         var statusCode = GetExceptionResponseStatusCode(exception);
-        context.Response.StatusCode = statusCode;
-        context.Response.ContentType = "application/json";
+        httpContext.Response.StatusCode = statusCode;
+        httpContext.Response.ContentType = "application/json";
         var message = GetExceptionResponseMessage(exception) ?? "";
         var errorResponse = new Result(statusCode, false,  new Error(message, exception.Message));
-        await context.Response.WriteAsJsonAsync(errorResponse, cancellationToken);
+        await httpContext.Response.WriteAsJsonAsync(errorResponse, cancellationToken);
         return true;
     }
 

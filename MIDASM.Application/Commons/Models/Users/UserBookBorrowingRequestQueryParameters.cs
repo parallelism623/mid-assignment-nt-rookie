@@ -1,9 +1,9 @@
-﻿using MIDASM.Domain.Enums;
-using System.Collections.Generic;
+﻿
+using MIDASM.Domain.Enums;
 
-namespace MIDASM.Application.Commons.Models.BookBorrowingRequests;
+namespace MIDASM.Application.Commons.Models.Users;
 
-public class BookBorrowingRequestQueryParameters : QueryParameters
+public class UserBookBorrowingRequestQueryParameters : QueryParameters
 {
     public string Status { get; set; } = new('1', Enum.GetNames(typeof(BookBorrowingStatus)).Length);
     public DateOnly FromRequestedDate { get; set; } = DateOnly.MinValue;

@@ -7,5 +7,5 @@ namespace MIDASM.Application.UseCases;
 public interface IBookBorrowingRequestDetailServices
 {
     Task<Result<PaginationResult<BookBorrowedRequestDetailResponse>>> GetsAsync(QueryParameters queryParameters);
-    Task<Result<string>> AdjustExtenDueDateAsync(Guid id, int status);
+    Task<Result<string>> AdjustExtendDueDateAsync(Guid id, int status);
 }

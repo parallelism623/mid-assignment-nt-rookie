@@ -24,7 +24,7 @@ public class BookBorrowingRequestDetailsController(IBookBorrowingRequestDetailSe
     [Route("{id:guid}/due-date-extend")]
     public async Task<IActionResult> AdjustDueDateExtendAsync(Guid id, [FromBody] BookBorrowedExtendDueDateRequest bookBorrowedExtendDueDateRequest)
     {
-        var result = await bookBorrowingRequestDetailServices.AdjustExtenDueDateAsync(id, bookBorrowedExtendDueDateRequest.Status);
+        var result = await bookBorrowingRequestDetailServices.AdjustExtendDueDateAsync(id, bookBorrowedExtendDueDateRequest.Status);
         return ProcessResult(result);
     }
 }
