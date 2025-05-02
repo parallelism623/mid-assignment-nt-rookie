@@ -13,6 +13,7 @@ const UserContext = React.createContext({
   id: "",
   firstName: "",
   lastName: "",
+  phoneNumber: "",
   useName: "",
   email: "",
   refreshUser: () => {},
@@ -44,6 +45,8 @@ const ProtectedRoutes = (props) => {
         setLoading(false);
       })
       .catch(() => {
+        removeAccessToken();
+        navigate("/signin");
         setLoading(false);
       });
   };

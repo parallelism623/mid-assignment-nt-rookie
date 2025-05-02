@@ -12,4 +12,9 @@ export const userServices = {
     axiosClient.get(`/users/${id}/book-borrowed`, { params: queryParameters }),
   extendDueDate: (id, requestModel) =>
     axiosClient.put(`/users/${id}/book-borrowed/due-date-extend`, requestModel),
+  get: (queryParameters) =>
+    axiosClient.get("/users", { params: queryParameters }),
+  update: (updateRequest) => axiosClient.put("/users", updateRequest),
+  create: (createRequest) => axiosClient.post("/users", createRequest),
+  delete: (id) => axiosClient.delete(`/users/${id}`),
 };

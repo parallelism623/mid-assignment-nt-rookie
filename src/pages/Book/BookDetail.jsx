@@ -65,13 +65,16 @@ const BookDetail = () => {
     imageUrl,
     subImagesUrl = [],
   } = book ?? [];
-  useEffect(() => {
-    let isSetDate = true;
+  const fetchData = (isSetDate = true) => {
     bookServices.getById(id).then((res) => {
       if (isSetDate == true) {
         setBook(res);
       }
     });
+  };
+  useEffect(() => {
+    let isSetDate = true;
+    fetchData(isSetDate);
     return () => {
       isSetDate = false;
     };
@@ -112,7 +115,12 @@ const BookDetail = () => {
   const handleOnCancelBookReview = () => {
     setOpenBookReview(false);
   };
-
+  const handleOnClickBOokReViewButton = () => {
+    setOpenBookReview(true);
+  };
+  const handleOnSubmittedBookReview = () => {
+    setOpenBookReview(false);
+  };
   return (
     <>
       {openBookReview && (
@@ -121,6 +129,10 @@ const BookDetail = () => {
           onCancel={handleOnCancelBookReview}
           book={book}
           reviewerId={userInfo.id}
+          onSubmit={() => {
+            handleOnSubmittedBookReview();
+            fetchData();
+          }}
         />
       )}
       {openDeleteConfirmPopup && (
@@ -147,7 +159,9 @@ const BookDetail = () => {
             <>
               <Space>
                 {userInfo.roleName !== environment.adminRole && (
-                  <ReviewButtonText></ReviewButtonText>
+                  <ReviewButtonText
+                    onClick={handleOnClickBOokReViewButton}
+                  ></ReviewButtonText>
                 )}
                 {userInfo.roleName === environment.adminRole && (
                   <EditButtonText

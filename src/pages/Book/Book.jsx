@@ -2,7 +2,7 @@ import { Card, Row, Col, Button, Input, Tag, Checkbox, Pagination } from "antd";
 
 import { FiTag, FiLayers, FiXCircle, FiCheckCircle } from "react-icons/fi";
 import { FaBook } from "react-icons/fa";
-import { ExclamationCircleOutlined } from "@ant-design/icons";
+
 import { IoFilterSharp } from "react-icons/io5";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
@@ -334,7 +334,9 @@ const Book = () => {
                     <Card.Meta
                       description={
                         <>
-                          <h1>{record.title}</h1>
+                          <h1 className="!text-gray-700 text-lg">
+                            {record.title}
+                          </h1>
                           <p className="text-sm text-gray-600">
                             by {record.author}
                           </p>

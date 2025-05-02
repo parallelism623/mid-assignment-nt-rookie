@@ -83,7 +83,12 @@ axiosClient.interceptors.response.use(
           isRefresh = false;
         }
       }
+      if (!isRefresh) {
+        localStorage.removeItem(environment.accessToken);
+        localStorage.removeItem("refresh_token");
 
+        window.location.href = "/signin";
+      }
       return new Promise((resolve, reject) => {
         queueRequestFailWhenRefreshToken.push({
           config: originalRequest,

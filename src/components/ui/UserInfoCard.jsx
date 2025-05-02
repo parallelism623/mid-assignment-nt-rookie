@@ -1,13 +1,19 @@
 import { Card } from "antd";
 import { environment } from "../../constants/environment";
 import { useParams } from "react-router";
-import { FiMail, FiUser, FiBook, FiShield } from "react-icons/fi";
+import { FiMail, FiUser, FiBook, FiShield, FiPhone } from "react-icons/fi";
 
 import { useUserContext } from "../../routes/ProtectedRoute";
 
 const UserInfoCard = () => {
-  const { email, firstName, lastName, bookBorrowingLimit, roleName } =
-    useUserContext();
+  const {
+    email,
+    firstName,
+    lastName,
+    bookBorrowingLimit,
+    roleName,
+    phoneNumber,
+  } = useUserContext();
   const { id } = useParams();
   return (
     <Card
@@ -23,6 +29,10 @@ const UserInfoCard = () => {
         <div className="flex items-center gap-2">
           <FiUser size={18} className="text-green-600" />
           <span className="font-semibold">Name:</span> {firstName} {lastName}
+        </div>
+        <div className="flex items-center gap-2">
+          <FiPhone size={18} className="text-pink-600" />
+          <span className="font-semibold">Phone:</span> {phoneNumber}
         </div>
         {roleName !== environment.adminRole && (
           <div className="flex items-center gap-2">

@@ -99,6 +99,7 @@ const Category = () => {
     setOpenDeleteConfirmModal(false);
   };
   const handleOnSubmitDelete = () => {
+    setOpenDeleteConfirmModal(false);
     categoryServices.delete(selectedCategory.id).then((res) => {
       setQueryParameters({
         ...queryParameters,

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Drawer, Form, Button, Space } from "antd";
 
 export function FilterDrawer({
@@ -8,24 +8,33 @@ export function FilterDrawer({
   form,
   onSubmit,
   children,
+  initialValues,
 }) {
+  const handleOnSubmit = () => {
+    form.validateFields().then((values) => {
+      onSubmit(values);
+    });
+  };
+  useEffect(() => {
+    if (initialValues) form.setFieldsValue(initialValues);
+  }, []);
   return (
     <Drawer
       title={title}
-      width={360}
+      width={"25rem"}
       onClose={onClose}
       open={open}
       bodyStyle={{ paddingBottom: 80 }}
       footer={
         <Space style={{ float: "right" }}>
           <Button onClick={() => form.resetFields()}>Clear</Button>
-          <Button type="primary" onClick={() => form.submit()}>
+          <Button type="primary" onClick={() => handleOnSubmit()}>
             Apply
           </Button>
         </Space>
       }
     >
-      <Form form={form} layout="vertical" onFinish={onSubmit}>
+      <Form form={form} layout="vertical">
         {children}
       </Form>
     </Drawer>
