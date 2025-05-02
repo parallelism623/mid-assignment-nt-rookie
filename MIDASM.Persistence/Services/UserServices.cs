@@ -255,4 +255,9 @@ public class UserServices(IUserRepository userRepository,
 
         return UserCommandMessages.BookBorrowedExtendDueDateSuccess;
     }
+
+    public Task<Result<PaginationResult<UserDetailResponse>>> GetAsync(UserQueryParameters queryParameters)
+    {
+        throw new NotImplementedException();
+    }
 }

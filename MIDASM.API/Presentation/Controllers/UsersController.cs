@@ -67,6 +67,7 @@ public class UsersController : ApiBaseController
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetAsync([FromQuery] UserQueryParameters queryParameters)
     {
-
+        var result = await _userServices.GetAsync(queryParameters);
+        return ProcessResult(result);
     }
 }
