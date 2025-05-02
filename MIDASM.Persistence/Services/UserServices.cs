@@ -285,6 +285,7 @@ public class UserServices(IUserRepository userRepository,
 
     public async Task<Result<string>> UpdateAsync(UserUpdateRequest updateRequest)
     {
+        var tmp = executionContext.GetUserId();
         var user = await userRepository.GetByIdAsync(updateRequest.Id);
 
         if(user == null)

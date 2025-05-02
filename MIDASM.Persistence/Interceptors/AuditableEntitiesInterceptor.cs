@@ -47,7 +47,7 @@ public class AuditableEntitiesInterceptor: SaveChangesInterceptor
 
             if (entityEntry.State == EntityState.Modified)
             {
-                entityEntry.Property(a => a.CreatedBy).CurrentValue = _executionContext.GetUserId();
+                entityEntry.Property(a => a.ModifiedBy).CurrentValue = _executionContext.GetUserId();
                 entityEntry.Property(a => a.ModifiedAt).CurrentValue = DateTime.UtcNow;
             }
         }

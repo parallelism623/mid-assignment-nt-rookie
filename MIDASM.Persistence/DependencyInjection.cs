@@ -42,11 +42,19 @@ public static class DependencyInjection
     public static IServiceCollection ConfigureApplicationDbContext(this IServiceCollection services,
         IConfiguration config)
     {
-        var executionContext = services.BuildServiceProvider().GetRequiredService<IExecutionContext>();
-        return services.AddDbContext<ApplicationDbContext>(options =>
+        services.AddScoped<AuditableEntitiesInterceptor>();
+        services.AddScoped<AuditLogInterceptor>();
+        services.AddDbContext<AuditLogDbContext>(options =>
         {
+            options.UseSqlServer(config.GetConnectionString("AuditLog"));
+        });
+        return services.AddDbContext<ApplicationDbContext>((sp, options) =>
+        {
+            var interceptorAuditablEntity = sp.GetRequiredService<AuditableEntitiesInterceptor>();
+            var interceptorAuditablLog = sp.GetRequiredService<AuditLogInterceptor>();
             options.UseSqlServer(config.GetConnectionString("Default"));
-            options.AddInterceptors(new AuditableEntitiesInterceptor(executionContext));
+            options.AddInterceptors(interceptorAuditablEntity)
+                   .AddInterceptors(interceptorAuditablLog);
         });
     }
 }

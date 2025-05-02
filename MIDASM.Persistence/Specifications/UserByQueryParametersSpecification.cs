@@ -10,7 +10,8 @@ public class UserByQueryParametersSpecification : Specification<User, Guid>
         : base(u => (string.IsNullOrEmpty(queryParameters.Search) 
                     || u.FirstName.Contains(queryParameters.Search) 
                     || u.LastName.Contains(queryParameters.Search)
-                    || u.Email.Contains(queryParameters.Search)))
+                    || u.Email.Contains(queryParameters.Search)) 
+                    && (string.IsNullOrEmpty(queryParameters.RoleIds) || queryParameters.GetRoleIds().Contains(u.RoleId)))
     {
         AddInclude(u => u.Role);
     }

@@ -12,6 +12,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection ConfigureDependencyLayers(this IServiceCollection services)
     {
+        services.AddHttpContextAccessor();
         return services
             .ConfigureInfrastructureServices()
             .ConfigureContractLayer()
