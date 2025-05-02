@@ -11,7 +11,6 @@ using Rookies.Contract.Exceptions;
 using LoginRequest = MIDASM.Application.Commons.Models.Authentication.LoginRequest;
 using RegisterRequest = MIDASM.Application.Commons.Models.Authentication.RegisterRequest;
 using System.Security.Cryptography;
-using Microsoft.AspNetCore.Hosting;
 using MIDASM.Contract.Messages.Commands;
 using Microsoft.Extensions.Caching.Memory;
 using MIDASM.Contract.Constants;

@@ -1,12 +1,17 @@
 ﻿
+using MIDASM.Application.Commons.Models.Users;
 using MIDASM.Domain.Entities;
-using System.Linq.Expressions;
 
 namespace MIDASM.Persistence.Specifications;
 
 public class UserByQueryParametersSpecification : Specification<User, Guid>
 {
-    public UserByQueryParametersSpecification(Expression<Func<User, bool>>? criteria) : base(criteria)
+    public UserByQueryParametersSpecification(UserQueryParameters queryParameters) 
+        : base(u => (string.IsNullOrEmpty(queryParameters.Search) 
+                    || u.FirstName.Contains(queryParameters.Search) 
+                    || u.LastName.Contains(queryParameters.Search)
+                    || u.Email.Contains(queryParameters.Search)))
     {
+
     }
 }

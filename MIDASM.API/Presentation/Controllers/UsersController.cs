@@ -70,4 +70,30 @@ public class UsersController : ApiBaseController
         var result = await _userServices.GetAsync(queryParameters);
         return ProcessResult(result);
     }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> CreateAsync([FromBody] UserCreateRequest createRequest )
+    {
+        var result = await _userServices.CreateAsync(createRequest);
+        return ProcessResult(result);
+    }
+
+
+    [HttpPut]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> UpdateAsync([FromBody] UserUpdateRequest updateRequest)
+    {
+        var result = await _userServices.UpdateAsync(updateRequest);
+        return ProcessResult(result);
+    }
+
+    [HttpDelete]
+    [Route("{id:guid}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteAsync(Guid id)
+    {
+        var result = await _userServices.DeleteAsync(id);
+        return ProcessResult(result);
+    }
 }

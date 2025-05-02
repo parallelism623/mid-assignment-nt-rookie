@@ -30,7 +30,8 @@ public class User : AuditableEntity, IEntity<Guid>
     [JsonIgnore]
     public ICollection<BookReview>? BookReviews { get; set; }
 
-    public static User Create(string email, string username, string password, string firstName, string lastName, string? phoneNumber, Guid roleId)
+    public static User Create(string email, string username, string password, string firstName, 
+        string lastName, string? phoneNumber, Guid roleId)
     {
         return new()
         {
@@ -46,5 +47,19 @@ public class User : AuditableEntity, IEntity<Guid>
         };
     }
 
+    public static void Update(User user, string email, string? password, string firstName, 
+        string lastName, string? phoneNumber, Guid roleId)
+    {
+        user.Email = email;
+        user.Password = !string.IsNullOrEmpty(password) ? password : user.Password;
+        user.FirstName = firstName;
+        user.PhoneNumber = phoneNumber;
+        user.RoleId = roleId;
+    }
+
+    public static void Delete(User user)
+    {
+        user.IsDeleted = true;
+    }
     
 }

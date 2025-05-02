@@ -21,6 +21,11 @@ public static class UserErrorMessages
     public const string BookBorrowRejectCanNotExtendDueDate = "Book borrowing request status is rejected, can not extend due date";
     public const string BookBorrowedExtendDueDateTimesReachLimit = "Book borrowed extend due date times reach limit";
     public const string BookBorrowedNewExtendDueDateInValid = "Book borrowed new extend due date in valid";
+
+    public const string UserRoleNotFound = "User role not found";
+    public const string UserNameAlreadyExists = "Username already exists";
+    public const string EmailAlreadyExists = "Email already exists";
+
 }
 public static class UserErrors
 {
@@ -50,5 +55,8 @@ public static class UserErrors
     public static Error BookBorrowRejectCanNotExtendDueDate => new(nameof(BookBorrowRejectCanNotExtendDueDate), UserErrorMessages.BookBorrowRejectCanNotExtendDueDate);
     public static Error BookBorrowedExtendDueDateTimesReachLimit => new(nameof(BookBorrowedExtendDueDateTimesReachLimit), UserErrorMessages.BookBorrowedNewExtendDueDateInValid);
     public static Error BookBorrowedNewExtendDueDateInValid => new(nameof(BookBorrowedNewExtendDueDateInValid), UserErrorMessages.BookBorrowedNewExtendDueDateInValid);
+    public static Error UserRoleNotFound => new(nameof(UserRoleNotFound), UserErrorMessages.UserRoleNotFound);
 
+    public static Error UsernameAlreadyExists => new(nameof(UsernameAlreadyExists), UserErrorMessages.EmailAlreadyExists);
+    public static Error EmailAlreadyExists => new(nameof(EmailAlreadyExists), UserErrorMessages.EmailAlreadyExists);
 }

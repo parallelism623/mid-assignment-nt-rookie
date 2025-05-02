@@ -13,4 +13,9 @@ public interface IUserServices
     Task<Result<PaginationResult<BookBorrowedRequestDetailResponse>>> GetBookBorrowedRequestDetailByIdAsync(Guid id, QueryParameters queryParameters);
     Task<Result<string>> ExtendDueDateBookBorrowed(DueDatedExtendRequest dueDatedExtendRequest);
     Task<Result<PaginationResult<UserDetailResponse>>>  GetAsync(UserQueryParameters queryParameters);
+    Task<Result<string>> CreateAsync(UserCreateRequest createRequest);
+
+    Task<Result<string>> UpdateAsync(UserUpdateRequest updateRequest);
+
+    Task<Result<string>> DeleteAsync(Guid id);
 }

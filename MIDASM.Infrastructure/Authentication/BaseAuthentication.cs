@@ -1,5 +1,4 @@
-﻿using Mapster;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using MIDASM.Application.Commons.Models.Authentication;
 using MIDASM.Application.Commons.Options;
 using MIDASM.Application.Services.Authentication;
@@ -9,6 +8,7 @@ using MIDASM.Contract.SharedKernel;
 using MIDASM.Domain.Entities;
 using MIDASM.Domain.Repositories;
 using Rookies.Contract.Exceptions;
+using System.IdentityModel.Tokens.Jwt;
 using LoginRequest = MIDASM.Application.Commons.Models.Authentication.LoginRequest;
 using RegisterRequest = MIDASM.Application.Commons.Models.Authentication.RegisterRequest;
 
@@ -101,7 +101,7 @@ public abstract class BaseAuthentication : IBaseAuthentication
     {
         var claimsPrincipal = _jwtTokenServices.ValidateAndDecode(refreshTokenRequest.AccessToken);
 
-        Guid.TryParse(claimsPrincipal.FindFirst("sid")!.Value, out Guid userId);
+        Guid.TryParse(claimsPrincipal.FindFirst(JwtRegisteredClaimNames.Sid)!.Value, out Guid userId);
         var user = await _userRepository.GetByIdAsync(userId, "Role");
         if(user == null)
         {

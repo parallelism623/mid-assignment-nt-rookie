@@ -10,8 +10,6 @@ public static class DependencyInjection
 {
     public static IServiceCollection ConfigureApplicationLayer(this IServiceCollection services)
     {
-        var config = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
-        
         return services.ConfigureFluentValidation();
     }
     public static IServiceCollection ConfigureFluentValidation(this IServiceCollection services)

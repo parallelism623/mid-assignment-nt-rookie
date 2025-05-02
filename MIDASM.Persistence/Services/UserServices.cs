@@ -5,6 +5,7 @@ using MIDASM.Application.Commons.Models;
 using MIDASM.Application.Commons.Models.BookBorrowingRequestDetails;
 using MIDASM.Application.Commons.Models.Users;
 using MIDASM.Application.Services.Authentication;
+using MIDASM.Application.Services.Crypto;
 using MIDASM.Application.UseCases;
 using MIDASM.Contract.Errors;
 using MIDASM.Contract.Messages.Commands;
@@ -14,6 +15,7 @@ using MIDASM.Domain.Constrants;
 using MIDASM.Domain.Entities;
 using MIDASM.Domain.Enums;
 using MIDASM.Domain.Repositories;
+using MIDASM.Infrastructure.Crypto;
 using MIDASM.Persistence.Specifications;
 
 namespace MIDASM.Persistence.Services;
@@ -23,7 +25,9 @@ public class UserServices(IUserRepository userRepository,
                             IExecutionContext executionContext,
                             IBookRepository bookRepository,
                             ITransactionManager transactionManager, 
-                            IBookBorrowingRequestDetailRepository bookBorrowingRequestDetailRepository) : IUserServices
+                            IBookBorrowingRequestDetailRepository bookBorrowingRequestDetailRepository,
+                            IRoleRepository roleRepository, 
+                            ICryptoServiceFactory cryptoServiceFactory) : IUserServices
 {
     public async Task<Result<string>> CreateBookBorrowingRequestAsync(BookBorrowingRequestCreate bookBorrowingRequest)
     {
@@ -256,8 +260,103 @@ public class UserServices(IUserRepository userRepository,
         return UserCommandMessages.BookBorrowedExtendDueDateSuccess;
     }
 
-    public Task<Result<PaginationResult<UserDetailResponse>>> GetAsync(UserQueryParameters queryParameters)
+    public async Task<Result<PaginationResult<UserDetailResponse>>> GetAsync(UserQueryParameters queryParameters)
     {
-        throw new NotImplementedException();
+        var query = userRepository.GetQueryable();
+        var querySpecification = new UserByQueryParametersSpecification(queryParameters);
+
+        query = querySpecification.GetQuery(query);
+
+        var totalCount = await query.CountAsync();
+
+        var pageSize = queryParameters.PageSize;
+        var pageIndex = queryParameters.PageIndex;
+
+        var data = await query.Skip(pageSize * (pageIndex - 1))
+                              .Take(pageSize).ToListAsync();
+
+        var userData = data.Select(d => d.ToUserDetailResponse()).ToList();
+
+        return PaginationResult<UserDetailResponse>.Create(pageSize, pageIndex, totalCount, userData);
+    }
+
+
+
+
+    public async Task<Result<string>> UpdateAsync(UserUpdateRequest updateRequest)
+    {
+        var user = await userRepository.GetByIdAsync(updateRequest.Id);
+
+        if(user == null)
+        {
+            return Result<string>.Failure(400, UserErrors.UserNotFound);
+        }
+
+        var role = await roleRepository.GetByIdAsync(updateRequest.RoleId);
+
+        if(role == null)
+        {
+            return Result<string>.Failure(400, UserErrors.UserRoleNotFound);
+        }
+
+        if(!string.IsNullOrEmpty(updateRequest.Password))
+        {
+            var crtyptoSerivce = cryptoServiceFactory.SetCryptoAlgorithm("RSA");
+            updateRequest.Password = crtyptoSerivce.Encrypt(updateRequest.Password);    
+        }
+
+        User.Update(user, updateRequest.Email, updateRequest.Password, updateRequest.FirstName, updateRequest.LastName,
+            updateRequest.PhoneNumber, updateRequest.RoleId);
+
+        await userRepository.SaveChangesAsync();
+
+        return UserCommandMessages.UserUpdateSuccessfully;
+    }
+
+    public async Task<Result<string>> CreateAsync(UserCreateRequest createRequest)
+    {
+        var userByUserName = await userRepository.GetByUsernameAsync(createRequest.Username);
+
+        if (userByUserName != null)
+        {
+            return Result<string>.Failure(400, UserErrors.UsernameAlreadyExists);
+        }
+
+        var userByEmail = await userRepository.GetByEmailAsync(createRequest.Email);
+
+        if (userByEmail != null)
+        {
+            return Result<string>.Failure(400, UserErrors.EmailAlreadyExists);
+        }
+
+        var role = await roleRepository.GetByIdAsync(createRequest.RoleId);
+
+        if (role == null)
+        {
+            return Result<string>.Failure(400, UserErrors.UserRoleNotFound);
+        }
+
+        var cryptoSerivce = cryptoServiceFactory.SetCryptoAlgorithm("RSA");
+        var user = User.Create(createRequest.Email, createRequest.Username, cryptoSerivce.Encrypt(createRequest.Password),
+            createRequest.FirstName, createRequest.LastName, createRequest.PhoneNumber, createRequest.RoleId);
+
+        userRepository.Add(user);
+        await userRepository.SaveChangesAsync();
+        return UserCommandMessages.UserCreateSuccessfully;
+    }
+
+    public async Task<Result<string>> DeleteAsync(Guid id)
+    {
+        var user = await userRepository.GetByIdAsync(id);
+
+        if (user == null)
+        {
+            return Result<string>.Failure(400, UserErrors.UserNotFound);
+        }
+
+        User.Delete(user);
+        await userRepository.SaveChangesAsync();
+
+        return UserCommandMessages.UserDeleteSuccessfully;
     }
 }
