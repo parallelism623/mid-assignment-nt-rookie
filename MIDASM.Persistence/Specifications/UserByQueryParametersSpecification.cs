@@ -12,6 +12,6 @@ public class UserByQueryParametersSpecification : Specification<User, Guid>
                     || u.LastName.Contains(queryParameters.Search)
                     || u.Email.Contains(queryParameters.Search)))
     {
-
+        AddInclude(u => u.Role);
     }
 }

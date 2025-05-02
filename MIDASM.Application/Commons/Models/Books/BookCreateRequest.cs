@@ -2,7 +2,7 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using MIDASM.Contract.Messages.Validations;
-using MIDASM.Domain.Constrants;
+using MIDASM.Domain.Constrants.Validations;
 
 namespace MIDASM.Application.Commons.Models.Books;
 

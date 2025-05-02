@@ -13,10 +13,12 @@ public static class UserMapping
             Id = user.Id,
             LastName = user.LastName,
             FirstName = user.FirstName,
+            Username = user.Username,
             Email = user.Email,
             BookBorrowingLimit = user.BookBorrowingLimit,
             RoleId = user.RoleId,
             RoleName = user.Role?.Name ?? string.Empty,
+            PhoneNumber = user.PhoneNumber,
         };
     }
 }

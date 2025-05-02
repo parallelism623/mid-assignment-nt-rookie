@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using MIDASM.Contract.Messages.Validations;
-using MIDASM.Domain.Constrants;
+using MIDASM.Domain.Constrants.Validations;
 using MIDASM.Domain.Entities;
 
 namespace MIDASM.Persistence.Configuration;

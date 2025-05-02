@@ -16,4 +16,6 @@ public interface IRepositoryBase<TEntity, TKey>
     void UpdateRange(IEnumerable<TEntity> entities);
     Task SaveChangesAsync();
     IQueryable<TEntity> GetQueryable();
+
+    Task<List<TEntity>> GetAll();
 }

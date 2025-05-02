@@ -76,4 +76,9 @@ public abstract class RepositoryBase<TEntity, TKey> : IRepositoryBase<TEntity, T
     {
         return _dbSet.AsNoTracking().Where(b => ids.Contains(b.Id)).ToListAsync();
     }
+
+    public Task<List<TEntity>> GetAll()
+    {
+        return _dbSet.AsNoTracking().ToListAsync();
+    }
 }

@@ -1,7 +1,7 @@
 ﻿
 using FluentValidation;
 using MIDASM.Contract.Messages.Validations;
-using MIDASM.Domain.Constrants;
+using MIDASM.Domain.Constrants.Validations;
 
 namespace MIDASM.Application.Commons.Models.Users;
 
@@ -13,7 +13,7 @@ public class UserUpdateRequest
     public string FirstName { get; set; } = default!;
     public string LastName { get; set; } = string.Empty;
     public string? PhoneNumber { get; set; }  = string.Empty;
-
+    public int BookBorrowingLimit { get; set; }
     public Guid RoleId { get; set; }
 
 }
@@ -25,6 +25,9 @@ public class UserUpdateRequestValidator : AbstractValidator<UserUpdateRequest>
         RuleFor(x => x.RoleId)
             .NotEmpty()
             .WithMessage(UserValidationMessages.UserRoleMustNotEmpty);
+        RuleFor(x => x.BookBorrowingLimit)
+            .Must(limit => limit >= 0 && limit <= 3)
+            .WithMessage(UserValidationMessages.BooksBorrowingRequestLimitShouldInRange);
         RuleFor(x => x.Id)
             .NotEmpty()
             .WithMessage(UserValidationMessages.UserIdMustBeNotEmpty);

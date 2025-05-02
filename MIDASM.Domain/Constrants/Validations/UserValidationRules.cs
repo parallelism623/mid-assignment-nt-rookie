@@ -1,5 +1,4 @@
-﻿
-namespace MIDASM.Domain.Constrants;
+﻿namespace MIDASM.Domain.Constrants.Validations;
 
 public static class UserValidationRules
 {

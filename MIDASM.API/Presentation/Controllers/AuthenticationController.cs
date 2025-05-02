@@ -67,6 +67,4 @@ public class AuthenticationController : ApiBaseController
 
         return ProcessResult(result);
     }
-
-
 }

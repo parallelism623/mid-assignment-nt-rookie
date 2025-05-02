@@ -11,7 +11,7 @@ using MIDASM.Contract.Errors;
 using MIDASM.Contract.Messages.Commands;
 using MIDASM.Contract.SharedKernel;
 using MIDASM.Domain.Abstract;
-using MIDASM.Domain.Constrants;
+using MIDASM.Domain.Constrants.Validations;
 using MIDASM.Domain.Entities;
 using MIDASM.Domain.Enums;
 using MIDASM.Domain.Repositories;
@@ -306,7 +306,7 @@ public class UserServices(IUserRepository userRepository,
         }
 
         User.Update(user, updateRequest.Email, updateRequest.Password, updateRequest.FirstName, updateRequest.LastName,
-            updateRequest.PhoneNumber, updateRequest.RoleId);
+            updateRequest.PhoneNumber, updateRequest.BookBorrowingLimit, updateRequest.RoleId);
 
         await userRepository.SaveChangesAsync();
 
@@ -338,8 +338,8 @@ public class UserServices(IUserRepository userRepository,
 
         var cryptoSerivce = cryptoServiceFactory.SetCryptoAlgorithm("RSA");
         var user = User.Create(createRequest.Email, createRequest.Username, cryptoSerivce.Encrypt(createRequest.Password),
-            createRequest.FirstName, createRequest.LastName, createRequest.PhoneNumber, createRequest.RoleId);
-
+            createRequest.FirstName, createRequest.LastName, createRequest.PhoneNumber, createRequest.RoleId, true);
+       
         userRepository.Add(user);
         await userRepository.SaveChangesAsync();
         return UserCommandMessages.UserCreateSuccessfully;

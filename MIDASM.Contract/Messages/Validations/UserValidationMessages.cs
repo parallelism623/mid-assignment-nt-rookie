@@ -15,7 +15,7 @@ public static class UserValidationMessages
         "Book borrowing detail noted should not be greater than {0}";
 
     public const string BooksBorrowingInSingleRequestShouldInRange = "Books borrowing should be in range 1 - 5";
-
+    public const string BooksBorrowingRequestLimitShouldInRange = "Books borrowing requset limit should be in range 0 - 3";
     public const string BooksBorrowingShouldHaveDistinctBookId =
         "Books id in borrowing request should be distinct with other";
 

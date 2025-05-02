@@ -31,7 +31,7 @@ public class User : AuditableEntity, IEntity<Guid>
     public ICollection<BookReview>? BookReviews { get; set; }
 
     public static User Create(string email, string username, string password, string firstName, 
-        string lastName, string? phoneNumber, Guid roleId)
+        string lastName, string? phoneNumber, Guid roleId, bool isVerifyCode = false)
     {
         return new()
         {
@@ -41,6 +41,7 @@ public class User : AuditableEntity, IEntity<Guid>
             FirstName = firstName,
             LastName = lastName,
             PhoneNumber = phoneNumber,
+            IsVerifyCode = isVerifyCode,
             RoleId = roleId,
             BookBorrowingLimit = 3,
             LastUpdateLimit = DateOnly.FromDateTime(DateTime.Now)
@@ -48,13 +49,15 @@ public class User : AuditableEntity, IEntity<Guid>
     }
 
     public static void Update(User user, string email, string? password, string firstName, 
-        string lastName, string? phoneNumber, Guid roleId)
+        string lastName, string? phoneNumber, int bookBorrowingLimit, Guid roleId)
     {
         user.Email = email;
         user.Password = !string.IsNullOrEmpty(password) ? password : user.Password;
         user.FirstName = firstName;
         user.PhoneNumber = phoneNumber;
+        user.LastName = lastName;
         user.RoleId = roleId;
+        user.BookBorrowingLimit = bookBorrowingLimit;
     }
 
     public static void Delete(User user)

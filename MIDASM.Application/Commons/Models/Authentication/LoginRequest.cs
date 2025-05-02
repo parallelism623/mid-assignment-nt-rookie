@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 using MIDASM.Contract.Messages.Validations;
-using MIDASM.Domain.Constrants;
+using MIDASM.Domain.Constrants.Validations;
 using System.Text.RegularExpressions;
 
 namespace MIDASM.Application.Commons.Models.Authentication;

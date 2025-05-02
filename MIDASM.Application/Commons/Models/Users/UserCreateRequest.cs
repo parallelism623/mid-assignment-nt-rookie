@@ -2,7 +2,7 @@
 
 using FluentValidation;
 using MIDASM.Contract.Messages.Validations;
-using MIDASM.Domain.Constrants;
+using MIDASM.Domain.Constrants.Validations;
 
 namespace MIDASM.Application.Commons.Models.Users;
 
@@ -13,7 +13,7 @@ public class UserCreateRequest
     public string Email { get; set; } = default!;
     public string FirstName { get; set; } = default!;
     public string LastName { get; set; } = default!;
-    public string? PhoneNumber { get; set; } = default;
+    public string? PhoneNumber { get; set; } = default!;
     public Guid RoleId { get; set; }    
 }
 
@@ -44,7 +44,6 @@ public class UserCreateRequestValidator : AbstractValidator<UserCreateRequest>
             .Matches(UserValidationRules.RegexPatternUsername)
             .WithMessage(string.Format(AuthenticationValidationMessages.UsernameShouldMatchesRegexPattern,
                                        UserValidationRules.MaxLengthUsername));
-
         RuleFor(x => x.LastName)
             .NotEmpty()
             .WithMessage(AuthenticationValidationMessages.LastNameShouldBeNotEmpty)
@@ -63,5 +62,6 @@ public class UserCreateRequestValidator : AbstractValidator<UserCreateRequest>
             .When(x => !string.IsNullOrEmpty(x.PhoneNumber))
             .WithMessage(string.Format(AuthenticationValidationMessages.PhoneNumberShouldBeLessThanOrEqualMaxLength,
                 UserValidationRules.MaxLengthPhoneNumber));
+
     }
 }
