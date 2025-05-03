@@ -1,14 +1,16 @@
 ﻿
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MIDASM.Application.Commons.Models;
 using MIDASM.Application.Commons.Models.BookBorrowingRequestDetails;
+using MIDASM.Application.Services.AuditLogServices;
+using MIDASM.Application.Services.Authentication;
 using MIDASM.Application.Services.HostedServices.Abstract;
 using MIDASM.Application.Services.Mail;
 using MIDASM.Application.UseCases;
 using MIDASM.Contract.Errors;
 using MIDASM.Contract.Helpers;
+using MIDASM.Contract.Messages.AuditLogMessage;
 using MIDASM.Contract.Messages.Commands;
 using MIDASM.Contract.SharedKernel;
 using MIDASM.Domain.Entities;
@@ -20,13 +22,15 @@ namespace MIDASM.Persistence.Services;
 public class BookBorrowingRequestDetailServices(
     IBookBorrowingRequestDetailRepository bookBorrowingRequestDetailRepository,
     IUserRepository userRepository,
+    IAuditLogger auditLogger,
+    IExecutionContext executionContext,
     IBackgroundTaskQueue<Func<IServiceProvider, CancellationToken, ValueTask>> mailSenderBackgroundService
     )
             : IBookBorrowingRequestDetailServices
 {
     public async Task<Result<string>> AdjustExtendDueDateAsync(Guid id, int status)
     {
-        var bookBorrowedDetail = await bookBorrowingRequestDetailRepository.GetByIdAsync(id, "BookBorrowingRequest", "Book");
+        var bookBorrowedDetail = await bookBorrowingRequestDetailRepository.GetByIdAsync(id, "BookBorrowingRequest", "Book", "Requester");
         if(bookBorrowedDetail == null)
         {
             return Result<string>.Failure(400, BookBorrowingRequestDetailErrors.BookBorrowedDetailNotFound);
@@ -44,11 +48,15 @@ public class BookBorrowingRequestDetailServices(
             bookBorrowedDetail.DueDate = (DateOnly)bookBorrowedDetail.ExtendDueDate;
         }
 
-        await HandleSendMailExtendDueDateStatusChange(bookBorrowedDetail, status);
-        bookBorrowedDetail.ExtendDueDate = null;
+        var oldBookBorrowedDetail = BookBorrowingRequestDetail.Copy(bookBorrowedDetail);
         
+        bookBorrowedDetail.ExtendDueDate = null;
         bookBorrowingRequestDetailRepository.Update(bookBorrowedDetail);
         await bookBorrowingRequestDetailRepository.SaveChangesAsync();
+
+
+        await HandleSendMailExtendDueDateStatusChange(bookBorrowedDetail, status);
+        await HandleAuditLogAdjustExtendDueDate(bookBorrowedDetail, oldBookBorrowedDetail);
 
         return BookBorrowingRequestDetailCommandMessages.AdjustExtendDueDateRequestSuccess;
     }
@@ -130,4 +138,49 @@ public class BookBorrowingRequestDetailServices(
 
 
     }
+
+    private async Task HandleAuditLogAdjustExtendDueDate(BookBorrowingRequestDetail newDetail, BookBorrowingRequestDetail oldDetail)
+    {
+        var propertyChanged = GetChangedBookBorrowingRequestDetailProperties(newDetail, oldDetail);
+        var statusString = (newDetail.DueDate == oldDetail.DueDate) ? "Rejected" : "Approved";
+        await auditLogger.LogAsync(newDetail.Id.ToString(),
+            nameof(BookBorrowingRequestDetail),
+            StringHelper.ReplacePlaceholders(
+                AuditLogMessageTemplate.AdjustDueDateExtend,
+                executionContext.GetUserName(),
+                statusString,
+                newDetail.Book.Title,
+                newDetail.BookBorrowingRequestId.ToString(),
+                newDetail.ModifiedAt?.ToString() ?? string.Empty
+                ), propertyChanged);
+    }
+    private static Dictionary<string, (string? OldValue, string? NewValue)> GetChangedBookBorrowingRequestDetailProperties(
+    BookBorrowingRequestDetail newDetail, BookBorrowingRequestDetail? oldDetail = default)
+    {
+        var changes = new Dictionary<string, (string?, string?)>();
+
+        if (oldDetail == null || newDetail.BookBorrowingRequestId != oldDetail.BookBorrowingRequestId)
+            changes[nameof(newDetail.BookBorrowingRequestId)] = (oldDetail?.BookBorrowingRequestId.ToString(), newDetail.BookBorrowingRequestId.ToString());
+
+        if (oldDetail == null || newDetail.BookId != oldDetail.BookId)
+            changes[nameof(newDetail.BookId)] = (oldDetail?.BookId.ToString(), newDetail.BookId.ToString());
+
+        if (oldDetail == null || newDetail.DueDate != oldDetail.DueDate)
+            changes[nameof(newDetail.DueDate)] = (oldDetail?.DueDate.ToString(), newDetail.DueDate.ToString());
+
+        if (oldDetail == null || newDetail.IsDeleted != oldDetail.IsDeleted)
+            changes[nameof(newDetail.IsDeleted)] = (oldDetail?.IsDeleted.ToString(), newDetail.IsDeleted.ToString());
+
+        if (oldDetail == null || newDetail.Noted != oldDetail.Noted)
+            changes[nameof(newDetail.Noted)] = (oldDetail?.Noted, newDetail.Noted);
+
+        if (oldDetail == null || newDetail.ExtendDueDateTimes != oldDetail.ExtendDueDateTimes)
+            changes[nameof(newDetail.ExtendDueDateTimes)] = (oldDetail?.ExtendDueDateTimes.ToString(), newDetail.ExtendDueDateTimes.ToString());
+
+        if (oldDetail == null || newDetail.ExtendDueDate != oldDetail.ExtendDueDate)
+            changes[nameof(newDetail.ExtendDueDate)] = (oldDetail?.ExtendDueDate?.ToString(), newDetail.ExtendDueDate?.ToString());
+
+        return changes;
+    }
+
 }

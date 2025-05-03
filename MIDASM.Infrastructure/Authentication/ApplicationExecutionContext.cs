@@ -9,6 +9,7 @@ public class ApplicationExecutionContext : IExecutionContext
     private UserExecutionContext? _userExecutionContext;
     private string? _accessToken;
     private Guid? _jti;
+    private string? _userAgent;
     public void SetUser(UserExecutionContext user)
     {
         _userExecutionContext = user;
@@ -43,5 +44,15 @@ public class ApplicationExecutionContext : IExecutionContext
     public string GetUserMail()
     {
         return _userExecutionContext?.Email ?? string.Empty;
+    }
+
+    public string GetUserAgent()
+    {
+        return _userAgent ?? string.Empty;
+    }
+
+    public void SetUserAgent(string userAgent)
+    {
+        _userAgent = userAgent;
     }
 }

@@ -7,9 +7,7 @@ namespace MIDASM.Persistence.Specifications;
 public class BookReviewsByQueryParametersSpecification : Specification<BookReview, Guid>
 {
     public BookReviewsByQueryParametersSpecification(BookReviewQueryParameters queryParameters) : 
-        base(br => (br.Title.Contains(queryParameters.Search)) 
-                && (string.IsNullOrEmpty(br.Content) || br.Content.Contains(queryParameters.Search))
-                && (queryParameters.BookId == null || br.BookId == queryParameters.BookId) 
+        base(br =>(queryParameters.BookId == null || br.BookId == queryParameters.BookId) 
                 && (queryParameters.ReviewId == null || br.ReviewerId == queryParameters.ReviewId)
                 && (queryParameters.Rating.Length == 0 || queryParameters.Rating.Contains(br.Rating)))
     {

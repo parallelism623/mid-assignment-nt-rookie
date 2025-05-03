@@ -25,7 +25,7 @@ public class BookBorrowingRequestsController : ApiBaseController
     [HttpPut]
     [Route("status")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> ChangeStatusAsync([FromBody]BookBorrowingStatusUpdateRequest statusUpdateRequest)
+    public async Task<IActionResult> UpdateStatusAsync([FromBody]BookBorrowingStatusUpdateRequest statusUpdateRequest)
     {
         var result = await _bookBorrowingRequestServices.ChangeStatusAsync(statusUpdateRequest);
 

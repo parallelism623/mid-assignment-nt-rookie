@@ -15,10 +15,18 @@ public class CategoriesController : ApiBaseController
     }
 
     [HttpGet]
-    [Authorize(Roles = "Admin,User")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetAsync([FromQuery] CategoriesQueryParameters queryParameters)
     {
         var result = await _categoryServices.GetCategoriesAsync(queryParameters);
+        return ProcessResult(result);
+    }
+
+    [HttpGet("v2")]
+    [Authorize(Roles = "Admin,User")]
+    public async Task<IActionResult> GetNameAsync()
+    {
+        var result = await _categoryServices.GetCategoriesAsync();
         return ProcessResult(result);
     }
     [HttpGet]
@@ -32,14 +40,14 @@ public class CategoriesController : ApiBaseController
 
     [HttpPost]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> CreateCategoryAsync([FromBody] CategoryCreateRequest createRequest)
+    public async Task<IActionResult> CreateAsync([FromBody] CategoryCreateRequest createRequest)
     {
         var result = await _categoryServices.CreateCategoryAsync(createRequest);
         return ProcessResult(result);
     }
     [HttpPut]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> UpdateCategoryAsync([FromBody] CategoryUpdateRequest updateRequest)
+    public async Task<IActionResult> UpdateAsync([FromBody] CategoryUpdateRequest updateRequest)
     {
         var result = await _categoryServices.UpdateCategoryAsync(updateRequest);
 
@@ -49,7 +57,7 @@ public class CategoriesController : ApiBaseController
     [HttpDelete]
     [Route("{id}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> DeleteCategoryAsync(Guid id)
+    public async Task<IActionResult> DeleteAsync(Guid id)
     {
         var result = await _categoryServices.DeleteCategoryAsync(id);
         return ProcessResult(result);

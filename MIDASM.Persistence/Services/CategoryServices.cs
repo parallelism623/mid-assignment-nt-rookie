@@ -1,20 +1,29 @@
-﻿using Mapster;
+﻿using Amazon.Runtime.Internal.Transform;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using MIDASM.Application.Commons.Mapping;
+using MIDASM.Application.Commons.Models;
 using MIDASM.Application.Commons.Models.Categories;
+using MIDASM.Application.Services.AuditLogServices;
+using MIDASM.Application.Services.Authentication;
 using MIDASM.Application.UseCases;
 using MIDASM.Contract.Errors;
+using MIDASM.Contract.Helpers;
+using MIDASM.Contract.Messages.AuditLogMessage;
 using MIDASM.Contract.Messages.Commands;
 using MIDASM.Contract.SharedKernel;
 using MIDASM.Domain.Abstract;
 using MIDASM.Domain.Entities;
 using MIDASM.Domain.Repositories;
 using MIDASM.Persistence.Specifications;
-using System.Transactions;
+
 namespace MIDASM.Persistence.Services;
 
-public class CategoryServices(ICategoryRepository categoryRepository, IBookRepository bookRepository,
-    ITransactionManager transactionManager)
+public class CategoryServices(ICategoryRepository categoryRepository, 
+    IBookRepository bookRepository,
+    ITransactionManager transactionManager,
+    IAuditLogger auditLogger, 
+    IExecutionContext executionContext)
     : ICategoryServices
 {
     public async Task<Result<PaginationResult<CategoryResponse>>> GetCategoriesAsync(CategoriesQueryParameters queryParameters)
@@ -34,7 +43,16 @@ public class CategoryServices(ICategoryRepository categoryRepository, IBookRepos
         return PaginationResult<CategoryResponse>.Create(queryParameters.PageSize,
             queryParameters.PageIndex, totalCount, data);
     }
+    public async Task<Result<PaginationResult<CategoryResponse>>> GetCategoriesAsync()
+    {
+        var query = categoryRepository.GetQueryable();
 
+        var totalCount = await query.CountAsync();
+        var data = await query
+            .Select(c => c.ToCategoryResponse())
+            .ToListAsync();
+        return PaginationResult<CategoryResponse>.Create(totalCount, data);
+    }
     public async Task<Result<CategoryResponse>> GetCategoryByIdAsync(Guid id)
     {
         var category = await categoryRepository.GetByIdAsync(id);
@@ -52,6 +70,8 @@ public class CategoryServices(ICategoryRepository categoryRepository, IBookRepos
         categoryRepository.Add(category);
         await categoryRepository.SaveChangesAsync();
 
+        await HandleAuditLogCreateCategory(category);
+
         return CategoryCommandMessages.CategoryCreatedSuccess;
     }
 
@@ -63,11 +83,11 @@ public class CategoryServices(ICategoryRepository categoryRepository, IBookRepos
         {
             return Result<string>.Failure(400, CategoryErrors.CategoryNotFound);
         }
-
+        var oldCategory = Category.Copy(category);
         Category.Update(category, updateRequest.Name, updateRequest.Description);
 
         await categoryRepository.SaveChangesAsync();
-
+        await HandleAuditLogUpdateCategory(category, oldCategory);
         return CategoryCommandMessages.CategoryUpdatedSuccess;
     }
 
@@ -88,12 +108,16 @@ public class CategoryServices(ICategoryRepository categoryRepository, IBookRepos
         {
             await transactionManager.BeginTransactionAsync();
             await DeleteBookOfCategory(category);
+            var oldCategory = Category.Copy(category);
             category.IsDeleted = true;
             categoryRepository.Update(category);
             await categoryRepository.SaveChangesAsync();
 
             await transactionManager.CommitTransactionAsync();
             transactionManager.DisposeTransaction();
+
+            await HandleAuditLogDeleteCategory(category, oldCategory);
+
             return CategoryCommandMessages.CategoryDeletedSuccess;
         }
         catch
@@ -117,4 +141,75 @@ public class CategoryServices(ICategoryRepository categoryRepository, IBookRepos
         bookRepository.UpdateRange(books);
         await bookRepository.SaveChangesAsync();
     }
+
+
+    private async Task HandleAuditLogCreateCategory(Category category)
+    {     
+        await auditLogger.LogAsync(
+            category.Id.ToString(),
+            nameof(Category),
+            StringHelper.ReplacePlaceholders(
+                AuditLogMessageTemplate.Create,
+                executionContext.GetUserName(),
+                nameof(Category).ToLower(),
+                category.Name,
+                category.CreatedAt.ToString()
+            ),
+            GetChangingProperties(category)
+            );
+    }
+
+    private async Task HandleAuditLogUpdateCategory(Category category, Category oldCategory)
+    {
+        var changingProperties = GetChangingProperties(category, oldCategory);
+        await auditLogger.LogAsync(
+            category.Id.ToString(),
+            nameof(Category),
+            StringHelper.ReplacePlaceholders(
+                AuditLogMessageTemplate.Update,
+                executionContext.GetUserName(),
+                nameof(Category).ToLower(),
+                category.Name,
+                category.ModifiedAt!.ToString() ?? string.Empty, 
+                StringHelper.SerializePropertiesChanges(changingProperties)
+            ),
+            changingProperties
+            );
+    }
+
+    private async Task HandleAuditLogDeleteCategory(Category category, Category oldCategory)
+    {
+        await auditLogger.LogAsync(
+            category.Id.ToString(),
+            nameof(Category),
+            StringHelper.ReplacePlaceholders(
+                AuditLogMessageTemplate.Delete,
+                executionContext.GetUserName(),
+                nameof(Category).ToLower(),
+                category.Name,
+                category.ModifiedAt!.ToString() ?? string.Empty
+            ),
+            GetChangingProperties(category, oldCategory)
+            );
+    }
+
+    private static Dictionary<string, (string?, string?)> GetChangingProperties(Category category, Category? oldCategory = default)
+    {
+        var newProperties = new Dictionary<string, (string?, string?)>();
+        if(oldCategory == null ||  category.Name != oldCategory?.Name)
+        {
+            newProperties.Add(nameof(category.Name), (oldCategory?.Name, category.Name));
+        }
+        if (oldCategory == null || category.Description != oldCategory?.Description)
+        {
+            newProperties.Add(nameof(category.Description), (oldCategory?.Description, category.Description));
+        }
+        if (oldCategory == null || category.IsDeleted != oldCategory?.IsDeleted)
+        {
+            newProperties.Add(nameof(category.IsDeleted), (oldCategory?.IsDeleted.ToString(), category.IsDeleted.ToString()));
+        }
+        return newProperties;
+    }
+
+
 }

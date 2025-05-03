@@ -2,9 +2,13 @@
 using Microsoft.EntityFrameworkCore;
 using MIDASM.Application.Commons.Mapping;
 using MIDASM.Application.Commons.Models.Books;
+using MIDASM.Application.Services.AuditLogServices;
+using MIDASM.Application.Services.Authentication;
 using MIDASM.Application.Services.FileServices;
 using MIDASM.Application.UseCases;
 using MIDASM.Contract.Errors;
+using MIDASM.Contract.Helpers;
+using MIDASM.Contract.Messages.AuditLogMessage;
 using MIDASM.Contract.Messages.Commands;
 using MIDASM.Contract.SharedKernel;
 using MIDASM.Domain.Entities;
@@ -16,7 +20,9 @@ namespace MIDASM.Persistence.Services;
 public class BookServices(IBookRepository bookRepository,
     ICategoryRepository categoryRepository,
     IBookReviewRepository bookReviewRepository,
-    IImageStorageServices imageStorageServices) : IBookServices
+    IImageStorageServices imageStorageServices, 
+    IAuditLogger auditLogger,
+    IExecutionContext executionContext) : IBookServices
 {
     private const string DefaultBookImage = "default.jpeg";
     public async Task<Result<PaginationResult<BookResponse>>> GetsAsync(BooksQueryParameters queryParameters)
@@ -109,7 +115,7 @@ public class BookServices(IBookRepository bookRepository,
 
         bookRepository.Add(book);
         await bookRepository.SaveChangesAsync();
-
+        await HandleAuditLogBookCreate(book);
         return BookCommandMessages.BookCreatedSuccess;
     }
 
@@ -136,7 +142,7 @@ public class BookServices(IBookRepository bookRepository,
             }
         }
 
- 
+        var oldBook = Book.Copy(book);
         Book.Update(book, request.Title, request.Description, request.Author, request.AddedQuantity,
             request.CategoryId);
         if(request.NewImage != null)
@@ -178,6 +184,8 @@ public class BookServices(IBookRepository bookRepository,
         }
         bookRepository.Update(book);
         await bookRepository.SaveChangesAsync();
+
+        await HandleAuditLogBookUpdate(book, oldBook);
         return BookCommandMessages.BookUpdatedSuccess;
         
         
@@ -195,9 +203,11 @@ public class BookServices(IBookRepository bookRepository,
         {
             return Result<string>.Failure(400, BookErrors.BookCanNotDeletedDueToExistsBorrowRequest);
         }
+        var oldBook = Book.Copy(book);
         book.IsDeleted = true;
         bookRepository.Update(book);
         await bookRepository.SaveChangesAsync();
+        await HandleAuditLogBookDelete(book, oldBook);
         return BookCommandMessages.BookDeletedSuccess;
     }
 
@@ -227,4 +237,95 @@ public class BookServices(IBookRepository bookRepository,
         return imageStorageServices.GetPreSignedUrlImage(subImageKey);
     }
 
+    public async Task HandleAuditLogBookCreate(Book newBook)
+    {
+        var propertiesChanged = GetChangedProperties(newBook);
+
+        await auditLogger.LogAsync(
+                newBook.Id.ToString(),
+                nameof(Book),
+                StringHelper.ReplacePlaceholders(
+                    AuditLogMessageTemplate.Create,
+                    executionContext.GetUserName(),
+                    nameof(Book).ToLower(),
+                    $"{newBook.Title} (#{newBook.Id})",
+                    newBook.CreatedAt.ToString()
+                    ),
+                propertiesChanged
+            );
+    }
+    public async Task HandleAuditLogBookUpdate(Book newBook, Book oldBook)
+    {
+        var propertiesChanged = GetChangedProperties(newBook, oldBook);
+
+        await auditLogger.LogAsync(
+                newBook.Id.ToString(),
+                nameof(Book),
+                StringHelper.ReplacePlaceholders(
+                    AuditLogMessageTemplate.Update,
+                    executionContext.GetUserName(),
+                    nameof(Book).ToLower(),
+                    $"{newBook.Title} (#{newBook.Id})",
+                    newBook.ModifiedAt!.ToString() ?? string.Empty,
+                    StringHelper.SerializePropertiesChanges(propertiesChanged)
+                    ),
+                propertiesChanged
+            );
+    }
+
+    public async Task HandleAuditLogBookDelete(Book newBook, Book oldBook)
+    {
+        var propertiesChanged = GetChangedProperties(newBook, oldBook);
+
+        await auditLogger.LogAsync(
+                newBook.Id.ToString(),
+                nameof(Book),
+                StringHelper.ReplacePlaceholders(
+                    AuditLogMessageTemplate.Delete,
+                    executionContext.GetUserName(),
+                    nameof(Book).ToLower() ,
+                    $"{newBook.Title} (#{newBook.Id})",
+                    newBook.ModifiedAt!.ToString() ?? string.Empty
+                    ),
+                propertiesChanged
+            );
+    }
+
+    private static Dictionary<string, (string?, string?)> GetChangedProperties(Book newBook, Book? oldBook = default)
+    {
+        var changes = new Dictionary<string, (string?, string?)>();
+
+        if (oldBook == null || newBook.Title != oldBook.Title)
+            changes.Add(nameof(newBook.Title), (oldBook?.Title, newBook.Title));
+
+        if (oldBook == null || newBook.Description != oldBook.Description)
+            changes.Add(nameof(newBook.Description), (oldBook?.Description, newBook.Description));
+
+        if (oldBook == null || newBook.Author != oldBook.Author)
+            changes.Add(nameof(newBook.Author), (oldBook?.Author, newBook.Author));
+
+        if (oldBook == null || newBook.Quantity != oldBook.Quantity)
+            changes.Add(nameof(newBook.Quantity), (oldBook?.Quantity.ToString(), newBook.Quantity.ToString()));
+
+        if (oldBook == null || newBook.Available != oldBook.Available)
+            changes.Add(nameof(newBook.Available), (oldBook?.Available.ToString(), newBook.Available.ToString()));
+
+        if (oldBook == null || newBook.ImageUrl != oldBook.ImageUrl)
+            changes.Add(nameof(newBook.ImageUrl), (oldBook?.ImageUrl, newBook.ImageUrl));
+
+        if (oldBook == null ||
+            string.Join(";", newBook.SubImagesUrl ?? new List<string>()) != string.Join(";", oldBook?.SubImagesUrl ?? new List<string>()))
+        {
+            changes.Add(nameof(newBook.SubImagesUrl), (
+                oldBook?.SubImagesUrl != null ? string.Join(";", oldBook.SubImagesUrl) : null,
+                newBook.SubImagesUrl != null ? string.Join(";", newBook.SubImagesUrl) : null
+            ));
+        }
+
+        if (oldBook == null || newBook.CategoryId != oldBook.CategoryId)
+            changes.Add(nameof(newBook.CategoryId), (oldBook?.CategoryId.ToString(), newBook.CategoryId.ToString()));
+
+
+        return changes;
+    }
 }

@@ -9,9 +9,20 @@ public class PaginationResult<T>
         TotalCount = totalCount;
         Items = data;
     }
+    public PaginationResult(int totalCount, List<T> data)
+    {
+        PageSize = 10;
+        PageIndex = 1;
+        TotalCount = totalCount;
+        Items = data;
+    }
     public static PaginationResult<T> Create(int pageSize, int pageIndex, int totalCount, List<T> data)
     {
         return new PaginationResult<T>(pageSize, pageIndex, totalCount, data); 
+    }
+    public static PaginationResult<T> Create(int totalCount, List<T> data)
+    {
+        return new PaginationResult<T>(totalCount, data);
     }
     public int PageSize { get; set; }
 

@@ -4,10 +4,13 @@ using MIDASM.Application.Commons.Mapping;
 using MIDASM.Application.Commons.Models;
 using MIDASM.Application.Commons.Models.BookBorrowingRequestDetails;
 using MIDASM.Application.Commons.Models.Users;
+using MIDASM.Application.Services.AuditLogServices;
 using MIDASM.Application.Services.Authentication;
 using MIDASM.Application.Services.Crypto;
 using MIDASM.Application.UseCases;
 using MIDASM.Contract.Errors;
+using MIDASM.Contract.Helpers;
+using MIDASM.Contract.Messages.AuditLogMessage;
 using MIDASM.Contract.Messages.Commands;
 using MIDASM.Contract.SharedKernel;
 using MIDASM.Domain.Abstract;
@@ -27,7 +30,8 @@ public class UserServices(IUserRepository userRepository,
                             ITransactionManager transactionManager, 
                             IBookBorrowingRequestDetailRepository bookBorrowingRequestDetailRepository,
                             IRoleRepository roleRepository, 
-                            ICryptoServiceFactory cryptoServiceFactory) : IUserServices
+                            ICryptoServiceFactory cryptoServiceFactory, 
+                            IAuditLogger auditLogger) : IUserServices
 {
     public async Task<Result<string>> CreateBookBorrowingRequestAsync(BookBorrowingRequestCreate bookBorrowingRequest)
     {
@@ -131,6 +135,7 @@ public class UserServices(IUserRepository userRepository,
         await userRepository.SaveChangesAsync();
         await transactionManager.CommitTransactionAsync();
         transactionManager.DisposeTransaction();
+        await HandleAuditLogCreateBookBorrowingRequest(booksBorrowingRequest);
         return UserCommandMessages.BooksBorrowingRequestCreateSuccess;
     }
 
@@ -230,7 +235,7 @@ public class UserServices(IUserRepository userRepository,
     public async Task<Result<string>> ExtendDueDateBookBorrowed(DueDatedExtendRequest dueDatedExtendRequest)
     {
         var bookBorrowedDetail = await bookBorrowingRequestDetailRepository
-                                    .GetByIdAsync(dueDatedExtendRequest.BookBorrowedDetailId, "BookBorrowingRequest");
+                                    .GetByIdAsync(dueDatedExtendRequest.BookBorrowedDetailId, "BookBorrowingRequest", "Book");
         if(bookBorrowedDetail == null)
         {
             return Result<string>.Failure(400, UserErrors.BookBorrowedNotExistsCanNotExtendDueDate);
@@ -250,13 +255,14 @@ public class UserServices(IUserRepository userRepository,
         {
             return Result<string>.Failure(400, UserErrors.BookBorrowedNewExtendDueDateInValid);
         }
+        var oldBookBorrowedDetail = BookBorrowingRequestDetail.Copy(bookBorrowedDetail);
 
         bookBorrowedDetail.ExtendDueDate = dueDatedExtendRequest.ExtendDueDate;
         bookBorrowedDetail.ExtendDueDateTimes += 1;
 
         bookBorrowingRequestDetailRepository.Update(bookBorrowedDetail);
         await bookBorrowingRequestDetailRepository.SaveChangesAsync();
-
+        await HandleAuditLogCreateExtendDueDate(bookBorrowedDetail, oldBookBorrowedDetail);
         return UserCommandMessages.BookBorrowedExtendDueDateSuccess;
     }
 
@@ -285,7 +291,6 @@ public class UserServices(IUserRepository userRepository,
 
     public async Task<Result<string>> UpdateAsync(UserUpdateRequest updateRequest)
     {
-        var tmp = executionContext.GetUserId();
         var user = await userRepository.GetByIdAsync(updateRequest.Id);
 
         if(user == null)
@@ -305,12 +310,14 @@ public class UserServices(IUserRepository userRepository,
             var crtyptoSerivce = cryptoServiceFactory.SetCryptoAlgorithm("RSA");
             updateRequest.Password = crtyptoSerivce.Encrypt(updateRequest.Password);    
         }
+        var oldUser = User.Copy(user);
 
         User.Update(user, updateRequest.Email, updateRequest.Password, updateRequest.FirstName, updateRequest.LastName,
             updateRequest.PhoneNumber, updateRequest.BookBorrowingLimit, updateRequest.RoleId);
 
         await userRepository.SaveChangesAsync();
 
+        await HandleAuditLogUserUpdate(user, oldUser);
         return UserCommandMessages.UserUpdateSuccessfully;
     }
 
@@ -343,6 +350,7 @@ public class UserServices(IUserRepository userRepository,
        
         userRepository.Add(user);
         await userRepository.SaveChangesAsync();
+        await HandleAuditLogUserCreate(user);
         return UserCommandMessages.UserCreateSuccessfully;
     }
 
@@ -354,10 +362,181 @@ public class UserServices(IUserRepository userRepository,
         {
             return Result<string>.Failure(400, UserErrors.UserNotFound);
         }
-
+        var oldUser = User.Copy(user);
         User.Delete(user);
         await userRepository.SaveChangesAsync();
-
+        await HandleAuditLogUserDelete(user, oldUser);
         return UserCommandMessages.UserDeleteSuccessfully;
+    }
+
+    private async Task HandleAuditLogUserCreate(User user)
+    {
+        var propertiesChanged = GetChangedUserProperties(user);
+        await auditLogger.LogAsync(user.Id.ToString(),
+            nameof(User),
+            StringHelper.ReplacePlaceholders(
+                AuditLogMessageTemplate.Create,
+                executionContext.GetUserName(),
+                nameof(User).ToLower(),
+                $"{user.Username} (#ID: {user.Id})",
+                user.CreatedAt.ToString()
+                ), propertiesChanged);
+    }
+    private async Task HandleAuditLogUserUpdate(User user, User oldUser)
+    {
+        var propertiesChanged = GetChangedUserProperties(user, oldUser);
+        await auditLogger.LogAsync(user.Id.ToString(),
+            nameof(User),
+            StringHelper.ReplacePlaceholders(
+                AuditLogMessageTemplate.Update,
+                executionContext.GetUserName(),
+                nameof(User).ToLower(),
+                $"{user.Username} (#ID: {user.Id})",
+                user.CreatedAt.ToString(),
+                StringHelper.SerializePropertiesChanges(propertiesChanged)
+                ), propertiesChanged);  
+    }
+    private async Task HandleAuditLogCreateBookBorrowingRequest(BookBorrowingRequest bookBorrowingRequest)
+    {
+        await auditLogger.LogAsync(
+            bookBorrowingRequest.Id.ToString(),
+            nameof(BookBorrowingRequest),
+            StringHelper.ReplacePlaceholders(
+                AuditLogMessageTemplate.CreateBookBorrowingRequest,
+                executionContext.GetUserName(),
+                bookBorrowingRequest.Id.ToString(),
+                bookBorrowingRequest.CreatedAt.ToString()
+                ),
+            GetChangedBookBorrowingRequestProperties(bookBorrowingRequest));
+    }
+
+
+    private async Task HandleAuditLogCreateExtendDueDate(BookBorrowingRequestDetail newDetail, BookBorrowingRequestDetail oldDetail)
+    {
+        var propertyChanged = GetChangedBookBorrowingRequestDetailProperties(newDetail, oldDetail);
+        await auditLogger.LogAsync(newDetail.Id.ToString(),
+            nameof(BookBorrowingRequestDetail),
+            StringHelper.ReplacePlaceholders(
+                AuditLogMessageTemplate.ExtendDueDate,
+                executionContext.GetUserName(),
+                newDetail.Book.Title,
+                newDetail.DueDate.ToString(),
+                newDetail.ExtendDueDate?.ToString() ?? string.Empty,
+                newDetail.ModifiedAt?.ToString() ?? string.Empty
+                ), propertyChanged);
+    }
+
+    private async Task HandleAuditLogUserDelete(User user, User oldUser)
+    {
+        var propertiesChanged = GetChangedUserProperties(user, oldUser);
+        await auditLogger.LogAsync(
+            user.Id.ToString(),
+            nameof(User),
+            StringHelper.ReplacePlaceholders(
+                AuditLogMessageTemplate.Delete,
+                executionContext.GetUserName(),
+                nameof(User).ToLower(),
+                $"{user.Username} (#ID: {user.Id})",
+                user.ModifiedAt?.ToString() ?? string.Empty
+                ),
+            propertiesChanged);
+    }
+    private static Dictionary<string, (string?, string?)> GetChangedBookBorrowingRequestProperties(
+BookBorrowingRequest newRequest, BookBorrowingRequest? oldRequest = default)
+    {
+        var changes = new Dictionary<string, (string?, string?)>();
+
+        if (oldRequest == null || newRequest.RequesterId != oldRequest.RequesterId)
+            changes.Add(nameof(newRequest.RequesterId), (oldRequest?.RequesterId.ToString(), newRequest.RequesterId.ToString()));
+
+        if (oldRequest == null || newRequest.ApproverId != oldRequest.ApproverId)
+            changes.Add(nameof(newRequest.ApproverId), (oldRequest?.ApproverId?.ToString(), newRequest.ApproverId?.ToString()));
+
+        if (oldRequest == null || newRequest.DateRequested != oldRequest.DateRequested)
+            changes.Add(nameof(newRequest.DateRequested), (oldRequest?.DateRequested.ToString(), newRequest.DateRequested.ToString()));
+
+        if (oldRequest == null || newRequest.DateApproved != oldRequest.DateApproved)
+            changes.Add(nameof(newRequest.DateApproved), (oldRequest?.DateApproved?.ToString(), newRequest.DateApproved?.ToString()));
+
+        if (oldRequest == null || newRequest.Status != oldRequest.Status)
+            changes.Add(nameof(newRequest.Status), (oldRequest?.Status.ToString(), newRequest.Status.ToString()));
+
+        if (oldRequest == null || newRequest.IsDeleted != oldRequest.IsDeleted)
+            changes.Add(nameof(newRequest.IsDeleted), (oldRequest?.IsDeleted.ToString(), newRequest.IsDeleted.ToString()));
+
+        return changes;
+    }
+    public static Dictionary<string, (string? OldValue, string? NewValue)> GetChangedUserProperties(User newUser, User? oldUser = default)
+    {
+        var changes = new Dictionary<string, (string?, string?)>();
+
+        if (oldUser == null || newUser.Username != oldUser.Username)
+            changes[nameof(newUser.Username)] = (oldUser?.Username, newUser.Username);
+
+        if (oldUser == null || newUser.Password != oldUser.Password)
+            changes[nameof(newUser.Password)] = (oldUser?.Password, newUser.Password);
+
+        if (oldUser == null || newUser.Email != oldUser.Email)
+            changes[nameof(newUser.Email)] = (oldUser?.Email, newUser.Email);
+
+        if (oldUser == null || newUser.FirstName != oldUser.FirstName)
+            changes[nameof(newUser.FirstName)] = (oldUser?.FirstName, newUser.FirstName);
+
+        if (oldUser == null || newUser.LastName != oldUser.LastName)
+            changes[nameof(newUser.LastName)] = (oldUser?.LastName, newUser.LastName);
+
+        if (oldUser == null || newUser.PhoneNumber != oldUser.PhoneNumber)
+            changes[nameof(newUser.PhoneNumber)] = (oldUser?.PhoneNumber, newUser.PhoneNumber);
+
+        if (oldUser == null || newUser.IsDeleted != oldUser.IsDeleted)
+            changes[nameof(newUser.IsDeleted)] = (oldUser?.IsDeleted.ToString(), newUser.IsDeleted.ToString());
+
+        if (oldUser == null || newUser.BookBorrowingLimit != oldUser.BookBorrowingLimit)
+            changes[nameof(newUser.BookBorrowingLimit)] = (oldUser?.BookBorrowingLimit.ToString(), newUser.BookBorrowingLimit.ToString());
+
+        if (oldUser == null || newUser.LastUpdateLimit != oldUser.LastUpdateLimit)
+            changes[nameof(newUser.LastUpdateLimit)] = (oldUser?.LastUpdateLimit.ToString(), newUser.LastUpdateLimit.ToString());
+
+        if (oldUser == null || newUser.RefreshToken != oldUser.RefreshToken)
+            changes[nameof(newUser.RefreshToken)] = (oldUser?.RefreshToken, newUser.RefreshToken);
+
+        if (oldUser == null || newUser.RefreshTokenExpireTime != oldUser.RefreshTokenExpireTime)
+            changes[nameof(newUser.RefreshTokenExpireTime)] = (oldUser?.RefreshTokenExpireTime.ToString(), newUser.RefreshTokenExpireTime.ToString());
+
+        if (oldUser == null || newUser.IsVerifyCode != oldUser.IsVerifyCode)
+            changes[nameof(newUser.IsVerifyCode)] = (oldUser?.IsVerifyCode.ToString(), newUser.IsVerifyCode.ToString());
+
+        if (oldUser == null || newUser.RoleId != oldUser.RoleId)
+            changes[nameof(newUser.RoleId)] = (oldUser?.RoleId.ToString(), newUser.RoleId.ToString());
+
+        return changes;
+    }
+    private static Dictionary<string, (string? OldValue, string? NewValue)> GetChangedBookBorrowingRequestDetailProperties(
+BookBorrowingRequestDetail newDetail, BookBorrowingRequestDetail? oldDetail = default)
+    {
+        var changes = new Dictionary<string, (string?, string?)>();
+
+        if (oldDetail == null || newDetail.BookBorrowingRequestId != oldDetail.BookBorrowingRequestId)
+            changes[nameof(newDetail.BookBorrowingRequestId)] = (oldDetail?.BookBorrowingRequestId.ToString(), newDetail.BookBorrowingRequestId.ToString());
+
+        if (oldDetail == null || newDetail.BookId != oldDetail.BookId)
+            changes[nameof(newDetail.BookId)] = (oldDetail?.BookId.ToString(), newDetail.BookId.ToString());
+
+        if (oldDetail == null || newDetail.DueDate != oldDetail.DueDate)
+            changes[nameof(newDetail.DueDate)] = (oldDetail?.DueDate.ToString(), newDetail.DueDate.ToString());
+
+        if (oldDetail == null || newDetail.IsDeleted != oldDetail.IsDeleted)
+            changes[nameof(newDetail.IsDeleted)] = (oldDetail?.IsDeleted.ToString(), newDetail.IsDeleted.ToString());
+
+        if (oldDetail == null || newDetail.Noted != oldDetail.Noted)
+            changes[nameof(newDetail.Noted)] = (oldDetail?.Noted, newDetail.Noted);
+
+        if (oldDetail == null || newDetail.ExtendDueDateTimes != oldDetail.ExtendDueDateTimes)
+            changes[nameof(newDetail.ExtendDueDateTimes)] = (oldDetail?.ExtendDueDateTimes.ToString(), newDetail.ExtendDueDateTimes.ToString());
+
+        if (oldDetail == null || newDetail.ExtendDueDate != oldDetail.ExtendDueDate)
+            changes[nameof(newDetail.ExtendDueDate)] = (oldDetail?.ExtendDueDate?.ToString(), newDetail.ExtendDueDate?.ToString());
+
+        return changes;
     }
 }

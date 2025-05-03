@@ -9,6 +9,7 @@ public class AuditLog : IEntity<Guid>
     [Key]
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
+    public string? Username { get; set; }
     public string? EntityName { get; set; } = default!;
     public string? EntityId { get; set; } = default!;
     public DateTime TimeStamp { get; set; }
@@ -20,9 +21,7 @@ public class AuditLog : IEntity<Guid>
     public string? MethodName { get; set; }
     public string? Parameters { get; set; }
 
-    public int Status { get; set; }
-    public string? SuccessDescription { get; set; }
-    public string? ErrorDescription { get; set; }
+    public string? Description { get; set; }
 }
 
 

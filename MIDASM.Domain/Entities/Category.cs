@@ -27,4 +27,15 @@ public class Category : AuditableEntity, IEntity<Guid>
             Description = description
         };
     }
+
+    public static Category Copy(Category category)
+    {
+        return new()
+        {
+            Name = category.Name,
+            Description = category.Description,
+            IsDeleted = category.IsDeleted,
+        };
+    }
+    
 }

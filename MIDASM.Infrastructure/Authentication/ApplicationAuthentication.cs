@@ -1,24 +1,25 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using MIDASM.Application.Commons.Models.Authentication;
 using MIDASM.Application.Commons.Options;
+using MIDASM.Application.Services.AuditLogServices;
 using MIDASM.Application.Services.Authentication;
 using MIDASM.Application.Services.Crypto;
+using MIDASM.Application.Services.HostedServices.Abstract;
 using MIDASM.Application.Services.Mail;
+using MIDASM.Contract.Constants;
+using MIDASM.Contract.Helpers;
+using MIDASM.Contract.Messages.Commands;
 using MIDASM.Contract.SharedKernel;
 using MIDASM.Domain.Entities;
 using MIDASM.Domain.Enums;
 using MIDASM.Domain.Repositories;
 using Rookies.Contract.Exceptions;
+using System.Security.Cryptography;
 using LoginRequest = MIDASM.Application.Commons.Models.Authentication.LoginRequest;
 using RegisterRequest = MIDASM.Application.Commons.Models.Authentication.RegisterRequest;
-using System.Security.Cryptography;
-using MIDASM.Contract.Messages.Commands;
-using Microsoft.Extensions.Caching.Memory;
-using MIDASM.Contract.Constants;
-using MIDASM.Application.Commons.Models.Authentication;
-using MIDASM.Application.Services.HostedServices.Abstract;
-using MIDASM.Infrastructure.HostedServices.Abstract;
-using Microsoft.Extensions.DependencyInjection;
-using MIDASM.Contract.Helpers;
 namespace MIDASM.Infrastructure.Authentication;
 
 public class ApplicationAuthentication : BaseAuthentication, IApplicationAuthentication
@@ -27,10 +28,18 @@ public class ApplicationAuthentication : BaseAuthentication, IApplicationAuthent
     private readonly IRoleRepository _roleRepository;
     private readonly IMemoryCache _memoryCache;
     private readonly IBackgroundTaskQueue<Func<IServiceProvider, CancellationToken, ValueTask>> _backgroundTaskQueue;
-    public ApplicationAuthentication(IJwtTokenServices jwtTokenServices, ICryptoServiceFactory cryptoServiceFactory,
-        IOptions<JwtTokenOptions> jwtTokenOptions, IUserRepository userRepository,
-        IExecutionContext executionContext, IRoleRepository roleRepository, IMemoryCache memoryCache, IBackgroundTaskQueue<Func<IServiceProvider, CancellationToken, ValueTask>> backgroundTaskQueue) : base(jwtTokenServices, cryptoServiceFactory, jwtTokenOptions,
-        userRepository, executionContext)
+    public ApplicationAuthentication(IJwtTokenServices jwtTokenServices, 
+        ICryptoServiceFactory cryptoServiceFactory,
+        IOptions<JwtTokenOptions> jwtTokenOptions,
+        IUserRepository userRepository,
+        IExecutionContext executionContext, 
+        IRoleRepository roleRepository, 
+        IMemoryCache memoryCache, 
+        IBackgroundTaskQueue<Func<IServiceProvider, CancellationToken, ValueTask>> backgroundTaskQueue,
+        IAuditLogger auditLogger,
+        IHttpContextAccessor httpContextAccessor) 
+        : base(jwtTokenServices, cryptoServiceFactory, jwtTokenOptions, auditLogger,
+        userRepository, executionContext, httpContextAccessor)
     {
         _backgroundTaskQueue = backgroundTaskQueue;
         _memoryCache = memoryCache;
@@ -132,9 +141,9 @@ public class ApplicationAuthentication : BaseAuthentication, IApplicationAuthent
         return code.ToString("D6");
     }
 
-    private async Task<string> GetMailVerifyCodeTemplate(User user, string code)
+    private static async Task<string> GetMailVerifyCodeTemplate(User user, string code)
     {
-        string content = await FileHelper.GetMailTemplateFile(MailTemplateHelper.MailTemplateUpdateBookBorrowingStatus);
+        string content = await FileHelper.GetMailTemplateFile(MailTemplateHelper.MailTemplateVerifyNewAccount);
 
         return content.Replace("<<<FullName>>>", user.FirstName + " " + user.LastName)
                       .Replace("<<<{{Code}}>>>", code)

@@ -1,8 +1,13 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Amazon.Runtime.Internal.Transform;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 using MIDASM.Application.Commons.Models.Authentication;
 using MIDASM.Application.Commons.Options;
+using MIDASM.Application.Services.AuditLogServices;
 using MIDASM.Application.Services.Authentication;
 using MIDASM.Application.Services.Crypto;
+using MIDASM.Contract.Helpers;
+using MIDASM.Contract.Messages.AuditLogMessage;
 using MIDASM.Contract.Messages.Commands;
 using MIDASM.Contract.SharedKernel;
 using MIDASM.Domain.Entities;
@@ -21,18 +26,24 @@ public abstract class BaseAuthentication : IBaseAuthentication
     private readonly JwtTokenOptions _jwtTokenOptions;
     private readonly IUserRepository _userRepository;
     private readonly IExecutionContext _executionContext;
+    private readonly IAuditLogger _auditLogger;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     protected BaseAuthentication(IJwtTokenServices jwtTokenServices,
         ICryptoServiceFactory cryptoServiceFactory,
         IOptions<JwtTokenOptions> jwtTokenOptions,
+        IAuditLogger auditLogger,
         IUserRepository userRepository,
-        IExecutionContext executionContext)
+        IExecutionContext executionContext,
+        IHttpContextAccessor httpContextAccessor)
     {
         _userRepository = userRepository;
         _jwtTokenOptions = jwtTokenOptions.Value;
         _jwtTokenServices = jwtTokenServices;
         _cryptoService = cryptoServiceFactory.SetCryptoAlgorithm("RSA");
         _executionContext = executionContext;
+        _auditLogger = auditLogger;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<Result<LoginResponse>> LoginAsync(LoginRequest loginRequest)
@@ -45,6 +56,12 @@ public abstract class BaseAuthentication : IBaseAuthentication
         string token = _jwtTokenServices.GenerateAccessToken(user);
         string refreshToken = _jwtTokenServices.GenerateRefreshToken();
         await SaveUserRefreshToken(user, refreshToken);
+        _executionContext.SetUser(new()
+        {
+            Username = user.Username,
+            Id = user.Id
+        });
+        await HandleAuditLogUserLogin(user);
         return new LoginResponse{ AccessToken = token, RefreshToken = refreshToken };
     }
 
@@ -64,6 +81,7 @@ public abstract class BaseAuthentication : IBaseAuthentication
         user.RefreshTokenExpireTime = DateTime.MinValue;
         _jwtTokenServices.RecallAccessToken();
         await _userRepository.SaveChangesAsync();
+        await HandleAuditLogUserLogout(user);
         return AuthenticationMessages.LogoutSuccessfully;
     }
     public async Task<Result<string>> RegisterAsync(RegisterRequest registerRequest)
@@ -122,5 +140,36 @@ public abstract class BaseAuthentication : IBaseAuthentication
             AccessToken = accessToken,
             RefreshToken = refreshToken
         };
+    }
+
+
+    private async Task HandleAuditLogUserLogin(User user)
+    {
+        var changedProperties = new Dictionary<string, (string?, string?)>();
+        changedProperties.Add(nameof(user.RefreshToken), (string.Empty, user.RefreshToken));
+        changedProperties.Add(nameof(user.RefreshTokenExpireTime), (string.Empty, user.RefreshTokenExpireTime.ToString()));
+        await _auditLogger.LogAsync(user.Id.ToString(),
+            "Authentication",
+            StringHelper.ReplacePlaceholders(
+                AuditLogMessageTemplate.UserLogin,
+                user.Username,
+                user.ModifiedAt?.ToString() ?? string.Empty,
+                _httpContextAccessor.HttpContext?.Request.Headers["User-Agent"].ToString() ?? string.Empty
+                ), changedProperties);
+    }
+
+    private async Task HandleAuditLogUserLogout(User user)
+    {
+        var changedProperties = new Dictionary<string, (string?, string?)>();
+        changedProperties.Add(nameof(user.RefreshToken), (user.RefreshToken, string.Empty));
+        changedProperties.Add(nameof(user.RefreshTokenExpireTime), (user.RefreshTokenExpireTime.ToString(), string.Empty));
+        await _auditLogger.LogAsync(user.Id.ToString(),
+            "Authentication",
+            StringHelper.ReplacePlaceholders(
+                AuditLogMessageTemplate.UserLogout,
+                user.Username,
+                user.ModifiedAt?.ToString() ?? string.Empty,
+                _executionContext.GetUserAgent()
+                ), changedProperties);
     }
 }

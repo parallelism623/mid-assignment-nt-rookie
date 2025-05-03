@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MIDASM.Application.Services.AuditLogServices;
 using MIDASM.Application.Services.Authentication;
 using MIDASM.Application.UseCases;
 using MIDASM.Domain.Abstract;
@@ -35,7 +36,8 @@ public static class DependencyInjection
         services.AddScoped<IBookReviewRepository, BookReviewRepository>();
         services.AddScoped<IBookReviewServices, BookReviewServices>();
         services.AddScoped<IEmailRecordRepository, EmailRecordRepository>();
-        services.AddScoped<IRoleServices, RoleServices>();  
+        services.AddScoped<IRoleServices, RoleServices>();
+        services.AddScoped<IAuditLogger, AuditLogger>();
         return services;
     }
 
@@ -43,7 +45,6 @@ public static class DependencyInjection
         IConfiguration config)
     {
         services.AddScoped<AuditableEntitiesInterceptor>();
-        services.AddScoped<AuditLogInterceptor>();
         services.AddDbContext<AuditLogDbContext>(options =>
         {
             options.UseSqlServer(config.GetConnectionString("AuditLog"));
@@ -51,10 +52,8 @@ public static class DependencyInjection
         return services.AddDbContext<ApplicationDbContext>((sp, options) =>
         {
             var interceptorAuditablEntity = sp.GetRequiredService<AuditableEntitiesInterceptor>();
-            var interceptorAuditablLog = sp.GetRequiredService<AuditLogInterceptor>();
             options.UseSqlServer(config.GetConnectionString("Default"));
-            options.AddInterceptors(interceptorAuditablEntity)
-                   .AddInterceptors(interceptorAuditablLog);
+            options.AddInterceptors(interceptorAuditablEntity);
         });
     }
 }

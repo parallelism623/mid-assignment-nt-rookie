@@ -15,4 +15,7 @@ public interface IExecutionContext
     public string GetAccessToken();
     public void SetAccessToken(string token);
 
+    public string GetUserAgent();
+    public void SetUserAgent(string userAgent);
+
 }

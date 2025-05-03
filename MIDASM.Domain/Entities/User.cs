@@ -59,7 +59,26 @@ public class User : AuditableEntity, IEntity<Guid>
         user.RoleId = roleId;
         user.BookBorrowingLimit = bookBorrowingLimit;
     }
-
+    public static User Copy(User sourceUser)
+    {
+        return new User
+        {
+            Id = sourceUser.Id,
+            Username = sourceUser.Username,
+            Password = sourceUser.Password,
+            Email = sourceUser.Email,
+            FirstName = sourceUser.FirstName,
+            LastName = sourceUser.LastName,
+            PhoneNumber = sourceUser.PhoneNumber,
+            IsDeleted = sourceUser.IsDeleted,
+            BookBorrowingLimit = sourceUser.BookBorrowingLimit,
+            LastUpdateLimit = sourceUser.LastUpdateLimit,
+            RefreshToken = sourceUser.RefreshToken,
+            RefreshTokenExpireTime = sourceUser.RefreshTokenExpireTime,
+            IsVerifyCode = sourceUser.IsVerifyCode,
+            RoleId = sourceUser.RoleId
+        };
+    }
     public static void Delete(User user)
     {
         user.IsDeleted = true;

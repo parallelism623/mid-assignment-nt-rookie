@@ -21,7 +21,7 @@ public class BooksController(IBookServices bookServices)
     [HttpGet]
     [Route("{id:guid}")]
     [Authorize(Roles = "Admin,User")]
-    public async Task<IActionResult> GetsAsync(Guid id)
+    public async Task<IActionResult> GetByIdAsync(Guid id)
     {
         var result = await bookServices.GetByIdAsync(id);
 

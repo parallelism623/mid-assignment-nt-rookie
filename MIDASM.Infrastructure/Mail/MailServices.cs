@@ -22,11 +22,12 @@ public class MailServices : IMailServices
         var password = _emailSettingsOptions.Password;
         var senderName = _emailSettingsOptions.SenderName;
         int port = _emailSettingsOptions.MailPort;
-        using var client = new SmtpClient(mailServer, port)
+        var client = new SmtpClient(mailServer, port)
         {
             Credentials = new NetworkCredential(fromEmail, password),
             EnableSsl = true,
         };
+        
         MailAddress fromAddress = new MailAddress(fromEmail, senderName);
         MailMessage mailMessage = new MailMessage
         {
@@ -39,6 +40,7 @@ public class MailServices : IMailServices
         mailMessage.To.Add(toEmail);
 
         return client.SendMailAsync(mailMessage, cancellationToken);
+        
     }
 
     public async Task SendMailWithAttachmentAsync(SendMailAttachmentData mailAttachmentData, CancellationToken cancellationToken = default)

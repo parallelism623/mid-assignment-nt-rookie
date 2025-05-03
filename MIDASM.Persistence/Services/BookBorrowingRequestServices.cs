@@ -1,14 +1,15 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MIDASM.Application.Commons.Mapping;
 using MIDASM.Application.Commons.Models.BookBorrowingRequests;
+using MIDASM.Application.Services.AuditLogServices;
 using MIDASM.Application.Services.Authentication;
 using MIDASM.Application.Services.HostedServices.Abstract;
 using MIDASM.Application.Services.Mail;
 using MIDASM.Application.UseCases;
 using MIDASM.Contract.Errors;
 using MIDASM.Contract.Helpers;
+using MIDASM.Contract.Messages.AuditLogMessage;
 using MIDASM.Contract.Messages.Commands;
 using MIDASM.Contract.SharedKernel;
 using MIDASM.Domain.Entities;
@@ -23,7 +24,8 @@ public class BookBorrowingRequestServices(
     IExecutionContext executionContext,
     IBookRepository bookRepository,
     IUserRepository userRepository,
-    IBackgroundTaskQueue<Func<IServiceProvider, CancellationToken,ValueTask>> mailSenderBackgroundService)
+    IBackgroundTaskQueue<Func<IServiceProvider, CancellationToken,ValueTask>> mailSenderBackgroundService,
+    IAuditLogger auditLogger)
     : IBookBorrowingRequestServices
 {
     public async Task<Result<PaginationResult<BookBorrowingRequestData>>> GetsAsync(BookBorrowingRequestQueryParameters queryParameters)
@@ -48,7 +50,7 @@ public class BookBorrowingRequestServices(
 
     public async Task<Result<string>> ChangeStatusAsync(BookBorrowingStatusUpdateRequest statusUpdateRequest)
     {
-        var bookBorrowingRequest = await bookBorrowingRequestRepository.GetByIdAsync(statusUpdateRequest.Id, "BookBorrowingRequestDetails");
+        var bookBorrowingRequest = await bookBorrowingRequestRepository.GetByIdAsync(statusUpdateRequest.Id, "BookBorrowingRequestDetails", "Requester");
 
         if (bookBorrowingRequest == null)
         {
@@ -64,12 +66,15 @@ public class BookBorrowingRequestServices(
         {
             await HandleRejectBookBorrowingRequest(bookBorrowingRequest);
         }
+        var oldBookBorrowingRequest = BookBorrowingRequest.Copy(bookBorrowingRequest);
         bookBorrowingRequest.Status = statusUpdateRequest.Status;
         bookBorrowingRequest.ApproverId = executionContext.GetUserId();
         bookBorrowingRequest.DateApproved = DateOnly.FromDateTime(DateTime.UtcNow.Date);
         bookBorrowingRequestRepository.Update(bookBorrowingRequest);
         await bookBorrowingRequestRepository.SaveChangesAsync();
         await HandleSendMailChangeStatusRequest(bookBorrowingRequest);
+
+        await HandleAuditLogBookBorrowingRequestChangeStatus(bookBorrowingRequest, oldBookBorrowingRequest);
         return BookBorrowingRequestCommandMessages.ChangeStatusSuccess;
     }
 
@@ -110,5 +115,49 @@ public class BookBorrowingRequestServices(
                 await mailServices.SendMailAsync(toEmail, subject, body ?? "", cancellationToken: c);
             });
         }
+    }
+
+    private async Task HandleAuditLogBookBorrowingRequestChangeStatus(
+        BookBorrowingRequest bookBorrowingRequest,
+        BookBorrowingRequest oldBookBorrowingRequest)
+    {
+        var propertiesChanged = GetChangedBookBorrowingRequestProperties(bookBorrowingRequest, oldBookBorrowingRequest);
+        var statusString = Enum.GetName(typeof(BookBorrowingStatus), bookBorrowingRequest.Status) ?? string.Empty;
+        await auditLogger.LogAsync(bookBorrowingRequest.Id.ToString(),
+            nameof(BookBorrowingRequest),
+            StringHelper.ReplacePlaceholders(
+                AuditLogMessageTemplate.UpdateBookBorrowingRequestStatus,
+                executionContext.GetUserName(),
+                statusString,
+                $"{bookBorrowingRequest.Requester.Username} (#{bookBorrowingRequest.Id})",
+                bookBorrowingRequest.ModifiedAt?.ToString() ?? string.Empty
+                ),
+                propertiesChanged);
+    }
+
+    private static Dictionary<string, (string?, string?)> GetChangedBookBorrowingRequestProperties(
+    BookBorrowingRequest newRequest, BookBorrowingRequest? oldRequest = default)
+    {
+        var changes = new Dictionary<string, (string?, string?)>();
+
+        if (oldRequest == null || newRequest.RequesterId != oldRequest.RequesterId)
+            changes.Add(nameof(newRequest.RequesterId), (oldRequest?.RequesterId.ToString(), newRequest.RequesterId.ToString()));
+
+        if (oldRequest == null || newRequest.ApproverId != oldRequest.ApproverId)
+            changes.Add(nameof(newRequest.ApproverId), (oldRequest?.ApproverId?.ToString(), newRequest.ApproverId?.ToString()));
+
+        if (oldRequest == null || newRequest.DateRequested != oldRequest.DateRequested)
+            changes.Add(nameof(newRequest.DateRequested), (oldRequest?.DateRequested.ToString(), newRequest.DateRequested.ToString()));
+
+        if (oldRequest == null || newRequest.DateApproved != oldRequest.DateApproved)
+            changes.Add(nameof(newRequest.DateApproved), (oldRequest?.DateApproved?.ToString(), newRequest.DateApproved?.ToString()));
+
+        if (oldRequest == null || newRequest.Status != oldRequest.Status)
+            changes.Add(nameof(newRequest.Status), (oldRequest?.Status.ToString(), newRequest.Status.ToString()));
+
+        if (oldRequest == null || newRequest.IsDeleted != oldRequest.IsDeleted)
+            changes.Add(nameof(newRequest.IsDeleted), (oldRequest?.IsDeleted.ToString(), newRequest.IsDeleted.ToString()));
+
+        return changes;
     }
 }

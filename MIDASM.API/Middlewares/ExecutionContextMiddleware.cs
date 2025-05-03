@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Memory;
 using MIDASM.Application.Commons.Models.Users;
 using MIDASM.Application.Services.Authentication;
 using MIDASM.Contract.Constants;
@@ -62,11 +63,16 @@ public class ExecutionContextMiddleware
                 Id = user!.Id,
                 BookBorrowingLimit = user.BookBorrowingLimit,
                 Role = new UserRoleExecutionContext { Name = user.Role.Name },
-                Email = user.Email
+                Email = user.Email,
+                Username = user.Username,
             };
             executionContext.SetJti(jti);
             executionContext.SetAccessToken(accessToken!);
             executionContext.SetUser(userExecutionContext);
+
+            var userAgent = context?.Request.Headers["User-Agent"].ToString();
+
+            executionContext.SetUserAgent(userAgent);
         }
 
         await _next(context);

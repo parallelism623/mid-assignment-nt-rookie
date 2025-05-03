@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MIDASM.Application.Commons.Models;
 using MIDASM.Application.Commons.Models.Users;
+using MIDASM.Application.Services.AuditLogServices;
 using MIDASM.Application.UseCases;
 
 namespace MIDASM.API.Presentation.Controllers;
@@ -12,8 +13,11 @@ namespace MIDASM.API.Presentation.Controllers;
 public class UsersController : ApiBaseController
 {
     private readonly IUserServices _userServices;
-    public UsersController(IUserServices userServices)
+    private readonly IAuditLogger _auditLogger;
+    public UsersController(IUserServices userServices,
+            IAuditLogger auditLogger)
     {
+        _auditLogger = auditLogger;
         _userServices = userServices;
     }
 
@@ -94,6 +98,16 @@ public class UsersController : ApiBaseController
     public async Task<IActionResult> DeleteAsync(Guid id)
     {
         var result = await _userServices.DeleteAsync(id);
+        return ProcessResult(result);
+    }
+
+    [HttpGet]
+    [Route("{id:guid}/audit-logs")]
+    [Authorize(Roles = "User,Admin")]
+    public async Task<IActionResult> GetAuditLogsAsync(Guid id, [FromQuery] UserAuditLogQueryParameters queryParameters)
+    {
+        var result = await _auditLogger.GetUserActivitiesAsync(id, queryParameters);
+
         return ProcessResult(result);
     }
 }

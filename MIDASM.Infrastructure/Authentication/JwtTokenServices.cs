@@ -45,8 +45,7 @@ public class JwtTokenServices : IJwtTokenServices
         SecurityTokenDescriptor tokenDescriptor = new()
         {
             Subject = claimsList,
-            //Expires = DateTime.UtcNow.AddMinutes(_jwtOptions.ExpireTokenMinutes),           
-            Expires = DateTime.UtcNow.AddSeconds(10),           
+            Expires = DateTime.UtcNow.AddMinutes(_jwtOptions.ExpireTokenMinutes),                    
             Issuer = _jwtOptions.Issuer,
             Audience = _jwtOptions.Audience,
             SigningCredentials = credentials

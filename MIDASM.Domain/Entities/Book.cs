@@ -56,4 +56,20 @@ public class Book : AuditableEntity, IEntity<Guid>
     {
         book.SubImagesUrl = subImagesUrl;
     }
+
+    public static Book Copy(Book book)
+    {
+        return new Book()
+        {
+            Id = book.Id,
+            Title = book.Title,
+            Description = book.Description,
+            Author = book.Author,
+            Available = book.Available,
+            Quantity = book.Quantity,
+            ImageUrl = book.ImageUrl,
+            SubImagesUrl = book.SubImagesUrl,
+            CategoryId = book.CategoryId
+        };
+    }
 }
