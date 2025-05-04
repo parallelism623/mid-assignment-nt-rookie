@@ -28,4 +28,9 @@ public abstract class ApiBaseController : ControllerBase
     protected IActionResult ProcessResult<T>(T result)
         where T : Result
         => result.IsSuccess ? OnResultSuccess(result) : OnResultFailure(result);
+
+    protected IActionResult ProcessFileResult(byte[] result, string contentType, string fileName)
+    {
+        return File(result, contentType, fileName);
+    }
 }

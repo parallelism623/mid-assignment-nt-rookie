@@ -4,13 +4,14 @@ using MIDASM.Application.Commons.Models.ImportExport;
 using MIDASM.Application.Services.ImportExport;
 using MIDASM.Domain.Entities;
 using MIDASM.Domain.Repositories;
+using MIDASM.Infrastructure.ImportExport.Export.Excels;
 using Quartz;
 
 namespace MIDASM.Infrastructure.ScheduleJobs;
 
 public class ScanBookBorrowingDueDateJob(
     IBookBorrowingRequestDetailRepository bookBorrowingRequestDetailRepository,
-    IExportServices exportServices,
+    IExportFactory exportFactory,
     IEmailRecordRepository emailRecordRepository) 
     : IJob
 {
@@ -48,7 +49,11 @@ public class ScanBookBorrowingDueDateJob(
 
         foreach (var it in data)
         {
-            var excelExportData = exportServices.Export(it.Books);
+            var excelExportData = exportFactory.ExportFile(nameof(ExportToExcel), new ExportRequest<ExportBookDueDate>
+            {
+                DataExport = it.Books,
+                Title = $"List book due date at {targetDate}",  
+            });
             var emailRecord = new EmailRecord()
             {
                 ToEmail = it.Email,

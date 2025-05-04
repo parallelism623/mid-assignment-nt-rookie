@@ -14,6 +14,7 @@ using MIDASM.Infrastructure.Files;
 using MIDASM.Infrastructure.HostedServices.Abstract;
 using MIDASM.Infrastructure.HostedServices.MailSenderBackgroundService;
 using MIDASM.Infrastructure.ImportExport.Export;
+using MIDASM.Infrastructure.ImportExport.Export.Excels;
 using MIDASM.Infrastructure.Mail;
 using MIDASM.Infrastructure.Options;
 using MIDASM.Infrastructure.ScheduleJobs;
@@ -52,7 +53,9 @@ public static class DependencyInjection
     }
     public static IServiceCollection ConfigureImportExportServices(this IServiceCollection services)
     {
-        services.AddScoped<IExportServices, ExportToExcel>();
+        services.AddKeyedScoped<IExportServices, ExportToExcel>(nameof(ExportToExcel));
+        services.AddScoped<IExportFactory, ExportFactory>();
+        services.AddKeyedScoped<IExportServices, ExportToPdf>(nameof(ExportToPdf));
         return services;
     }
 

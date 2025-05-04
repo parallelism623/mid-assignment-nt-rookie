@@ -145,15 +145,16 @@ public class ReportServices(IBookRepository bookRepository,
         var bookBorrowingRequestQuery = bookBorrowingRequestRepository.GetQueryable().Where(bbd => bbd.DateRequested >= queryParameters.FromDate
                                                 && bbd.DateRequested <= queryParameters.ToDate);
         
-        var data = await userQuery.GroupJoin(bookBorrowingRequestQuery, 
-                                    u => u.Id, 
-                                    bb => bb.RequesterId,
-                                    (u, bb) => new 
-                                    {
-                                        User = u,
-                                        BookBorrowingRequests = bb,
-                                        BookReviews = u.BookReviews != null ? u.BookReviews.Count : 0
-                                    })
+        var data = await userQuery
+            .GroupJoin(bookBorrowingRequestQuery, 
+                        u => u.Id, 
+                        bb => bb.RequesterId,
+                        (u, bb) => new 
+                        {
+                            User = u,
+                            BookBorrowingRequests = bb,
+                            BookReviews = u.BookReviews != null ? u.BookReviews.Count : 0
+                        })
             .SelectMany(d => d.BookBorrowingRequests.DefaultIfEmpty(), 
                        (d, bb) => new
                        {
@@ -167,7 +168,7 @@ public class ReportServices(IBookRepository bookRepository,
                 d.User.Id,
                 d.User.Username,
                 d.User.Email,
-                d.BookReviews
+                d.BookReviews,
             })
             .Select(g => new UserReportResponse
             {

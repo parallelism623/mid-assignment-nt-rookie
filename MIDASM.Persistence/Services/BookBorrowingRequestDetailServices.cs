@@ -30,7 +30,7 @@ public class BookBorrowingRequestDetailServices(
 {
     public async Task<Result<string>> AdjustExtendDueDateAsync(Guid id, int status)
     {
-        var bookBorrowedDetail = await bookBorrowingRequestDetailRepository.GetByIdAsync(id, "BookBorrowingRequest", "Book", "Requester");
+        var bookBorrowedDetail = await bookBorrowingRequestDetailRepository.GetByIdAsync(id, "BookBorrowingRequest", "Book");
         if(bookBorrowedDetail == null)
         {
             return Result<string>.Failure(400, BookBorrowingRequestDetailErrors.BookBorrowedDetailNotFound);

@@ -1,7 +1,7 @@
 ﻿
 namespace MIDASM.Application.Commons.Models.Report;
 
-public class ReportQueryParameters : QueryParameters
+public class ReportQueryParameters
 {
     public DateOnly FromDate { get; set; }
     public DateOnly ToDate { get; set; } 

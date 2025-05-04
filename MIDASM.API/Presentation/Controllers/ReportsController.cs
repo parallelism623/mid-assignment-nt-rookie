@@ -31,6 +31,7 @@ public class ReportsController(IReportServices reportServices) : ApiBaseControll
 
     [HttpGet]
     [Route("users")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetUserReport([FromQuery] UserEngagementReportQueryParameters userReportQueryParameters)
     {
         var result = await reportServices.GetUserReportAsync(userReportQueryParameters);

@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using MIDASM.API;
 using MIDASM.API.Middlewares;
 using MIDASM.Application.Commons.Options;
+using QuestPDF.Infrastructure;
 using System.Security.Cryptography;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,7 +18,7 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
     options.SuppressModelStateInvalidFilter = true;
 });
-
+QuestPDF.Settings.License = LicenseType.Community;
 var corsSection = builder.Configuration.GetSection("Cors");
 var policyName = corsSection.GetValue<string>("PolicyName");
 var origins = corsSection.GetSection("AllowedOrigins").Get<string[]>();
