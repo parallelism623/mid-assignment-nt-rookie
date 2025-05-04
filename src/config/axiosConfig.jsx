@@ -26,6 +26,35 @@ axiosClient.interceptors.request.use((config) => {
 axiosClient.interceptors.response.use(
   (response) => {
     if (
+      response.config.method === "get" &&
+      response.config.url.includes("/exports/")
+    ) {
+      const contentType = response.headers["content-type"];
+
+      const disposition = response.headers["content-disposition"];
+      let filename = "downloaded-file";
+
+      if (disposition && disposition.includes("filename=")) {
+        const match = disposition.match(
+          /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+        );
+        if (match && match[1]) {
+          filename = match[1].replace(/['"]/g, "");
+        }
+      }
+
+      const blob = new Blob([response.data], { type: contentType });
+      const href = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = href;
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(href);
+    }
+    if (
       response.config.method !== "get" &&
       typeof response.data?.data === "string"
     ) {

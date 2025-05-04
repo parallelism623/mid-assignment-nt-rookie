@@ -7,8 +7,9 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { reportType } from "../../constants/reportType";
-
+import { exportType } from "../../constants/exportType";
 const { RangePicker } = DatePicker;
+import { exportServices } from "../../services/exportServices";
 
 const ReportCard = ({ onSelect }) => {
   const [selectedKey, setSelectedKey] = useState(reportType.bookBorrowing);
@@ -81,7 +82,17 @@ const ReportCard = ({ onSelect }) => {
       key: reportType.userEngagement,
     },
   ];
-
+  const onExport = (values) => {
+    if (values.option == reportType.userEngagement) {
+      exportServices.exportUserEngagementReport(values);
+    }
+    if (values.option == reportType.bookBorrowing) {
+      exportServices.exportBookBorrowingReport(values);
+    }
+    if (values.option == reportType.category) {
+      exportServices.exportCategoriesReport(values);
+    }
+  };
   return (
     <Card
       title="📊 Report Options"
@@ -147,6 +158,39 @@ const ReportCard = ({ onSelect }) => {
           { label: "Top 50", value: 50 },
         ]}
       />
+      <Divider>Export</Divider>
+      <div className="flex gap-4">
+        <button
+          className="px-4 py-2 bg-red-400 text-white rounded hover:bg-red-600 transition-all"
+          onClick={() => {
+            const { fromDate, toDate } = getDateRange(timeOption, customRange);
+            onExport?.({
+              fromDate,
+              toDate,
+              top: topN,
+              option: selectedKey,
+              exportType: exportType.pdf,
+            });
+          }}
+        >
+          Export PDF
+        </button>
+        <button
+          className="px-4 py-2 bg-green-400 text-white rounded hover:bg-green-600 transition-all"
+          onClick={() => {
+            const { fromDate, toDate } = getDateRange(timeOption, customRange);
+            onExport?.({
+              fromDate,
+              toDate,
+              top: topN,
+              option: selectedKey,
+              exportType: exportType.excel,
+            });
+          }}
+        >
+          Export Excel
+        </button>
+      </div>
     </Card>
   );
 };

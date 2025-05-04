@@ -58,11 +58,6 @@ const UserEngagementReport = ({ reportQueryParameters }) => {
       key: "rejectedBookBorrowingRequest",
     },
     {
-      title: "Total Borrowing (Actual)",
-      dataIndex: "totalBookBorrowing",
-      key: "totalBookBorrowing",
-    },
-    {
       title: "Active Days",
       dataIndex: "activeDay",
       key: "activeDay",
@@ -81,7 +76,7 @@ const UserEngagementReport = ({ reportQueryParameters }) => {
 
   return (
     <ReportTable
-      title={`👤 User Engagement Report from ${reportQueryParameters.fromDate} to ${reportQueryParameters.toDate} (Order by total borrowing request)`}
+      title={`👤 User Engagement Top ${reportQueryParameters.top} total borrowing request Report from ${reportQueryParameters.fromDate} to ${reportQueryParameters.toDate}`}
       columns={columns}
       loading={loading}
       data={data}
