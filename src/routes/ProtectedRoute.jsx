@@ -45,8 +45,6 @@ const ProtectedRoutes = (props) => {
         setLoading(false);
       })
       .catch(() => {
-        removeAccessToken();
-        navigate("/signin");
         setLoading(false);
       });
   };

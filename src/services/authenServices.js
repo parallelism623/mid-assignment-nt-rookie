@@ -10,4 +10,6 @@ export const authenServices = {
     axiosClient.post("/auth/email-confirm", requestModel),
   emailConfirmRefresh: (requestModel) =>
     axiosClient.post("/auth/email-confirm-refresh", requestModel),
+  changePassword: (requestModel) =>
+    axiosClient.post("/auth/change-password", requestModel),
 };

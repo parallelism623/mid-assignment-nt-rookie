@@ -50,6 +50,12 @@ const AppHeader = () => {
       visible: roleName === environment.adminRole,
       className: "be-vietnam-pro-light header-nav-item",
     },
+    {
+      key: "reports",
+      label: "Report",
+      visible: roleName === environment.adminRole,
+      className: "be-vietnam-pro-light header-nav-item",
+    },
   ];
   return (
     <>

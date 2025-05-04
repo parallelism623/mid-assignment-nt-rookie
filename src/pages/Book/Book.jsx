@@ -192,7 +192,6 @@ const Book = () => {
     setQueryParameters({
       ...queryParameters,
       pageIndex: defaultQueryParameters.pageIndex,
-      pageSize: defaultQueryParameters.pageSize,
       ...values,
     });
   };
@@ -329,7 +328,9 @@ const Book = () => {
                         ? actionOfBookItemsAdmin(record)
                         : actionOfBookItemsUser(record)
                     }
-                    className={isSelected ? "ring-2 ring-blue-400" : ""}
+                    className={`rounded-xl shadow-lg border border-gray-200 bg-white ${
+                      isSelected ? "ring-2 ring-blue-400" : ""
+                    }`}
                   >
                     <Card.Meta
                       description={

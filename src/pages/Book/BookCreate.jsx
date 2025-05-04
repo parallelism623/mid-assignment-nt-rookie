@@ -161,7 +161,6 @@ const CreateBook = () => {
                   return (
                     <Col key={key} xs={24} sm={12} md={6}>
                       <Form.Item
-                        key={name}
                         name={[name]}
                         fieldKey={[fieldKey]}
                         {...restField}

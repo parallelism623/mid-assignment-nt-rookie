@@ -9,9 +9,10 @@ export const routesPath = {
   bookEdit: "books/:id/edit",
   bookCreate: "books/create",
   bookBorrowing: "books-borrowing",
-  userProfile: "users/profile",
+  userProfile: "profile",
   emailConfirm: "/email-confirm",
   bookBorrowed: "/book-borrowed",
   bookDetail: "/books/:id/detail",
   forbidden: "/forbidden",
+  reports: "reports",
 };

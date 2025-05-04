@@ -17,4 +17,6 @@ export const userServices = {
   update: (updateRequest) => axiosClient.put("/users", updateRequest),
   create: (createRequest) => axiosClient.post("/users", createRequest),
   delete: (id) => axiosClient.delete(`/users/${id}`),
+  updateProfile: (id, request) =>
+    axiosClient.put(`/users/${id}/profile`, request),
 };

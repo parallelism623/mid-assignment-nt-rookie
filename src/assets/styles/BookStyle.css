@@ -10,8 +10,9 @@
 }
 .book-list-card {
   min-width: 100% !important;
-  border: 2px solid var(--font-color-on-selected-dark-mode) !important;
   height: 100% !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
 }
 .book-list-card .ant-card-head-title {
   font-size: 1.5rem !important;

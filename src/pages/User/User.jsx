@@ -1,4 +1,4 @@
-import { Card, Table, Row, Col, Button } from "antd";
+import { Card, Table, Row, Col, Button, Input } from "antd";
 
 import { useEffect, useState } from "react";
 import { userServices } from "../../services/userServices";
@@ -8,12 +8,13 @@ import EditButton from "../../components/ui/buttons/EditButton";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import EditUserModal from "./EditUser";
 import CreateUserModal from "./CreateUser";
-
+import RoleSelect from "./RoleSelect";
+const { Search } = Input;
 const defaultQueryParameters = {
   pageIndex: 1,
   pageSize: 10,
   search: "",
-  roleId: "",
+  roleIds: "",
 };
 const { Column } = Table;
 const User = () => {
@@ -45,6 +46,7 @@ const User = () => {
     queryParameters.pageIndex,
     queryParameters.pageSize,
     queryParameters.search,
+    queryParameters.roleIds,
   ]);
   const handlePageChange = (pageIndex, pageSize) => {
     setQueryParameters({ ...queryParameters, pageIndex, pageSize });
@@ -59,6 +61,9 @@ const User = () => {
   };
   const handleOnClickCreateButton = () => {
     setOpenCreateModal(true);
+  };
+  const handleOnEnterSearch = (value) => {
+    setQueryParameters({ ...queryParameters, search: value });
   };
   const handleOnClickViewDetailButton = () => {};
   const handleOnSubmitDeleteUser = async () => {
@@ -98,6 +103,13 @@ const User = () => {
   const handleOnDeleteUser = async () => {
     setOpenDeleteConfirmModal(false);
   };
+  const handleOnSelectRole = (values) => {
+    console.log(values.join(";"));
+    setQueryParameters({
+      ...Button.queryParameters,
+      roleIds: values.join(";"),
+    });
+  };
   return (
     <>
       {openDeleteConfirmModal && (
@@ -128,6 +140,18 @@ const User = () => {
       <Card
         extra={
           <Row className="flex items-center justify-between gap-1.5 overflow-x-hidden">
+            <Col>
+              <RoleSelect onSelect={handleOnSelectRole} />
+            </Col>
+            <Col>
+              <Search
+                placeholder="Search by name/email"
+                style={{ width: 240 }}
+                onSearch={handleOnEnterSearch}
+                defaultValue={queryParameters.search}
+                loading={loading}
+              />
+            </Col>
             <Col>
               <Button
                 className="create-book-button"

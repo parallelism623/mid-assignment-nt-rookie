@@ -1,4 +1,4 @@
-.app-content{
-    background: var(--background-content-dark-mode) !important;
-padding: 4em;
+.app-content {
+  background: url("../body-background.avif") no-repeat center center / cover;
+  padding: 4em;
 }

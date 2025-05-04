@@ -6,6 +6,8 @@ import { booksBorrowingRequestServices } from "../../services/booksBorrowingRequ
 import { booksBorrowingRequestStatus } from "../../constants/booksBorrowingRequestStatus";
 import dayjs from "dayjs";
 import { routesPath } from "../../constants/routesPath";
+import { useUserContext } from "../../routes/ProtectedRoute";
+import { environment } from "../../constants/environment";
 const { Column } = Table;
 const BookBorrowingDetail = ({
   bookBorrowingId,
@@ -16,7 +18,7 @@ const BookBorrowingDetail = ({
   const [booksBorrow, setBooksBorrow] = useState([]);
   const [requestBorrowingStatus, setRequestBorrowingStatus] = useState(null);
   const [loading, setLoading] = useState(false);
-
+  const { id, roleName } = useUserContext();
   const fetchData = (isSetData = true) => {
     setLoading(true);
     booksBorrowingRequestServices
@@ -55,26 +57,28 @@ const BookBorrowingDetail = ({
             className="flex gap-3 justify-end"
             key="footer-modal-book-borrowing-request-detail"
           >
-            {requestBorrowingStatus === booksBorrowingRequestStatus.Waiting && (
-              <Tooltip title="Approve" key="approve">
-                <button
-                  onClick={() => onApprove(bookBorrowingId)}
-                  className="p-2 rounded-lg bg-green-300 text-green-800 hover:bg-green-400"
-                >
-                  <FiCheck size={20} />
-                </button>
-              </Tooltip>
-            )}
-            {requestBorrowingStatus === booksBorrowingRequestStatus.Waiting && (
-              <Tooltip title="Reject" key="reject">
-                <button
-                  onClick={() => onReject(bookBorrowingId)}
-                  className="p-2 rounded-lg bg-red-300 text-red-800 hover:bg-red-400"
-                >
-                  <FiX size={20} />
-                </button>
-              </Tooltip>
-            )}
+            {requestBorrowingStatus === booksBorrowingRequestStatus.Waiting &&
+              roleName === environment.adminRole && (
+                <Tooltip title="Approve" key="approve">
+                  <button
+                    onClick={() => onApprove(bookBorrowingId)}
+                    className="p-2 rounded-lg bg-green-300 text-green-800 hover:bg-green-400"
+                  >
+                    <FiCheck size={20} />
+                  </button>
+                </Tooltip>
+              )}
+            {requestBorrowingStatus === booksBorrowingRequestStatus.Waiting &&
+              roleName === environment.adminRole && (
+                <Tooltip title="Reject" key="reject">
+                  <button
+                    onClick={() => onReject(bookBorrowingId)}
+                    className="p-2 rounded-lg bg-red-300 text-red-800 hover:bg-red-400"
+                  >
+                    <FiX size={20} />
+                  </button>
+                </Tooltip>
+              )}
           </div>,
         ]}
       >

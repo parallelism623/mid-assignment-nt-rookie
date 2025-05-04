@@ -26,7 +26,7 @@ const Category = () => {
   const fetchData = (isSetData = true) => {
     setLoading(true);
     categoryServices
-      .getsName()
+      .gets(queryParameters)
       .then((res) => {
         if (isSetData) {
           setQueryParameters({

@@ -12,13 +12,9 @@ import { useLocalStorage } from "../hooks/useStorage";
 
 const content = (onClickLogout) => (
   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-    <Link to="users/profile">
+    <Link to="/profile">
       <UserOutlined style={{ paddingRight: "0.6em" }} />
       Profile
-    </Link>
-    <Link to="/settings">
-      <SettingOutlined style={{ paddingRight: "0.6em" }} />
-      Settings
     </Link>
     <Link onClick={onClickLogout} to="/logout">
       <LogoutOutlined style={{ paddingRight: "0.6em" }} />
@@ -32,11 +28,12 @@ const AccountMenu = () => {
     "access_token",
     ""
   );
-  const onClickLogout = async () => {
-    await authenServices.logout();
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    navigate("/signin");
+  const onClickLogout = () => {
+    authenServices.logout().then(() => {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      navigate("/signin");
+    });
   };
   const accountMenuItem = content(onClickLogout);
   return (
