@@ -9,5 +9,6 @@ public interface IAuditLogger
 {
     Task LogAsync(string entityId, string entityName, string desciption, Dictionary<string, (string?, string?)>? changedProperties = default);
     Task<Result<PaginationResult<AuditLogResponse>>> GetActivitiesAsync(AuditLogQueryParameters queryParameters);
+    Task<List<UserActiveDaysAuditLog>> GetUserActivitiesReportAsync(UserActivitiesQueryParameters userActivitiesQueryParameters);
     Task<Result<PaginationResult<UserAuditLogResponse>>> GetUserActivitiesAsync(Guid userId, UserAuditLogQueryParameters queryParameters);
 }

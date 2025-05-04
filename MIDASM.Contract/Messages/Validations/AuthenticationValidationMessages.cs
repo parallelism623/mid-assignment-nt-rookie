@@ -4,6 +4,8 @@ namespace MIDASM.Contract.Messages.Validations;
 public static class AuthenticationValidationMessages
 {
     public const string PasswordShouldNotBeEmpty = "Password should not be empty";
+    public const string CurrentPasswordShouldNotBeEmpty = "Current password should not be empty";
+    public const string NewPasswordShouldNotBeEmpty = "New password should not be empty";
     public const string EmailOrUsernameShouldBeProvided = "Email or username should be provided";
 
     public const string PasswordShouldBeInRange = "Password length must be in range {0} - {1}";
@@ -27,4 +29,6 @@ public static class AuthenticationValidationMessages
     public const string UsernameShouldMatchesRegexPattern = "Username must start with a letter, 1 - {0} chars, only letters, numbers and underscore.";
     public const string PasswordMustBeNotEmpty = "Password must be not empty";
     public const string PasswordMustMatcheRegexPattern = "Password must be {0}-{1} chars, include uppercase, lowercase, number and special character.";
+    public const string NewPasswordMustMatcheRegexPattern = "Current password must be {0}-{1} chars, include uppercase, lowercase, number and special character.";
+    public const string CurrentPasswordMustMatcheRegexPattern = "New password must be {0}-{1} chars, include uppercase, lowercase, number and special character.";
 }

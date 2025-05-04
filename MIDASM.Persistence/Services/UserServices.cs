@@ -286,7 +286,24 @@ public class UserServices(IUserRepository userRepository,
         return PaginationResult<UserDetailResponse>.Create(pageSize, pageIndex, totalCount, userData);
     }
 
+    public async Task<Result<string>> UpdateProfileAsync(Guid id, UserProfileUpdateRequest userProfileUpdateRequest)
+    {
+        var user = await userRepository.GetByIdAsync(id);
+        var userId = executionContext.GetUserId();
+        if(userId != id)
+        {
+            return Result<string>.Failure(400, UserErrors.UserCannotBeInCurrentSession);
+        }
+        if (user == null)
+        {
+            return Result<string>.Failure(400, UserErrors.UserNotFound);
+        }
 
+        User.UpdateProfile(user, userProfileUpdateRequest.FirstName, userProfileUpdateRequest.LastName, userProfileUpdateRequest.PhoneNumber);
+        await userRepository.SaveChangesAsync();
+
+        return UserCommandMessages.UserUpdateSuccessfully;
+    }
 
 
     public async Task<Result<string>> UpdateAsync(UserUpdateRequest updateRequest)
@@ -539,4 +556,5 @@ BookBorrowingRequestDetail newDetail, BookBorrowingRequestDetail? oldDetail = de
 
         return changes;
     }
+
 }

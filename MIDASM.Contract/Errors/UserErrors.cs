@@ -26,6 +26,7 @@ public static class UserErrorMessages
     public const string UserNameAlreadyExists = "Username already exists";
     public const string EmailAlreadyExists = "Email already exists";
 
+    public const string PasswordNotCorrect = "Current password incorrect";
 }
 public static class UserErrors
 {
@@ -59,4 +60,6 @@ public static class UserErrors
 
     public static Error UsernameAlreadyExists => new(nameof(UsernameAlreadyExists), UserErrorMessages.EmailAlreadyExists);
     public static Error EmailAlreadyExists => new(nameof(EmailAlreadyExists), UserErrorMessages.EmailAlreadyExists);
+
+    public static Error PasswordNotCorrect => new(nameof(PasswordNotCorrect), UserErrorMessages.PasswordNotCorrect);
 }

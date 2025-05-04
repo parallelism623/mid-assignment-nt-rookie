@@ -107,7 +107,15 @@ public class UsersController : ApiBaseController
     public async Task<IActionResult> GetAuditLogsAsync(Guid id, [FromQuery] UserAuditLogQueryParameters queryParameters)
     {
         var result = await _auditLogger.GetUserActivitiesAsync(id, queryParameters);
+        return ProcessResult(result);
+    }
 
+    [HttpPut]
+    [Route("{id:guid}/profile")]
+    [Authorize(Roles = "User, Admin")]
+    public async Task<IActionResult> UpdateProfileAsync(Guid id, [FromBody] UserProfileUpdateRequest userProfileUpdateRequest)
+    {
+        var result = await _userServices.UpdateProfileAsync(id, userProfileUpdateRequest);
         return ProcessResult(result);
     }
 }

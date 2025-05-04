@@ -38,6 +38,7 @@ public static class DependencyInjection
         services.AddScoped<IEmailRecordRepository, EmailRecordRepository>();
         services.AddScoped<IRoleServices, RoleServices>();
         services.AddScoped<IAuditLogger, AuditLogger>();
+        services.AddScoped<IReportServices, ReportServices>();
         return services;
     }
 

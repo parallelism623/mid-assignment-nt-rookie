@@ -18,4 +18,6 @@ public interface IUserServices
     Task<Result<string>> UpdateAsync(UserUpdateRequest updateRequest);
 
     Task<Result<string>> DeleteAsync(Guid id);
+
+    Task<Result<string>> UpdateProfileAsync(Guid id, UserProfileUpdateRequest userProfileUpdateRequest);
 }

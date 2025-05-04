@@ -70,7 +70,7 @@ public class ExecutionContextMiddleware
             executionContext.SetAccessToken(accessToken!);
             executionContext.SetUser(userExecutionContext);
 
-            var userAgent = context?.Request.Headers["User-Agent"].ToString();
+            var userAgent = context?.Request.Headers["User-Agent"].ToString() ?? string.Empty;
 
             executionContext.SetUserAgent(userAgent);
         }

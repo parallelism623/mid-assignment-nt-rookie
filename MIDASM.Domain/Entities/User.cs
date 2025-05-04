@@ -83,5 +83,17 @@ public class User : AuditableEntity, IEntity<Guid>
     {
         user.IsDeleted = true;
     }
+
+    public static void UpdateProfile(User user, string firstName, string lastName, string? phoneNumber)
+    {
+        user.FirstName = firstName;
+        user.LastName = lastName;
+        user.PhoneNumber = phoneNumber;
+    }
+
+    public static void UpdatePassword(User user, string password)
+    {
+        user.Password = password;   
+    }
     
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Hangfire.Storage.Monitoring;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -10,6 +11,7 @@ using MIDASM.Application.Services.Crypto;
 using MIDASM.Application.Services.HostedServices.Abstract;
 using MIDASM.Application.Services.Mail;
 using MIDASM.Contract.Constants;
+using MIDASM.Contract.Errors;
 using MIDASM.Contract.Helpers;
 using MIDASM.Contract.Messages.Commands;
 using MIDASM.Contract.SharedKernel;
@@ -170,4 +172,5 @@ public class ApplicationAuthentication : BaseAuthentication, IApplicationAuthent
         await SendEmailConfirmCode(user);
         return AuthenticationMessages.RefreshEmailConfirmSuccess;
     }
+
 }

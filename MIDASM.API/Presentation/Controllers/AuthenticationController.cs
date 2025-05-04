@@ -67,4 +67,14 @@ public class AuthenticationController : ApiBaseController
 
         return ProcessResult(result);
     }
+
+    [HttpPost]
+    [Route("change-password")]
+    [Authorize(Roles ="User,Admin")]
+    public async Task<IActionResult> ChangePasswordAsync([FromBody] UserPasswordChangeRequest userPasswordChangeRequest)
+    {
+        var result = await _applicationAuthentication.ChangePasswordAsync(userPasswordChangeRequest);
+
+        return ProcessResult(result);
+    }
 }

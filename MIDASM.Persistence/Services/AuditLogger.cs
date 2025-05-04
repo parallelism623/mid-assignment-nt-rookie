@@ -136,4 +136,20 @@ public class AuditLogger : IAuditLogger
         }
         return auditLogDatas;
     }
+
+    public async Task<List<UserActiveDaysAuditLog>> GetUserActivitiesReportAsync(UserActivitiesQueryParameters userActivitiesQueryParameters)
+    {
+        return await _auditDbContext.AuditLogs.Where(ad => userActivitiesQueryParameters.UserIds.Contains(ad.UserId)
+                                                    && DateOnly.FromDateTime(ad.TimeStamp.Date) <= userActivitiesQueryParameters.ToDate
+                                                    && DateOnly.FromDateTime(ad.TimeStamp.Date) >= userActivitiesQueryParameters.FromDate)
+                                              .GroupBy(ad => new
+                                              {
+                                                  ad.UserId,
+                                              })
+                                              .Select(g => new UserActiveDaysAuditLog
+                                              {
+                                                  UserId =  g.Key.UserId, 
+                                                  ActiveDays = g.Select(ad => ad.TimeStamp.Date).Distinct().Count()
+                                              }).ToListAsync();
+    }
 }

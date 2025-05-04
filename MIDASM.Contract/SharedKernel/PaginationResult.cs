@@ -16,6 +16,7 @@ public class PaginationResult<T>
         TotalCount = totalCount;
         Items = data;
     }
+
     public static PaginationResult<T> Create(int pageSize, int pageIndex, int totalCount, List<T> data)
     {
         return new PaginationResult<T>(pageSize, pageIndex, totalCount, data); 

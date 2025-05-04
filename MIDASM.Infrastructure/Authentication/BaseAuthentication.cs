@@ -6,6 +6,7 @@ using MIDASM.Application.Commons.Options;
 using MIDASM.Application.Services.AuditLogServices;
 using MIDASM.Application.Services.Authentication;
 using MIDASM.Application.Services.Crypto;
+using MIDASM.Contract.Errors;
 using MIDASM.Contract.Helpers;
 using MIDASM.Contract.Messages.AuditLogMessage;
 using MIDASM.Contract.Messages.Commands;
@@ -64,7 +65,29 @@ public abstract class BaseAuthentication : IBaseAuthentication
         await HandleAuditLogUserLogin(user);
         return new LoginResponse{ AccessToken = token, RefreshToken = refreshToken };
     }
+    public async Task<Result<string>> ChangePasswordAsync(UserPasswordChangeRequest userPasswordChangeRequest)
+    {
+        var userId = _executionContext.GetUserId();
 
+        var user = await _userRepository.GetByIdAsync(userId);
+
+        if (user == null)
+        {
+            return Result<string>.Failure(400, UserErrors.UserNotFound);
+        }
+
+        if (userPasswordChangeRequest.OldPassword != _cryptoService.Decrypt(user.Password))
+        {
+            return Result<string>.Failure(400, UserErrors.PasswordNotCorrect);
+        }
+
+
+ 
+        User.UpdatePassword(user, _cryptoService.Encrypt(userPasswordChangeRequest.Password));
+
+        await _userRepository.SaveChangesAsync();
+        return AuthenticationMessages.PasswordChangeSuccessFully;
+    }
     public async Task<Result<string>> LogoutAsync()
     {
         var userId = _executionContext.GetUserId();
