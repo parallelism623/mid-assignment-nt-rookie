@@ -145,21 +145,28 @@ public class BookServices(IBookRepository bookRepository,
         var oldBook = Book.Copy(book);
         Book.Update(book, request.Title, request.Description, request.Author, request.AddedQuantity,
             request.CategoryId);
-        if(request.NewImage != null)
+        if(request.ImageUrl == null)
         {
-            if(book.ImageUrl != null)
+            if(book.ImageUrl != null && book.ImageUrl != DefaultBookImage)
             {
                 await imageStorageServices.DeleteImageAsync(book.ImageUrl);
             }
-            var newImageUrl = await imageStorageServices.UploadImageAsync(request.NewImage);
-            Book.UpdateImageUrl(book, newImageUrl);
+
+            Book.UpdateImageUrl(book, DefaultBookImage);
+            if (request.NewImage != null)
+            {
+                var newImageUrl = await imageStorageServices.UploadImageAsync(request.NewImage);
+                Book.UpdateImageUrl(book, newImageUrl);
+            }
         }
-        if(request.SubImagesUrl != null && request.SubImagesUrl.Count != 0)
+    
+        var imageDeletedUrl = book.SubImagesUrl?.Where(i => !request.SubImagesUrl?.Contains(i) ?? true)?.ToList();
+        if (imageDeletedUrl != null && imageDeletedUrl.Count > 0)
         {
-            var imageDeletedUrl = book.SubImagesUrl!.Where(i => !request.SubImagesUrl?.Contains(i) ?? true).ToList();
             await Task.WhenAll(imageDeletedUrl.Select(u => imageStorageServices.DeleteImageAsync(u)));
-            Book.UpdateSubImagesUrl(book, request.SubImagesUrl);
-        }   
+            Book.UpdateSubImagesUrl(book, request.SubImagesUrl!);
+        }
+          
         
         if (request.NewSubImages != null && request.NewSubImages.Count != 0)
         {
