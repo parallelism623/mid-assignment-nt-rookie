@@ -263,15 +263,17 @@ const Book = () => {
                 </Button>
               </Col>
             )}
-            <Col>
-              {!borrowMode ? (
-                <Button onClick={toggleBorrowMode}>Borrow Books</Button>
-              ) : (
-                <Button onClick={handleSubmitBorrow}>
-                  {selectedRowKeys.length ? "Submit Borrow" : "Cancel Borrow"}
-                </Button>
-              )}
-            </Col>
+            {roleName !== environment.adminRole && (
+              <Col>
+                {!borrowMode ? (
+                  <Button onClick={toggleBorrowMode}>Borrow Books</Button>
+                ) : (
+                  <Button onClick={handleSubmitBorrow}>
+                    {selectedRowKeys.length ? "Submit Borrow" : "Cancel Borrow"}
+                  </Button>
+                )}
+              </Col>
+            )}
             <Col
               className="flex items-center cursor-pointer"
               onClick={() => setOpenFilter(true)}
