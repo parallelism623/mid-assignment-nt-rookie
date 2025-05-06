@@ -84,12 +84,13 @@ public static class DependencyInjection
             context.Users.Add(new User
             {
                 Username = "admin",
-                Password = rsaEncryptService.Encrypt("admin123"),
+                Password = rsaEncryptService.Encrypt("admin123A@"),
                 FirstName = "admin",
                 LastName = "admin",
                 Email = "admin@parabook.com",
                 BookBorrowingLimit = 3,
-                RoleId = adminRole.Id
+                RoleId = adminRole.Id,
+                IsVerifyCode = true
             });
             await context.SaveChangesAsync();
         }
