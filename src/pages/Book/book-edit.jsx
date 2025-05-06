@@ -57,6 +57,10 @@ const BookEdit = () => {
       formData.append("description", values.description || "");
       formData.append("categoryId", values.category.id);
       formData.append("addedQuantity", values.addedQuantity ?? 0);
+
+      if (imageUrl.current != null) {
+        formData.append("imageUrl", imageUrl.current);
+      }
       const tmpSubImagesUrl =
         subImagesUrl.current?.filter((si) => !!si) ?? null;
       if (!!tmpSubImagesUrl)
@@ -68,7 +72,7 @@ const BookEdit = () => {
       const newSubImages = [];
       const newSubImagesPos = [];
 
-      values.subImagesUrl.forEach((file, idx) => {
+      values.subImagesUrl?.forEach((file, idx) => {
         if (file instanceof File) {
           newSubImages.push(file);
           newSubImagesPos.push(idx);
@@ -170,7 +174,7 @@ const BookEdit = () => {
                   className="rounded-lg"
                   suffixIcon={<FiTag />}
                 >
-                  {categories.map((c) => (
+                  {categories?.map((c) => (
                     <Option key={c.id} value={c.id}>
                       {c.name}
                     </Option>
@@ -215,6 +219,7 @@ const BookEdit = () => {
                     form.setFieldsValue({ imageUrl: file });
                     if (!!imageUrlSigned.current) {
                       imageUrlSigned.current = null;
+                      imageUrl.current = null;
                     }
                   }}
                   defaultUrl={imageUrlSigned.current}
@@ -226,7 +231,7 @@ const BookEdit = () => {
           <Form.List name="subImagesUrl">
             {(fields, { add, remove }) => (
               <Row gutter={[16, 20]}>
-                {fields.map((field) => {
+                {fields?.map((field) => {
                   const { key, name, fieldKey, ...restField } = field;
                   return (
                     <Col key={key} xs={24} sm={12} md={6}>

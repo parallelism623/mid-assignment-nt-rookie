@@ -28,8 +28,13 @@ export default function ExtendDueDateModal({
       onCancel();
     }
   };
-  const minDate = dayjs().add(1, "day").startOf("day");
 
+  const dateAfterToDay = dayjs().add(1, "day").startOf("day");
+  const dateAfterDueDate = dayjs(currentDueDate).add(1, "day").startOf("day");
+
+  const minDate = dateAfterDueDate.isAfter(dateAfterToDay)
+    ? dateAfterDueDate
+    : dateAfterToDay;
   return (
     <Modal
       title="Extend Due Date"

@@ -25,7 +25,7 @@ import dayjs from "dayjs";
 const { Paragraph, Title } = Typography;
 import { bookServices } from "../../services/bookServices";
 import { useParams, useNavigate } from "react-router";
-import BookReviewCardModal from "../Book/BookReviewCardModal";
+import BookReviewCardModal from "./book-review-card-modal";
 import { VscCodeReview } from "react-icons/vsc";
 import FractionalStar from "../../components/ui/icons/FractionalStar";
 import { bookReviewServices } from "../../services/bookReviewServices";
