@@ -44,6 +44,11 @@ const BookBorrowingReport = ({ reportQueryParameters }) => {
       key: "author",
     },
     {
+      title: "Category",
+      dataIndex: "category",
+      key: "category",
+    },
+    {
       title: "Total Request",
       dataIndex: "totalBorrow",
       key: "totalRequest",

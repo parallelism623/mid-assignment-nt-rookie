@@ -35,7 +35,7 @@ import ReviewButtonText from "../../components/ui/buttons/ReviewButtonText";
 import { useUserContext } from "../../routes/ProtectedRoute";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import { environment } from "../../constants/environment";
-import { routesPath } from "../../constants/routesPath";
+
 const BookDetail = () => {
   const { id } = useParams();
   const [book, setBook] = useState(null);
@@ -44,13 +44,17 @@ const BookDetail = () => {
   const userInfo = useUserContext();
   const [openBookReview, setOpenBookReview] = useState(false);
   const [openDeleteConfirmPopup, setOpenDeleteConfirmPopup] = useState(false);
-  const [queryParameters, setQueryParameters] = useState({
+  const defaultQueryParameters = {
     skip: 0,
     take: 3,
     totalCount: 4,
     bookId: id,
     rating: [1, 2, 3, 4, 5],
+  };
+  const [queryParameters, setQueryParameters] = useState({
+    ...defaultQueryParameters,
   });
+
   let {
     title,
     author,
@@ -65,11 +69,29 @@ const BookDetail = () => {
     imageUrl,
     subImagesUrl = [],
   } = book ?? [];
-  const fetchData = (isSetDate = true) => {
+  const fetchData = (isSetData = true) => {
     bookServices.getById(id).then((res) => {
-      if (isSetDate == true) {
+      if (isSetData == true) {
         setBook(res);
       }
+    });
+  };
+  const fetchDataBookReviews = (fetchDataParameters, isSetData = true) => {
+    bookReviewServices.get(fetchDataParameters).then((res) => {
+      if (fetchDataParameters.skip >= fetchDataParameters.totalCount) return;
+      if (isSetData) {
+        setQueryParameters({
+          ...fetchDataParameters,
+          totalCount: res.totalCount,
+        });
+        setReviewsData([...reviewsData, ...res.items]);
+      }
+    });
+  };
+  const resetBookReviews = (fetchDataParameters, isSetData = true) => {
+    setReviewsData([]);
+    setQueryParameters({
+      ...fetchDataParameters,
     });
   };
   useEffect(() => {
@@ -80,11 +102,12 @@ const BookDetail = () => {
     };
   }, [id]);
   useEffect(() => {
-    bookReviewServices.get(queryParameters).then((res) => {
-      if (queryParameters.skip >= queryParameters.totalCount) return;
-      setQueryParameters({ ...queryParameters, totalCount: res.totalCount });
-      setReviewsData([...reviewsData, ...res.items]);
-    });
+    let isSetData = true;
+    fetchDataBookReviews(queryParameters, isSetData);
+
+    return () => {
+      isSetData = false;
+    };
   }, [queryParameters.skip, queryParameters.take, queryParameters.rating]);
   const handleOnClickExpand = () => {
     setQueryParameters({ ...queryParameters, skip: queryParameters.skip + 3 });
@@ -132,6 +155,7 @@ const BookDetail = () => {
           onSubmit={() => {
             handleOnSubmittedBookReview();
             fetchData();
+            resetBookReviews({ ...defaultQueryParameters });
           }}
         />
       )}

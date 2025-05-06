@@ -212,9 +212,6 @@ const User = () => {
                 <DeleteButton
                   onClick={() => handleOnClickDeleteButton(record)}
                 ></DeleteButton>
-                <ViewDetailButton
-                  onClick={handleOnClickViewDetailButton}
-                ></ViewDetailButton>
               </div>
             )}
           />

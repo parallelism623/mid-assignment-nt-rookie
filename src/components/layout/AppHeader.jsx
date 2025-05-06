@@ -21,7 +21,7 @@ const AppHeader = () => {
       key: "dashboard",
       label: "Dashboard",
       className: "header-nav-item be-vietnam-pro-light",
-      visible: true,
+      visible: false,
     },
     {
       key: "categories",

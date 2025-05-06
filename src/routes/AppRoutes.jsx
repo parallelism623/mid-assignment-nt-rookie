@@ -31,8 +31,13 @@ export const appRoutes = [
       </ProtectedRoutes>
     ),
     children: [
-      { index: true, path: routesPath.dashBoard, element: <Dashboard /> },
       {
+        index: true,
+        element: <Navigate to={routesPath.book} replace />,
+      },
+
+      {
+        index: true,
         path: routesPath.book,
         element: <Book />,
       },
