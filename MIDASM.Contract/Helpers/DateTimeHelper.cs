@@ -1,4 +1,0 @@
-﻿
-namespace MIDASM.Contract.Helpers;
-
-
