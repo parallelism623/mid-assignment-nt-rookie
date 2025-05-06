@@ -18,7 +18,6 @@ using MIDASM.Domain.Constrants.Validations;
 using MIDASM.Domain.Entities;
 using MIDASM.Domain.Enums;
 using MIDASM.Domain.Repositories;
-using MIDASM.Infrastructure.Crypto;
 using MIDASM.Persistence.Specifications;
 
 namespace MIDASM.Persistence.UseCases;
@@ -61,7 +60,7 @@ public class UserServices(IUserRepository userRepository,
         {
             return Result<string>.Failure(400, UserErrors.SomeBooksInBooksBorrowingRequestUnavailable);
         }
-
+            
         await transactionManager.BeginTransactionAsync();
 
         try
@@ -84,7 +83,6 @@ public class UserServices(IUserRepository userRepository,
                 {
                     book.Available += 1;
                 }
-
                 bookRepository.UpdateRange(books);
                 var bookEntry = exception.Entries?.Where(entity => entity.Entity is Book)?.ToList();
                 if(bookEntry != null)
@@ -93,8 +91,11 @@ public class UserServices(IUserRepository userRepository,
                     {
 
                         var databaseValues = await entry.GetDatabaseValuesAsync();
-                        if(databaseValues != null)
+                        if (databaseValues != null)
+                        {
                             entry.OriginalValues.SetValues(databaseValues);
+                            entry.CurrentValues.SetValues(databaseValues);
+                        }
 
                     }
                 }    

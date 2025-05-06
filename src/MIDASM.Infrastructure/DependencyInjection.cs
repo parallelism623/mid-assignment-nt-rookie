@@ -75,11 +75,7 @@ public static class DependencyInjection
             q.AddTrigger(opts => opts
                 .ForJob("sendMailInformDueDateJob", "emailGroup")
                 .WithIdentity("sendMailInformDueDateTrigger", "emailGroup")
-                .WithSimpleSchedule(option =>
-                {
-                    option.WithIntervalInMinutes(1)
-                        .WithRepeatCount(1);
-                }) 
+                .WithCronSchedule("0 55 15 * * ? *")
             );
 
             q.AddJob<ScanBookBorrowingDueDateJob>(opts => opts
@@ -90,12 +86,7 @@ public static class DependencyInjection
             q.AddTrigger(opts => opts
                 .ForJob("scanBookBorrowingDueDateJob", "scanDbGroup")
                 .WithIdentity("scanBookBorrowingDueDateTrigger", "scanDbGroup")
-                .WithSimpleSchedule(option =>
-                {
-                    option.WithIntervalInMinutes(1)
-                        .WithRepeatCount(1);
-                })
-
+                .WithCronSchedule("0 52 15 * * ? *")
             );
         });
         services.AddQuartzHostedService(opt =>

@@ -69,7 +69,7 @@ public class ExportToPdfBasicDocs<T> : IDocument
     {
         if (_request == null)
         {
-            throw new ArgumentException("Export to PDF failure beacause no data provider");
+            throw new ArgumentException("Export to PDF failure because no data provider");
         }
         var columnsOfExportFile = ReflectionHelper.GetDeclareProperties<T>();
         var dataOfExportFile = _request.DataExport.Select(c =>

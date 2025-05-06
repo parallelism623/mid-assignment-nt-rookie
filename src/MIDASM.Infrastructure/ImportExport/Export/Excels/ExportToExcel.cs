@@ -22,7 +22,7 @@ public class ExportToExcel : IExportServices
             var columns = ReflectionHelper.GetDeclareProperties<T>();
             if(columns.Count == 0)
             {
-                throw new BadRequestException("Can not export file beacause data invalid");
+                throw new BadRequestException("Can not export file because data invalid");
             }    
             int row = 1;
             var worksheet = workbook.Worksheets.Add("Export Data");

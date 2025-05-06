@@ -49,6 +49,7 @@ public class SendMailInformDueDateJob(IMailServices mailServices,
         }
 
         await Task.WhenAll(consumers);
+        await mailRecordRepository.SaveChangesAsync();
     }
 
 
