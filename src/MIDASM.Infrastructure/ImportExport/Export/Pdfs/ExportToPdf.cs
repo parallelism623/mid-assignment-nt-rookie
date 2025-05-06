@@ -3,11 +3,8 @@ using MIDASM.Application.Commons.Models.ImportExport;
 using MIDASM.Application.Services.ImportExport;
 using MIDASM.Contract.Helpers;
 using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
-using System.Net.Mime;
 
-namespace MIDASM.Infrastructure.ImportExport.Export;
+namespace MIDASM.Infrastructure.ImportExport.Export.Pdfs;
 
 public class ExportToPdf : IExportServices
 {

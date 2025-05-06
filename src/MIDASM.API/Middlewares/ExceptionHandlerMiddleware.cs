@@ -34,8 +34,7 @@ public class ExceptionHandlerMiddleware : IExceptionHandler
             NotFoundException => 404,
             ValidationException => 400,
             UnAuthorizedException => 401,
-            InternalServerErrorException => 500,
-            _ => 400
+            _ => 500
         };
     }
 
@@ -47,8 +46,7 @@ public class ExceptionHandlerMiddleware : IExceptionHandler
             NotFoundException => "Not found",
             ValidationException => "Invalid model",
             UnAuthorizedException => "UnAuthorized",
-            InternalServerErrorException => "Internal server error",
-            _ => "Bad request"
+            _ => "Internal server error"
         };
     }
 }

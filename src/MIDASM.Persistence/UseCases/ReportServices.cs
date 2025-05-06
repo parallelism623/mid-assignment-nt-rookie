@@ -7,7 +7,7 @@ using MIDASM.Contract.SharedKernel;
 using MIDASM.Domain.Enums;
 using MIDASM.Domain.Repositories;
 
-namespace MIDASM.Persistence.Services;
+namespace MIDASM.Persistence.UseCases;
 
 public class ReportServices(IBookRepository bookRepository, 
         IBookBorrowingRequestDetailRepository bookBorrowingRequestDetailRepository, 
@@ -106,6 +106,7 @@ public class ReportServices(IBookRepository bookRepository,
                 Quantity = g.Key.Quantity,
                 TotalBorrow = g.Count(x => x.Detail != null)
             }).OrderByDescending(b => b.TotalBorrow);
+
         var data = await categoryQuery
             .GroupJoin(
                 bookRequestedQuery,

@@ -1,19 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
-using Moq;
-using Xunit;
-
 using MIDASM.API.Presentation.Controllers;
+using MIDASM.Application.Commons.Models;
+using MIDASM.Application.Commons.Models.BookBorrowingRequestDetails;
+using MIDASM.Application.Commons.Models.Users;
 using MIDASM.Application.Services.AuditLogServices;
 using MIDASM.Application.UseCases;
-using MIDASM.Application.Commons.Models;
-using MIDASM.Application.Commons.Models.Users;
 using MIDASM.Contract.SharedKernel;
-using MIDASM.Application.Commons.Models.BookBorrowingRequestDetails;
 using MISARM.API.Tests.TestHelpers;
+using Moq;
 
 namespace MIDASM.API.Tests.Controllers
 {

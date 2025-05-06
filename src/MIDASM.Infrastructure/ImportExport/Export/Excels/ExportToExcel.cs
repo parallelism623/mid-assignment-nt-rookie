@@ -70,8 +70,18 @@ public class ExportToExcel : IExportServices
                     worksheet.Cell(dataRowStart + i, j + 1).Value = data[i][columns[j]]?.ToString() ?? "";
                 }
             }
+            worksheet.RangeUsed().Style.Alignment.WrapText = true;
 
-      
+            worksheet.Columns(1, columns.Count).AdjustToContents();
+
+            foreach (var col in worksheet.Columns(1, columns.Count))
+            {
+                if (col.Width > 50)
+                    col.Width = 50;
+            }
+
+            worksheet.Rows().AdjustToContents();
+
             using (var stream = new MemoryStream())
             {
                 workbook.SaveAs(stream, validate: false);

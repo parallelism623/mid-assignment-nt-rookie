@@ -9,7 +9,8 @@ using MIDASM.Domain.Abstract;
 using MIDASM.Domain.Repositories;
 using MIDASM.Persistence.Interceptors;
 using MIDASM.Persistence.Repositories;
-using MIDASM.Persistence.Services;
+using MIDASM.Persistence.UseCases;
+using MIDASM.Persistence.UseCases;
 
 namespace MIDASM.Persistence;
 

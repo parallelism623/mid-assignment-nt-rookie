@@ -1,6 +1,5 @@
 ﻿using FluentAssertions;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 using MIDASM.Application.Commons.Models.Books;
 using MIDASM.Application.Services.AuditLogServices;
 using MIDASM.Application.Services.Authentication;
@@ -9,8 +8,7 @@ using MIDASM.Contract.Errors;
 using MIDASM.Contract.Messages.Commands;
 using MIDASM.Domain.Entities;
 using MIDASM.Domain.Repositories;
-using MIDASM.Persistence.Services;
-using MockQueryable;
+using MIDASM.Persistence.UseCases;
 using MockQueryable.Moq;
 using Moq;
 using System.Text;

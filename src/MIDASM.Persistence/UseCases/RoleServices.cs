@@ -4,7 +4,7 @@ using MIDASM.Application.UseCases;
 using MIDASM.Contract.SharedKernel;
 using MIDASM.Domain.Repositories;
 
-namespace MIDASM.Persistence.Services;
+namespace MIDASM.Persistence.UseCases;
 
 public class RoleServices(IRoleRepository roleRepository) : IRoleServices
 {

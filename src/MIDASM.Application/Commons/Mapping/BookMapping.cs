@@ -27,7 +27,7 @@ public static class BookMapping
                 Id = book.Category.Id,
                 Name = book.Category.Name
             } : default!,
-            NumberOfReview = book.BookReviews?.Count() ?? 0,
+            NumberOfReview = book.BookReviews?.Count ?? 0,
             AverageRating = (!book.BookReviews?.Any() ?? true) ? 0 : Math.Round((decimal)book.BookReviews!.Sum(br => br.Rating) / book.BookReviews!.Count, 1)
         };
     }
@@ -50,8 +50,8 @@ public static class BookMapping
             {
                 Id = book.Category.Id,
                 Name = book.Category.Name
-            } : default,
-            NumberOfReview = book.BookReviews?.Count() ?? 0,
+            } : default!,
+            NumberOfReview = book.BookReviews?.Count ?? 0,
             AverageRating = (!book.BookReviews?.Any() ?? true) ? 0 : Math.Round((decimal)book.BookReviews!.Sum(br => br.Rating) / book.BookReviews!.Count, 1)
         };
     }

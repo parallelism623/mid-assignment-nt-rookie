@@ -16,7 +16,7 @@ public class ValidationRequestModelAttribute : ActionFilterAttribute
                 .Select(x => new Error(x.Key, x.Value?.Errors?.FirstOrDefault()?.ErrorMessage))
                 .ToList();
             var errorResponse = new Result(400, false);
-            if (errors.Any())
+            if (errors.Count != 0)
             {
                 errorResponse.Errors = errors;
             }

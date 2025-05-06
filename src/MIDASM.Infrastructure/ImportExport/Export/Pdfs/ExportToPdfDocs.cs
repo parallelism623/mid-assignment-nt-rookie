@@ -5,7 +5,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
-namespace MIDASM.Infrastructure.ImportExport.Export;
+namespace MIDASM.Infrastructure.ImportExport.Export.Pdfs;
 
 public class ExportToPdfBasicDocs<T> : IDocument
 {

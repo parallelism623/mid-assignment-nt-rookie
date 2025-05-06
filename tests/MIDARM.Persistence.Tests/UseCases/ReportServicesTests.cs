@@ -16,6 +16,7 @@ using MIDASM.Application.Commons.Models.Auditlogs;
 using MIDASM.Application.UseCases;
 using MIDASM.Contract.SharedKernel;
 using MIDASM.Application.Services.AuditLogServices;
+using MIDASM.Persistence.UseCases;
 using MockQueryable;
 
 namespace MIDASM.Persistence.Services.Tests

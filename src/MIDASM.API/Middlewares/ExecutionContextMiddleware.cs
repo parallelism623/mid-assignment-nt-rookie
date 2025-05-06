@@ -3,9 +3,13 @@ using Microsoft.Extensions.Caching.Memory;
 using MIDASM.Application.Commons.Models.Users;
 using MIDASM.Application.Services.Authentication;
 using MIDASM.Contract.Constants;
+using MIDASM.Contract.Errors;
 using MIDASM.Domain.Entities;
 using MIDASM.Domain.Repositories;
 using Rookies.Contract.Exceptions;
+using System.IdentityModel.Tokens.Jwt;
+using System.Net;
+using System.Net.Mail;
 using System.Security.Claims;
 
 namespace MIDASM.API.Middlewares;
@@ -24,9 +28,10 @@ public class ExecutionContextMiddleware
     {
         if (context.User.Identity?.IsAuthenticated == true)
         {
-            Guid.TryParse(context.User.FindFirstValue("sid"), out Guid id);
-            Guid.TryParse(context.User.FindFirstValue("jti"), out Guid jti);
-            string? bearer = context.Request.Headers["Authorization"].FirstOrDefault();
+            Guid.TryParse(context.User.FindFirstValue(JwtRegisteredClaimNames.Sid), out Guid id);
+            Guid.TryParse(context.User.FindFirstValue(JwtRegisteredClaimNames.Jti), out Guid jti);
+
+            string? bearer = context.Request.Headers[nameof(HttpRequestHeader.Authorization)].FirstOrDefault();
             string? accessToken = bearer?.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) ?? false
                 ? bearer[7..]
                 : null;
@@ -35,18 +40,18 @@ public class ExecutionContextMiddleware
             if (memoryCache.Get(recallAccessTokenCacheKey) is not null)
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                await context.Response.WriteAsync("Unauthorized");
+                await context.Response.WriteAsync(nameof(HttpStatusCode.Unauthorized));
                 return;
             }
 
-            User? user = await userRepository.GetByIdAsync(id, "Role");
+            User? user = await userRepository.GetByIdAsync(id, nameof(user.Role));
             if (user == null)
             {
-                throw new BadRequestException("User does not exists");
+                throw new BadRequestException(UserErrorMessages.UserNotExists);
             }
             if(!user.IsVerifyCode)
             {
-                throw new UnAuthorizedException("User has not been verified code");
+                throw new UnAuthorizedException(UserErrorMessages.UserHasNotBeenVerified);
             }    
 
             DateTime dateTimeNow = DateTime.UtcNow;
@@ -70,7 +75,7 @@ public class ExecutionContextMiddleware
             executionContext.SetAccessToken(accessToken!);
             executionContext.SetUser(userExecutionContext);
 
-            var userAgent = context?.Request.Headers["User-Agent"].ToString() ?? string.Empty;
+            var userAgent = context?.Request.Headers[nameof(HttpRequestHeader.UserAgent)].ToString() ?? string.Empty;
 
             executionContext.SetUserAgent(userAgent);
         }

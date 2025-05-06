@@ -5,6 +5,8 @@ namespace MIDASM.Contract.Errors;
 public static class UserErrorMessages
 {
     public const string UserNotFound = "User not found";
+    public const string UserNotExists = "User not exists";
+    public const string UserHasNotBeenVerified= "User has not been verified";
     public const string UserReachBorrowingRequestLimit = "User has been reached borrowing request limit in this month";
 
     public const string UserBorrowingRequestBooksInvalid = "Some books in borrowing request invalid";

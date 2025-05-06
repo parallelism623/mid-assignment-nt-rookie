@@ -17,7 +17,7 @@ using MIDASM.Domain.Entities;
 using MIDASM.Domain.Enums;
 using MIDASM.Domain.Repositories;
 
-namespace MIDASM.Persistence.Services;
+namespace MIDASM.Persistence.UseCases;
 
 public class BookBorrowingRequestDetailServices(
     IBookBorrowingRequestDetailRepository bookBorrowingRequestDetailRepository,

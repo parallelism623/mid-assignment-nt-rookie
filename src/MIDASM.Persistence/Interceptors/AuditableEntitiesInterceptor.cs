@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using MIDASM.Application.Services.Authentication;
 using MIDASM.Domain.Abstract;
-using System.Threading;
 
 namespace MIDASM.Persistence.Interceptors;
 

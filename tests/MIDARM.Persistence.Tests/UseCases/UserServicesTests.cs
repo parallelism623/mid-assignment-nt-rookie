@@ -13,6 +13,7 @@ using MIDASM.Domain.Abstract;
 using MIDASM.Domain.Entities;
 using MIDASM.Domain.Enums;
 using MIDASM.Domain.Repositories;
+using MIDASM.Persistence.UseCases;
 using MockQueryable;
 using Moq;
 

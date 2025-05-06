@@ -1,10 +1,12 @@
-﻿
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using MIDASM.Application.Commons.Models;
 using MIDASM.Application.Services.Mail;
 using MIDASM.Contract.Helpers;
+using MIDASM.Domain.Entities;
 using MIDASM.Domain.Repositories;
+using MimeKit;
 using Quartz;
+using System.Threading.Channels;
 
 namespace MIDASM.Infrastructure.ScheduleJobs;
 
@@ -17,68 +19,67 @@ public class SendMailInformDueDateJob(IMailServices mailServices,
             .GetQueryable()
             .Where(p => !p.Solved 
                         && p.CreatedAt.Day == DateTime.Now.Day).ToListAsync();
-        var throttler = new SemaphoreSlim(10);
-        mailRecords.ForEach(msg => msg.Solved = true);
-        var sendMailTasks = mailRecords.Select(async msg =>
+        int poolSize = 10;
+        var channel = Channel.CreateUnbounded<MimeMessage>();
+        
+        _ = Task.Run(async () =>
         {
-            await throttler.WaitAsync();
-            try
-            {
-                var content = await FileHelper.GetMailTemplateFile($"{msg.Type}.html");
-                content = content
-                    .Replace("{UserName}", msg.UserFullName)
-                    .Replace("{DueDate}", DateTime.Today.AddDays(7).ToString("dd/MM/yyyy"));
-                var sendMailData = new SendMailAttachmentData()
-                {
-                    Body = content,
-                    IsBodyHtml = true,
-                    FileBytes = msg.AttachFile,
-                    ToEmail = msg.ToEmail,
-                    Subject = msg.Title,
-                    MineType = msg.MineType
-                };
-                await mailServices.SendMailWithAttachmentAsync(sendMailData);
-            }
-            catch           
-            {
-                throttler.Release();
-                var ex = new InvalidOperationException(
-                        $"Failed sending mail for record Id={msg.Id}, To={msg.ToEmail}");
-                ex.Data["RecordId"] = msg.Id;
-                throw ex;
-            }
-            finally { throttler.Release(); }
+            mailRecords.ForEach(x => x.Solved = true);
+            var mineMessages = await GetMineMessagesAsync(mailRecords);
+            foreach (var msg in mineMessages)
+                    await channel.Writer.WriteAsync(msg);
+            channel.Writer.Complete();
+        });
 
-        }).ToArray();
-
-        try
+  
+        var consumers = new List<Task>();
+        for (int i = 0; i<poolSize; i++)
         {
-            await Task.WhenAll(sendMailTasks);
-        }
-        catch
-        {
-            var errors = sendMailTasks
-                .Where(t => t.IsFaulted)
-                .SelectMany(t => t.Exception?.InnerExceptions ?? default!);
-
-            if(errors.Any())
+            consumers.Add(Task.Run(async () =>
             {
-                foreach (var ex in errors)
-                {
-                    if (ex != null && ex.Data.Contains("RecordId"))
-                    {
-                        var recordId = ex.Data["RecordId"]?.ToString();
-                   
-                        var mailRecord = mailRecords.FirstOrDefault(m => m.Id.ToString() == recordId);
-                        if(mailRecord != null)
-                        {
-                            mailRecord.Solved = false;
-                        }    
-                    }
-                }
-            }    
+
+                using var client = await mailServices.GetSmtpClient();
+
+
+                await foreach (var message in channel.Reader.ReadAllAsync())
+                        await client.SendAsync(message);
+                
+
+
+                await client.DisconnectAsync(true);
+            }));
         }
         mailRecordRepository.UpdateRange(mailRecords);
         await mailRecordRepository.SaveChangesAsync();
+    }
+
+
+
+    private async Task<List<MimeMessage>> GetMineMessagesAsync(List<EmailRecord> mailRecords)
+    {
+        if (mailRecords == null || mailRecords.Count == 0)
+        {
+            return new();
+        }
+        var template = await FileHelper.GetMailTemplateFile($"{mailRecords[0].Type}.html");
+        return mailRecords.Select( mailRecord => GetMineMessageAsync(mailRecord, template)).ToList();
+    }
+    private  MimeMessage GetMineMessageAsync(EmailRecord msg, string template)
+    {
+        var content = template;
+        content = content
+            .Replace("{UserName}", msg.UserFullName)
+            .Replace("{DueDate}", DateTime.Today.AddDays(7).ToString("dd/MM/yyyy"));
+        var sendMailData = new SendMailAttachmentData()
+        {
+            Body = content,
+            IsBodyHtml = true,
+            FileBytes = msg.AttachFile,
+            ToEmail = msg.ToEmail,
+            Subject = msg.Title,
+            MineType = msg.MineType,
+            FileName = $"book-due-date-list-at-{DateTime.UtcNow.AddDays(7):YYYY-MM-DD}"
+        };
+        return mailServices.GetMimeMessage(sendMailData);
     }
 }

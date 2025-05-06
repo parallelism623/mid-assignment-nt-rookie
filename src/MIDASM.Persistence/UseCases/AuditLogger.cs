@@ -11,7 +11,7 @@ using MIDASM.Domain.Entities;
 using MIDASM.Persistence.Specifications;
 
 
-namespace MIDASM.Persistence.Services;
+namespace MIDASM.Persistence.UseCases;
 
 public class AuditLogger : IAuditLogger
 {

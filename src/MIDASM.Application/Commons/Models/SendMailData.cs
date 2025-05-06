@@ -14,4 +14,5 @@ public class SendMailAttachmentData : SendMailData
 {
     public byte[]? FileBytes { get; set; } = default;
     public string MineType { get; set; } = default!;
+    public string FileName { get; set; } = default!;
 }

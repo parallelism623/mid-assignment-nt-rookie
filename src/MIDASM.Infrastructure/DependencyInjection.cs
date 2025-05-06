@@ -15,6 +15,7 @@ using MIDASM.Infrastructure.HostedServices.Abstract;
 using MIDASM.Infrastructure.HostedServices.MailSenderBackgroundService;
 using MIDASM.Infrastructure.ImportExport.Export;
 using MIDASM.Infrastructure.ImportExport.Export.Excels;
+using MIDASM.Infrastructure.ImportExport.Export.Pdfs;
 using MIDASM.Infrastructure.Mail;
 using MIDASM.Infrastructure.Options;
 using MIDASM.Infrastructure.ScheduleJobs;
@@ -26,12 +27,14 @@ public static class DependencyInjection
 {
     public static IServiceCollection ConfigureInfrastructureServices(this IServiceCollection services)
     {
+
+        var config = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
+
         services.AddCryptoService<RsaCryptoService, RsaCryptoOptions>("RSA");
         services.AddScoped<IExecutionContext, ApplicationExecutionContext>();
         services.AddScoped<IJwtTokenServices, JwtTokenServices>();
         services.AddScoped<ICryptoServiceFactory, CryptoServiceFactory>();
         services.AddScoped<IApplicationAuthentication, ApplicationAuthentication>();
-        var config = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
         services.Configure<EmailSettingsOptions>(config.GetRequiredSection(nameof(EmailSettingsOptions)));
         services.Configure<AWSS3Options>(config.GetRequiredSection(nameof(AWSS3Options)));
         services.AddTransient<IMailServices, MailServices>();
@@ -72,7 +75,11 @@ public static class DependencyInjection
             q.AddTrigger(opts => opts
                 .ForJob("sendMailInformDueDateJob", "emailGroup")
                 .WithIdentity("sendMailInformDueDateTrigger", "emailGroup")
-                .WithCronSchedule("0 0 7 * * ?") 
+                .WithSimpleSchedule(option =>
+                {
+                    option.WithIntervalInMinutes(1)
+                        .WithRepeatCount(1);
+                }) 
             );
 
             q.AddJob<ScanBookBorrowingDueDateJob>(opts => opts
@@ -83,7 +90,12 @@ public static class DependencyInjection
             q.AddTrigger(opts => opts
                 .ForJob("scanBookBorrowingDueDateJob", "scanDbGroup")
                 .WithIdentity("scanBookBorrowingDueDateTrigger", "scanDbGroup")
-                .WithCronSchedule("0 0 0 * * ?") 
+                .WithSimpleSchedule(option =>
+                {
+                    option.WithIntervalInMinutes(1)
+                        .WithRepeatCount(1);
+                })
+
             );
         });
         services.AddQuartzHostedService(opt =>

@@ -21,7 +21,7 @@ using MIDASM.Domain.Repositories;
 using MIDASM.Infrastructure.Crypto;
 using MIDASM.Persistence.Specifications;
 
-namespace MIDASM.Persistence.Services;
+namespace MIDASM.Persistence.UseCases;
 
 public class UserServices(IUserRepository userRepository, 
                             IBookBorrowingRequestRepository bookBorrowingRequestRepository,

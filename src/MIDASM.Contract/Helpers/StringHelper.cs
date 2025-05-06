@@ -30,4 +30,9 @@ public static class StringHelper
 
         return string.Join("||", lines);
     }
+
+    public static string GetFormatAuthorizationJwtBearerToken(string accessToken)
+    {
+        return $"Bearer {accessToken}";
+    }
 }

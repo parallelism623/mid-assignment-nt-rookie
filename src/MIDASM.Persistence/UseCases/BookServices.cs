@@ -15,7 +15,7 @@ using MIDASM.Domain.Entities;
 using MIDASM.Domain.Repositories;
 using MIDASM.Persistence.Specifications;
 
-namespace MIDASM.Persistence.Services;
+namespace MIDASM.Persistence.UseCases;
 
 public class BookServices(IBookRepository bookRepository,
     ICategoryRepository categoryRepository,
@@ -79,7 +79,7 @@ public class BookServices(IBookRepository bookRepository,
     {
         var book = await bookRepository.GetByIdAsync(id, "Category", "BookReviews");
         var bookResponse = book!.ToBookDetailResponse();
-        if(bookResponse.SubImagesUrl != null && bookResponse.SubImagesUrl.Any())
+        if(bookResponse.SubImagesUrl != null && bookResponse.SubImagesUrl.Count != 0)
         {
             bookResponse.SubImagesUrlSigned = (await Task
                 .WhenAll(bookResponse.SubImagesUrl.Select(GetSignedUrlSubImage)))
@@ -102,7 +102,7 @@ public class BookServices(IBookRepository bookRepository,
             return Result<string>.Failure(400, BookErrors.BookCanNotCreateDueToInvalidCategory);
         }
         List<string>? imagesSubUrl = new();
-        if(request.SubImagesUrl != null && request.SubImagesUrl.Any())
+        if(request.SubImagesUrl != null && request.SubImagesUrl.Count != 0)
         {
             imagesSubUrl = (await Task.WhenAll(request.SubImagesUrl.Select(b => imageStorageServices.UploadImageAsync(b))))!.ToList();
         }
@@ -154,14 +154,14 @@ public class BookServices(IBookRepository bookRepository,
             var newImageUrl = await imageStorageServices.UploadImageAsync(request.NewImage);
             Book.UpdateImageUrl(book, newImageUrl);
         }
-        if(request.SubImagesUrl != null && request.SubImagesUrl.Any())
+        if(request.SubImagesUrl != null && request.SubImagesUrl.Count != 0)
         {
             var imageDeletedUrl = book.SubImagesUrl!.Where(i => !request.SubImagesUrl?.Contains(i) ?? true).ToList();
             await Task.WhenAll(imageDeletedUrl.Select(u => imageStorageServices.DeleteImageAsync(u)));
             Book.UpdateSubImagesUrl(book, request.SubImagesUrl);
         }   
         
-        if (request.NewSubImages != null && request.NewSubImages.Any())
+        if (request.NewSubImages != null && request.NewSubImages.Count != 0)
         {
 
             var newSubImagesUrl = (await Task.WhenAll(request.NewSubImages.Select(u => imageStorageServices.UploadImageAsync(u)))).ToList();

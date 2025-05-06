@@ -18,9 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\MIDASM.API\MIDASM.API.csproj" />
+    <ProjectReference Include="..\..\src\MIDASM.Contract\MIDASM.Contract.csproj" />
     <ProjectReference Include="..\MIDARM.Infrastructure.Tests\MIDARM.Infrastructure.Tests.csproj" />
-    <ProjectReference Include="..\src\MIDASM.API\MIDASM.API.csproj" />
-    <ProjectReference Include="..\src\MIDASM.Contract\MIDASM.Contract.csproj" />
   </ItemGroup>
 
   <ItemGroup>
