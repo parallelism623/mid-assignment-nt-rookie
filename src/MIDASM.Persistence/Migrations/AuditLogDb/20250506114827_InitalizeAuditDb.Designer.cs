@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MIDASM.Persistence.Migrations.AuditLogDb
 {
     [DbContext(typeof(AuditLogDbContext))]
-    [Migration("20250502181909_AddAuditLog")]
-    partial class AddAuditLog
+    [Migration("20250506114827_InitalizeAuditDb")]
+    partial class InitalizeAuditDb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,13 +34,13 @@ namespace MIDASM.Persistence.Migrations.AuditLogDb
                     b.Property<string>("BrowserInfo")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("EntityId")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("EntityName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ErrorDescription")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("HttpMethod")
@@ -55,12 +55,6 @@ namespace MIDASM.Persistence.Migrations.AuditLogDb
                     b.Property<string>("ServiceName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<string>("SuccessDescription")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime>("TimeStamp")
                         .HasColumnType("datetime2");
 
@@ -69,6 +63,9 @@ namespace MIDASM.Persistence.Migrations.AuditLogDb
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Username")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -93,9 +90,6 @@ namespace MIDASM.Persistence.Migrations.AuditLogDb
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PropertyName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PropertyTypeFullName")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");

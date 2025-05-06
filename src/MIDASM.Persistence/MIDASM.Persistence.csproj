@@ -29,4 +29,9 @@
     <ProjectReference Include="..\MIDASM.Infrastructure\MIDASM.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Migrations\AuditLogDb\" />
+    <Folder Include="Migrations\ApplicationDb\" />
+  </ItemGroup>
+
 </Project>

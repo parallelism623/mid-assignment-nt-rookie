@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace MIDASM.Persistence.Migrations
+namespace MIDASM.Persistence.Migrations.ApplicationDb
 {
     /// <inheritdoc />
-    public partial class InitialDatabase : Migration
+    public partial class InitializeDbContext : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,8 +16,8 @@ namespace MIDASM.Persistence.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ModifiedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -30,12 +30,33 @@ namespace MIDASM.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "EmailRecords",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ToEmail = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UserFullName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Type = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Solved = table.Column<bool>(type: "bit", nullable: false),
+                    AttachFile = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
+                    MineType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ModifiedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EmailRecords", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Roles",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -47,15 +68,16 @@ namespace MIDASM.Persistence.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Author = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    Author = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Quantity = table.Column<int>(type: "int", nullable: false),
                     Available = table.Column<int>(type: "int", nullable: false),
-                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SubImagesUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CategoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SubImagesUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TimeStamp = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
                     CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ModifiedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -77,11 +99,18 @@ namespace MIDASM.Persistence.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Username = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Username = table.Column<string>(type: "nvarchar(32)", maxLength: 32, nullable: false),
+                    Password = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    BookBorrowingLimit = table.Column<int>(type: "int", nullable: false, defaultValue: 3),
+                    LastUpdateLimit = table.Column<DateOnly>(type: "date", nullable: false),
+                    RefreshToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RefreshTokenExpireTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsVerifyCode = table.Column<bool>(type: "bit", nullable: false),
                     RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ModifiedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -95,8 +124,7 @@ namespace MIDASM.Persistence.Migrations
                         name: "FK_Users_Roles_RoleId",
                         column: x => x.RoleId,
                         principalTable: "Roles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -104,10 +132,12 @@ namespace MIDASM.Persistence.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Requester = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RequesterId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ApproverId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    DateRequested = table.Column<DateOnly>(type: "date", nullable: false),
+                    DateApproved = table.Column<DateOnly>(type: "date", nullable: true),
                     Status = table.Column<int>(type: "int", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ModifiedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -117,10 +147,49 @@ namespace MIDASM.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_BookBorrowingRequests", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_BookBorrowingRequests_Users_UserId",
-                        column: x => x.UserId,
+                        name: "FK_BookBorrowingRequests_Users_ApproverId",
+                        column: x => x.ApproverId,
                         principalTable: "Users",
                         principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_BookBorrowingRequests_Users_RequesterId",
+                        column: x => x.RequesterId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BookReviews",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ReviewerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    BookId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Rating = table.Column<int>(type: "int", nullable: false),
+                    Content = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    Title = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    DateReview = table.Column<DateOnly>(type: "date", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ModifiedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BookReviews", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_BookReviews_Books_BookId",
+                        column: x => x.BookId,
+                        principalTable: "Books",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_BookReviews_Users_ReviewerId",
+                        column: x => x.ReviewerId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -132,7 +201,9 @@ namespace MIDASM.Persistence.Migrations
                     BookId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     DueDate = table.Column<DateOnly>(type: "date", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    Noted = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Noted = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    ExtendDueDateTimes = table.Column<int>(type: "int", nullable: false),
+                    ExtendDueDate = table.Column<DateOnly>(type: "date", nullable: true),
                     CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ModifiedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -148,8 +219,8 @@ namespace MIDASM.Persistence.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_BookBorrowingRequestDetails_Books_BookBorrowingRequestId",
-                        column: x => x.BookBorrowingRequestId,
+                        name: "FK_BookBorrowingRequestDetails_Books_BookId",
+                        column: x => x.BookId,
                         principalTable: "Books",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -161,9 +232,29 @@ namespace MIDASM.Persistence.Migrations
                 column: "BookBorrowingRequestId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_BookBorrowingRequests_UserId",
+                name: "IX_BookBorrowingRequestDetails_BookId",
+                table: "BookBorrowingRequestDetails",
+                column: "BookId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BookBorrowingRequests_ApproverId",
                 table: "BookBorrowingRequests",
-                column: "UserId");
+                column: "ApproverId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BookBorrowingRequests_RequesterId",
+                table: "BookBorrowingRequests",
+                column: "RequesterId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BookReviews_BookId",
+                table: "BookReviews",
+                column: "BookId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BookReviews_ReviewerId",
+                table: "BookReviews",
+                column: "ReviewerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Books_CategoryId",
@@ -181,6 +272,12 @@ namespace MIDASM.Persistence.Migrations
         {
             migrationBuilder.DropTable(
                 name: "BookBorrowingRequestDetails");
+
+            migrationBuilder.DropTable(
+                name: "BookReviews");
+
+            migrationBuilder.DropTable(
+                name: "EmailRecords");
 
             migrationBuilder.DropTable(
                 name: "BookBorrowingRequests");

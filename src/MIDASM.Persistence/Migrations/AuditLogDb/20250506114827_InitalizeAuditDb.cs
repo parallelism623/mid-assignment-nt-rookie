@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MIDASM.Persistence.Migrations.AuditLogDb
 {
     /// <inheritdoc />
-    public partial class AddAuditLog : Migration
+    public partial class InitalizeAuditDb : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -19,7 +19,6 @@ namespace MIDASM.Persistence.Migrations.AuditLogDb
                     NewValue = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     OriginalValue = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PropertyName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PropertyTypeFullName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     AuditLogId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
@@ -33,6 +32,7 @@ namespace MIDASM.Persistence.Migrations.AuditLogDb
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Username = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     EntityName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     EntityId = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     TimeStamp = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -42,9 +42,7 @@ namespace MIDASM.Persistence.Migrations.AuditLogDb
                     ServiceName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     MethodName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Parameters = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Status = table.Column<int>(type: "int", nullable: false),
-                    SuccessDescription = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ErrorDescription = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {

@@ -9,11 +9,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace MIDASM.Persistence.Migrations
+namespace MIDASM.Persistence.Migrations.ApplicationDb
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250429093001_Update_Book_Review")]
-    partial class Update_Book_Review
+    [Migration("20250506114758_InitializeDbContext")]
+    partial class InitializeDbContext
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace MIDASM.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("MIDASS.Domain.Entities.Book", b =>
+            modelBuilder.Entity("MIDASM.Domain.Entities.Book", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -49,7 +49,6 @@ namespace MIDASM.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
@@ -68,7 +67,7 @@ namespace MIDASM.Persistence.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
-                    b.PrimitiveCollection<string>("SubImagesUrl")
+                    b.Property<string>("SubImagesUrl")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<byte[]>("TimeStamp")
@@ -89,7 +88,7 @@ namespace MIDASM.Persistence.Migrations
                     b.ToTable("Books");
                 });
 
-            modelBuilder.Entity("MIDASS.Domain.Entities.BookBorrowingRequest", b =>
+            modelBuilder.Entity("MIDASM.Domain.Entities.BookBorrowingRequest", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -134,7 +133,7 @@ namespace MIDASM.Persistence.Migrations
                     b.ToTable("BookBorrowingRequests");
                 });
 
-            modelBuilder.Entity("MIDASS.Domain.Entities.BookBorrowingRequestDetail", b =>
+            modelBuilder.Entity("MIDASM.Domain.Entities.BookBorrowingRequestDetail", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -183,9 +182,10 @@ namespace MIDASM.Persistence.Migrations
                     b.ToTable("BookBorrowingRequestDetails");
                 });
 
-            modelBuilder.Entity("MIDASS.Domain.Entities.BookReview", b =>
+            modelBuilder.Entity("MIDASM.Domain.Entities.BookReview", b =>
                 {
-                    b.Property<Guid>("ReviewerId")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("BookId")
@@ -204,9 +204,6 @@ namespace MIDASM.Persistence.Migrations
                     b.Property<DateOnly>("DateReview")
                         .HasColumnType("date");
 
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -219,19 +216,24 @@ namespace MIDASM.Persistence.Migrations
                     b.Property<int>("Rating")
                         .HasColumnType("int");
 
+                    b.Property<Guid>("ReviewerId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.HasKey("ReviewerId");
+                    b.HasKey("Id");
 
                     b.HasIndex("BookId");
+
+                    b.HasIndex("ReviewerId");
 
                     b.ToTable("BookReviews");
                 });
 
-            modelBuilder.Entity("MIDASS.Domain.Entities.Category", b =>
+            modelBuilder.Entity("MIDASM.Domain.Entities.Category", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -266,7 +268,57 @@ namespace MIDASM.Persistence.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("MIDASS.Domain.Entities.Role", b =>
+            modelBuilder.Entity("MIDASM.Domain.Entities.EmailRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("AttachFile")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("MineType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("Solved")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ToEmail")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserFullName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("EmailRecords");
+                });
+
+            modelBuilder.Entity("MIDASM.Domain.Entities.Role", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -282,7 +334,7 @@ namespace MIDASM.Persistence.Migrations
                     b.ToTable("Roles");
                 });
 
-            modelBuilder.Entity("MIDASS.Domain.Entities.User", b =>
+            modelBuilder.Entity("MIDASM.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -359,9 +411,9 @@ namespace MIDASM.Persistence.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("MIDASS.Domain.Entities.Book", b =>
+            modelBuilder.Entity("MIDASM.Domain.Entities.Book", b =>
                 {
-                    b.HasOne("MIDASS.Domain.Entities.Category", "Category")
+                    b.HasOne("MIDASM.Domain.Entities.Category", "Category")
                         .WithMany("Books")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -370,14 +422,14 @@ namespace MIDASM.Persistence.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("MIDASS.Domain.Entities.BookBorrowingRequest", b =>
+            modelBuilder.Entity("MIDASM.Domain.Entities.BookBorrowingRequest", b =>
                 {
-                    b.HasOne("MIDASS.Domain.Entities.User", "Approver")
+                    b.HasOne("MIDASM.Domain.Entities.User", "Approver")
                         .WithMany("BookBorrowingApproves")
                         .HasForeignKey("ApproverId")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("MIDASS.Domain.Entities.User", "Requester")
+                    b.HasOne("MIDASM.Domain.Entities.User", "Requester")
                         .WithMany("BookBorrowingRequests")
                         .HasForeignKey("RequesterId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -388,15 +440,15 @@ namespace MIDASM.Persistence.Migrations
                     b.Navigation("Requester");
                 });
 
-            modelBuilder.Entity("MIDASS.Domain.Entities.BookBorrowingRequestDetail", b =>
+            modelBuilder.Entity("MIDASM.Domain.Entities.BookBorrowingRequestDetail", b =>
                 {
-                    b.HasOne("MIDASS.Domain.Entities.BookBorrowingRequest", "BookBorrowingRequest")
+                    b.HasOne("MIDASM.Domain.Entities.BookBorrowingRequest", "BookBorrowingRequest")
                         .WithMany("BookBorrowingRequestDetails")
                         .HasForeignKey("BookBorrowingRequestId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MIDASS.Domain.Entities.Book", "Book")
+                    b.HasOne("MIDASM.Domain.Entities.Book", "Book")
                         .WithMany("BookBorrowingRequestDetails")
                         .HasForeignKey("BookId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -407,15 +459,15 @@ namespace MIDASM.Persistence.Migrations
                     b.Navigation("BookBorrowingRequest");
                 });
 
-            modelBuilder.Entity("MIDASS.Domain.Entities.BookReview", b =>
+            modelBuilder.Entity("MIDASM.Domain.Entities.BookReview", b =>
                 {
-                    b.HasOne("MIDASS.Domain.Entities.Book", "Book")
+                    b.HasOne("MIDASM.Domain.Entities.Book", "Book")
                         .WithMany("BookReviews")
                         .HasForeignKey("BookId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("MIDASS.Domain.Entities.User", "Reviewer")
+                    b.HasOne("MIDASM.Domain.Entities.User", "Reviewer")
                         .WithMany("BookReviews")
                         .HasForeignKey("ReviewerId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -426,9 +478,9 @@ namespace MIDASM.Persistence.Migrations
                     b.Navigation("Reviewer");
                 });
 
-            modelBuilder.Entity("MIDASS.Domain.Entities.User", b =>
+            modelBuilder.Entity("MIDASM.Domain.Entities.User", b =>
                 {
-                    b.HasOne("MIDASS.Domain.Entities.Role", "Role")
+                    b.HasOne("MIDASM.Domain.Entities.Role", "Role")
                         .WithMany("Users")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -437,29 +489,29 @@ namespace MIDASM.Persistence.Migrations
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("MIDASS.Domain.Entities.Book", b =>
+            modelBuilder.Entity("MIDASM.Domain.Entities.Book", b =>
                 {
                     b.Navigation("BookBorrowingRequestDetails");
 
                     b.Navigation("BookReviews");
                 });
 
-            modelBuilder.Entity("MIDASS.Domain.Entities.BookBorrowingRequest", b =>
+            modelBuilder.Entity("MIDASM.Domain.Entities.BookBorrowingRequest", b =>
                 {
                     b.Navigation("BookBorrowingRequestDetails");
                 });
 
-            modelBuilder.Entity("MIDASS.Domain.Entities.Category", b =>
+            modelBuilder.Entity("MIDASM.Domain.Entities.Category", b =>
                 {
                     b.Navigation("Books");
                 });
 
-            modelBuilder.Entity("MIDASS.Domain.Entities.Role", b =>
+            modelBuilder.Entity("MIDASM.Domain.Entities.Role", b =>
                 {
                     b.Navigation("Users");
                 });
 
-            modelBuilder.Entity("MIDASS.Domain.Entities.User", b =>
+            modelBuilder.Entity("MIDASM.Domain.Entities.User", b =>
                 {
                     b.Navigation("BookBorrowingApproves");
 

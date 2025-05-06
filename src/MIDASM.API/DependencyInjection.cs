@@ -27,8 +27,10 @@ public static class DependencyInjection
 
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var rsaEncryptService = scope.ServiceProvider.GetRequiredKeyedService<ICryptoService>("RSA");
-       context.Database.MigrateAsync().GetAwaiter().GetResult();
+        context.Database.MigrateAsync().GetAwaiter().GetResult();
 
+        var auditlogContext = scope.ServiceProvider.GetRequiredService<AuditLogDbContext>();
+        auditlogContext.Database.MigrateAsync().GetAwaiter().GetResult();
         await SeedAsync(context, rsaEncryptService);
     }
 
@@ -93,6 +95,6 @@ public static class DependencyInjection
                 IsVerifyCode = true
             });
             await context.SaveChangesAsync();
-        }
+        }   
     }
 }
