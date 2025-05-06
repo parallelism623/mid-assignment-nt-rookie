@@ -23,9 +23,12 @@ public static class DependencyInjection
     {
         using var scope = app.Services.CreateScope();
 
+
+
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var rsaEncryptService = scope.ServiceProvider.GetRequiredKeyedService<ICryptoService>("RSA");
-                                context.Database.MigrateAsync().GetAwaiter().GetResult();
+       context.Database.MigrateAsync().GetAwaiter().GetResult();
+
         await SeedAsync(context, rsaEncryptService);
     }
 
