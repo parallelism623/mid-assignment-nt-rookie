@@ -33,24 +33,22 @@ public class SendMailInformDueDateJob(IMailServices mailServices,
 
   
         var consumers = new List<Task>();
-        for (int i = 0; i<poolSize; i++)
+        for (int i = 0; i < poolSize; i++)
         {
             consumers.Add(Task.Run(async () =>
             {
 
                 using var client = await mailServices.GetSmtpClient();
-
-
                 await foreach (var message in channel.Reader.ReadAllAsync())
-                        await client.SendAsync(message);
-                
-
+                {
+                    await client.SendAsync(message);
+                }
 
                 await client.DisconnectAsync(true);
             }));
         }
-        mailRecordRepository.UpdateRange(mailRecords);
-        await mailRecordRepository.SaveChangesAsync();
+
+        await Task.WhenAll(consumers);
     }
 
 
