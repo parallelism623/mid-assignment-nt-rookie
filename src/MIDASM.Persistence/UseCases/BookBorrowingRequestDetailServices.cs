@@ -43,12 +43,13 @@ public class BookBorrowingRequestDetailServices(
         {
             return Result<string>.Failure(400, BookBorrowingRequestDetailErrors.BookBorrowedExtendDueDateInvalid);
         }
-        if(status == 1)
+
+        var oldBookBorrowedDetail = BookBorrowingRequestDetail.Copy(bookBorrowedDetail);
+        if (status == 1)
         {
             bookBorrowedDetail.DueDate = (DateOnly)bookBorrowedDetail.ExtendDueDate;
         }
 
-        var oldBookBorrowedDetail = BookBorrowingRequestDetail.Copy(bookBorrowedDetail);
         
         bookBorrowedDetail.ExtendDueDate = null;
         bookBorrowingRequestDetailRepository.Update(bookBorrowedDetail);
@@ -73,7 +74,7 @@ public class BookBorrowingRequestDetailServices(
         int totalCount = await query.CountAsync();
 
         var data = await query
-                .OrderByDescending(b => b.CreatedAt)
+                .OrderByDescending(b => b.ModifiedAt == null ? b.CreatedAt : b.ModifiedAt)
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
                 .Select(bd => new BookBorrowedRequestDetailResponse()

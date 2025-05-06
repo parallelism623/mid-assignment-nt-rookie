@@ -201,7 +201,7 @@ public class UserServices(IUserRepository userRepository,
         int totalCount = await query.CountAsync();
 
         var data = await query
-                .OrderByDescending (b => b.CreatedAt)
+                .OrderByDescending(b => b.ModifiedAt !=  null ? b.ModifiedAt : b.CreatedAt)
                 .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
                 .Select(bd => new BookBorrowedRequestDetailResponse()
@@ -213,7 +213,7 @@ public class UserServices(IUserRepository userRepository,
                     RequesterName = bd.BookBorrowingRequest.Requester.FirstName
                                     + bd.BookBorrowingRequest.Requester.LastName,
                     ApproverName = bd.BookBorrowingRequest == null
-                    ? default
+                    ? default!
                     : bd.BookBorrowingRequest.Approver!.FirstName + bd.BookBorrowingRequest.Approver.LastName,
                     Book = new Application.Commons.Models.Books.BookResponse
                     {

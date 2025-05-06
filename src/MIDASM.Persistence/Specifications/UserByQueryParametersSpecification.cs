@@ -14,5 +14,6 @@ public class UserByQueryParametersSpecification : Specification<User, Guid>
                     && (string.IsNullOrEmpty(queryParameters.RoleIds) || queryParameters.GetRoleIds().Contains(u.RoleId)))
     {
         AddInclude(u => u.Role);
+        AddOrderByDescending(u => u.CreatedAt);
     }
 }

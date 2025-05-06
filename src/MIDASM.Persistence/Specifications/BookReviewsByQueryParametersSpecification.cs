@@ -13,6 +13,6 @@ public class BookReviewsByQueryParametersSpecification : Specification<BookRevie
     {
         AddInclude(br => br.Reviewer);
         AddInclude(br => br.Book);
-        AddOrderByDescending(b => b.DateReview);
+        AddOrderByDescending(b => b.ModifiedAt == null ? b.CreatedAt : b.ModifiedAt);
     }
 }

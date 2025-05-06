@@ -75,23 +75,23 @@ public class BookServices(IBookRepository bookRepository,
             queryParameters.PageIndex, totalCount, data);
     }
 
-        public async Task<Result<BookDetailResponse>> GetByIdAsync(Guid id)
+    public async Task<Result<BookDetailResponse>> GetByIdAsync(Guid id)
+    {
+        var book = await bookRepository.GetByIdAsync(id, "Category", "BookReviews");
+        var bookResponse = book!.ToBookDetailResponse();
+        if(bookResponse.SubImagesUrl != null && bookResponse.SubImagesUrl.Any())
         {
-            var book = await bookRepository.GetByIdAsync(id, "Category", "BookReviews");
-            var bookResponse = book!.ToBookDetailResponse();
-            if(bookResponse.SubImagesUrl != null && bookResponse.SubImagesUrl.Any())
-            {
-                bookResponse.SubImagesUrlSigned = (await Task
-                    .WhenAll(bookResponse.SubImagesUrl.Select(GetSignedUrlSubImage)))
-                    .ToList();
-            }
-            if(string.IsNullOrEmpty(bookResponse.ImageUrl))
-            {
-                bookResponse.ImageUrl = DefaultBookImage;
-            }
-            bookResponse.ImageUrlSigned = await GetSignedUrlSubImage(bookResponse.ImageUrl);
-            return bookResponse;
+            bookResponse.SubImagesUrlSigned = (await Task
+                .WhenAll(bookResponse.SubImagesUrl.Select(GetSignedUrlSubImage)))
+                .ToList();
         }
+        if(string.IsNullOrEmpty(bookResponse.ImageUrl))
+        {
+            bookResponse.ImageUrl = DefaultBookImage;
+        }
+        bookResponse.ImageUrlSigned = await GetSignedUrlSubImage(bookResponse.ImageUrl);
+        return bookResponse;
+    }
 
     public async Task<Result<string>> CreateAsync(BookCreateRequest request)
     {

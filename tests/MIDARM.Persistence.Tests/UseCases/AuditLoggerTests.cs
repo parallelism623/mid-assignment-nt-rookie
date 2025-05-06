@@ -1,21 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
-using Moq;
-using Xunit;
-
-using MIDASM.Persistence.Services;
-using MIDASM.Domain.Entities;
-using MIDASM.Contract.SharedKernel;
 using MIDASM.Application.Commons.Models.Auditlogs;
 using MIDASM.Application.Commons.Models.Users;
-using MIDASM.Application.Services.AuditLogServices;
 using MIDASM.Application.Services.Authentication;
+using MIDASM.Domain.Entities;
+using Moq;
 
 namespace MIDASM.Persistence.Services.Tests
 {
@@ -33,7 +24,7 @@ namespace MIDASM.Persistence.Services.Tests
                 .Options;
             _context = new AuditLogDbContext(options);
 
-            // Setup HttpContext with route data
+      
             _httpContext = new DefaultHttpContext();
             _httpContext.Request.Headers["User-Agent"] = "TestAgent";
             _httpContext.Request.Method = "POST";
@@ -92,7 +83,7 @@ namespace MIDASM.Persistence.Services.Tests
         [Fact]
         public async Task GetActivitiesAsync_ShouldReturnPagedResults()
         {
-            // Arrange: seed 3 logs
+            // Arrange
             for (int i = 1; i <= 3; i++)
             {
                 var log = new AuditLog
@@ -148,33 +139,36 @@ namespace MIDASM.Persistence.Services.Tests
             result.Data.Items.Should().OnlyContain(x => x.Id == logs[0].Id);
         }
 
-        //[Fact]
-        //public async Task GetUserActivitiesReportAsync_ShouldCountDistinctDays()
-        //{
-        //    // Arrange: two logs on same day and one on another day for u1
-        //    var u1 = Guid.NewGuid();
-        //    var logs = new List<AuditLog>
-        //    {
-        //        new AuditLog { Id = Guid.NewGuid(), UserId = u1, TimeStamp = DateTime.UtcNow },
-        //        new AuditLog { Id = Guid.NewGuid(), UserId = u1, TimeStamp = DateTime.UtcNow },
-        //        new AuditLog { Id = Guid.NewGuid(), UserId = u1, TimeStamp = DateTime.UtcNow.AddDays(-1) }
-        //    };
-        //    _context.AddRange(logs);
-        //    await _context.SaveChangesAsync();
-        //    var qp = new UserActivitiesQueryParameters
-        //    {
-        //        FromDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-2)),
-        //        ToDate = DateOnly.FromDateTime(DateTime.UtcNow)
-        //    };
+        [Fact]
+        public async Task GetUserActivitiesReportAsync_ShouldCountDistinctDays()
+        {
+            // Arrange
+            var u1 = Guid.NewGuid();
+            var date = DateTime.UtcNow;
+            var logs = new List<AuditLog>
+            {
+                new AuditLog { Id = Guid.NewGuid(), UserId = u1, TimeStamp = date },
+                new AuditLog { Id = Guid.NewGuid(), UserId = u1, TimeStamp = date },
+                new AuditLog { Id = Guid.NewGuid(), UserId = u1, TimeStamp = date.AddDays(-1) }
+            };
+            _context.AddRange(logs);
+            await _context.SaveChangesAsync();
+            var tmp = await _context.AuditLogs.CountAsync();
+            var qp = new UserActivitiesQueryParameters
+            {
+                FromDate = DateOnly.FromDateTime(date.AddDays(-2)),
+                ToDate = DateOnly.FromDateTime(date),
+                UserIds = new(){ u1 }
+            };
 
-        //    // Act
-        //    var result = await _logger.GetUserActivitiesReportAsync(qp);
+            // Act
+            var result = await _logger.GetUserActivitiesReportAsync(qp);
 
-        //    // Assert
-        //    result.Should().HaveCount(1);
-        //    result[0].UserId.Should().Be(u1);
-        //    result[0].ActiveDays.Should().Be(2);
-        //}
+            // Assert
+            result.Should().HaveCount(1);
+            result[0].UserId.Should().Be(u1);
+            result[0].ActiveDays.Should().Be(2);
+        }
 
         public void Dispose()
         {

@@ -17,6 +17,6 @@ public class BookBorrowingRequestByQueryParametersSpecification
         AddInclude(x => x.Approver!);
         AddInclude(x => x.BookBorrowingRequestDetails);
         AddInclude(x => x.Requester);
-        AddOrderByDescending(x => x.DateRequested);
+        AddOrderByDescending(x => x.ModifiedAt == null ? x.CreatedAt : x.ModifiedAt);
     }
 }

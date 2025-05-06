@@ -22,9 +22,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\MIDASM.Application\MIDASM.Application.csproj" />
-    <ProjectReference Include="..\src\MIDASM.Domain\MIDASM.Domain.csproj" />
-    <ProjectReference Include="..\src\MIDASM.Persistence\MIDASM.Persistence.csproj" />
+    <ProjectReference Include="..\..\src\MIDASM.API\MIDASM.API.csproj" />
+    <ProjectReference Include="..\..\src\MIDASM.Application\MIDASM.Application.csproj" />
+    <ProjectReference Include="..\..\src\MIDASM.Contract\MIDASM.Contract.csproj" />
   </ItemGroup>
 
   <ItemGroup>
