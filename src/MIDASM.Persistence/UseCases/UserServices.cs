@@ -1,5 +1,4 @@
-﻿
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using MIDASM.Application.Commons.Mapping;
 using MIDASM.Application.Commons.Models;
 using MIDASM.Application.Commons.Models.BookBorrowingRequestDetails;
@@ -8,6 +7,7 @@ using MIDASM.Application.Services.AuditLogServices;
 using MIDASM.Application.Services.Authentication;
 using MIDASM.Application.Services.Crypto;
 using MIDASM.Application.UseCases;
+using MIDASM.Contract.Enums;
 using MIDASM.Contract.Errors;
 using MIDASM.Contract.Helpers;
 using MIDASM.Contract.Messages.AuditLogMessage;
@@ -167,16 +167,6 @@ public class UserServices(IUserRepository userRepository,
             queryParameters.PageIndex, totalCount, data);
     }
 
-    private static bool CheckAvailableBooks(List<Book> books)
-    {
-        foreach (var book in books)
-        {
-            if (book.Available == 0)
-                return false;
-        }
-
-        return true;
-    }
 
     public async Task<Result<UserDetailResponse>> GetByIdAsync(Guid id)
     {
@@ -212,6 +202,7 @@ public class UserServices(IUserRepository userRepository,
                     BookBorrowingRequestId = bd.BookBorrowingRequestId,
                     BookId = bd.BookId,
                     RequesterName = bd.BookBorrowingRequest.Requester.FirstName
+                                    + " "
                                     + bd.BookBorrowingRequest.Requester.LastName,
                     ApproverName = bd.BookBorrowingRequest == null
                     ? default!
@@ -241,7 +232,9 @@ public class UserServices(IUserRepository userRepository,
     public async Task<Result<string>> ExtendDueDateBookBorrowed(DueDatedExtendRequest dueDatedExtendRequest)
     {
         var bookBorrowedDetail = await bookBorrowingRequestDetailRepository
-                                    .GetByIdAsync(dueDatedExtendRequest.BookBorrowedDetailId, "BookBorrowingRequest", "Book");
+                                    .GetByIdAsync(dueDatedExtendRequest.BookBorrowedDetailId, 
+                                        nameof(BookBorrowingRequestDetail.BookBorrowingRequest), 
+                                        nameof(BookBorrowingRequestDetail.Book));
         if(bookBorrowedDetail == null)
         {
             return Result<string>.Failure(400, UserErrors.BookBorrowedNotExistsCanNotExtendDueDate);
@@ -263,11 +256,10 @@ public class UserServices(IUserRepository userRepository,
         }
         var oldBookBorrowedDetail = BookBorrowingRequestDetail.Copy(bookBorrowedDetail);
 
-        bookBorrowedDetail.ExtendDueDate = dueDatedExtendRequest.ExtendDueDate;
-        bookBorrowedDetail.ExtendDueDateTimes += 1;
+        BookBorrowingRequestDetail.CreateExtendDueDate(bookBorrowedDetail, dueDatedExtendRequest.ExtendDueDate);
 
-        bookBorrowingRequestDetailRepository.Update(bookBorrowedDetail);
-        await bookBorrowingRequestDetailRepository.SaveChangesAsync();
+        await UpdateBookBorrowingRequestDetailAsync(bookBorrowedDetail);
+
         await HandleAuditLogCreateExtendDueDate(bookBorrowedDetail, oldBookBorrowedDetail);
         return UserCommandMessages.BookBorrowedExtendDueDateSuccess;
     }
@@ -306,6 +298,7 @@ public class UserServices(IUserRepository userRepository,
         }
 
         User.UpdateProfile(user, userProfileUpdateRequest.FirstName, userProfileUpdateRequest.LastName, userProfileUpdateRequest.PhoneNumber);
+        
         await userRepository.SaveChangesAsync();
 
         return UserCommandMessages.UserUpdateSuccessfully;
@@ -330,9 +323,10 @@ public class UserServices(IUserRepository userRepository,
 
         if(!string.IsNullOrEmpty(updateRequest.Password))
         {
-            var crtyptoSerivce = cryptoServiceFactory.SetCryptoAlgorithm("RSA");
-            updateRequest.Password = crtyptoSerivce.Encrypt(updateRequest.Password);    
+            var cryptoService = cryptoServiceFactory.SetCryptoAlgorithm(nameof(CryptoAlgorithmType.RSA));
+            updateRequest.Password = cryptoService.Encrypt(updateRequest.Password);    
         }
+
         var oldUser = User.Copy(user);
 
         User.Update(user, updateRequest.Email, updateRequest.Password, updateRequest.FirstName, updateRequest.LastName,
@@ -367,12 +361,13 @@ public class UserServices(IUserRepository userRepository,
             return Result<string>.Failure(400, UserErrors.UserRoleNotFound);
         }
 
-        var cryptoSerivce = cryptoServiceFactory.SetCryptoAlgorithm("RSA");
-        var user = User.Create(createRequest.Email, createRequest.Username, cryptoSerivce.Encrypt(createRequest.Password),
+        var cryptoService = cryptoServiceFactory.SetCryptoAlgorithm("RSA");
+
+        var user = User.Create(createRequest.Email, createRequest.Username, cryptoService.Encrypt(createRequest.Password),
             createRequest.FirstName, createRequest.LastName, createRequest.PhoneNumber, createRequest.RoleId, true);
-       
-        userRepository.Add(user);
-        await userRepository.SaveChangesAsync();
+
+        await AddNewUserIntoStorageAsync(user);
+
         await HandleAuditLogUserCreate(user);
         return UserCommandMessages.UserCreateSuccessfully;
     }
@@ -386,8 +381,8 @@ public class UserServices(IUserRepository userRepository,
             return Result<string>.Failure(400, UserErrors.UserNotFound);
         }
         var oldUser = User.Copy(user);
-        User.Delete(user);
-        await userRepository.SaveChangesAsync();
+
+        await DeleteUserFromStorageAsync(user);
         await HandleAuditLogUserDelete(user, oldUser);
         return UserCommandMessages.UserDeleteSuccessfully;
     }
@@ -402,7 +397,7 @@ public class UserServices(IUserRepository userRepository,
                 executionContext.GetUserName(),
                 nameof(User).ToLower(),
                 $"{user.Username} (#ID: {user.Id})",
-                user.CreatedAt.ToString()
+                user.CreatedAt.ToShortDateString()
                 ), propertiesChanged);
     }
     private async Task HandleAuditLogUserUpdate(User user, User oldUser)
@@ -415,7 +410,7 @@ public class UserServices(IUserRepository userRepository,
                 executionContext.GetUserName(),
                 nameof(User).ToLower(),
                 $"{user.Username} (#ID: {user.Id})",
-                user.CreatedAt.ToString(),
+                user.CreatedAt.ToShortDateString(),
                 StringHelper.SerializePropertiesChanges(propertiesChanged)
                 ), propertiesChanged);  
     }
@@ -428,7 +423,7 @@ public class UserServices(IUserRepository userRepository,
                 AuditLogMessageTemplate.CreateBookBorrowingRequest,
                 executionContext.GetUserName(),
                 bookBorrowingRequest.Id.ToString(),
-                bookBorrowingRequest.CreatedAt.ToString()
+                bookBorrowingRequest.CreatedAt.ToShortDateString()
                 ),
             GetChangedBookBorrowingRequestProperties(bookBorrowingRequest));
     }
@@ -445,7 +440,7 @@ public class UserServices(IUserRepository userRepository,
                 newDetail.Book?.Title ?? string.Empty,
                 newDetail.DueDate.ToString(),
                 newDetail.ExtendDueDate?.ToString() ?? string.Empty,
-                newDetail.ModifiedAt?.ToString() ?? string.Empty
+                newDetail.ModifiedAt?.ToShortDateString() ?? string.Empty
                 ), propertyChanged);
     }
 
@@ -563,4 +558,33 @@ BookBorrowingRequestDetail newDetail, BookBorrowingRequestDetail? oldDetail = de
         return changes;
     }
 
+    private static bool CheckAvailableBooks(List<Book> books)
+    {
+        foreach (var book in books)
+        {
+            if (book.Available == 0)
+                return false;
+        }
+
+        return true;
+    }
+
+
+    private async Task UpdateBookBorrowingRequestDetailAsync(BookBorrowingRequestDetail detail)
+    {
+        bookBorrowingRequestDetailRepository.Update(detail);
+        await bookBorrowingRequestDetailRepository.SaveChangesAsync();
+    }
+
+    private async Task AddNewUserIntoStorageAsync(User user)
+    {
+        userRepository.Add(user);
+        await userRepository.SaveChangesAsync();
+    }
+
+    private async Task DeleteUserFromStorageAsync(User user)
+    {
+        userRepository.Delete(user);
+        await userRepository.SaveChangesAsync();
+    }
 }

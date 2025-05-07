@@ -39,23 +39,24 @@ namespace MIDASM.Infrastructure.Mail
 
             message.Body = builder.ToMessageBody();
 
-        
-            using var client = new SmtpClient();
 
-          
-            await client.ConnectAsync(
-                _emailSettings.MailServer,
-                _emailSettings.MailPort,
-                SecureSocketOptions.StartTlsWhenAvailable
-            );
+            using (var client = new SmtpClient())
+            {
 
-            await client.AuthenticateAsync(
+                await client.ConnectAsync(
+                    _emailSettings.MailServer,
+                    _emailSettings.MailPort,
+                    SecureSocketOptions.StartTlsWhenAvailable
+                );
+
+                await client.AuthenticateAsync(
                 _emailSettings.FromEmail,
                 _emailSettings.Password
-            );
+                );
 
-            await client.SendAsync(message);
-            //await client.DisconnectAsync(true);
+                await client.SendAsync(message);
+                await client.DisconnectAsync(true);
+            }
         }
 
         public async Task SendMailWithAttachmentAsync(

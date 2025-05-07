@@ -1,6 +1,8 @@
 ﻿
 using Microsoft.Extensions.DependencyInjection;
 using MIDASM.Application.Services.Crypto;
+using MIDASM.Contract.Helpers;
+using MIDASM.Contract.Messages.ExceptionMessages;
 using Rookies.Contract.Exceptions;
 
 namespace MIDASM.Infrastructure.Crypto;
@@ -20,7 +22,9 @@ public class CryptoServiceFactory : ICryptoServiceFactory
         }
         catch
         {
-            throw new BadRequestException($"No support {algorithm} crypto algorithm");
+            var exMessage = StringHelper.ReplacePlaceholders(ApplicationExceptionMessages.NoSupportCryptoAlgorithmType, 
+                                                                algorithm);
+            throw new BadRequestException(exMessage);
         }
     }
 }

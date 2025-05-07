@@ -44,4 +44,10 @@ public class BookBorrowingRequestDetail : AuditableEntity, IEntity<Guid>
             BookBorrowingRequest = other.BookBorrowingRequest
         };
     }
+
+    public static void CreateExtendDueDate(BookBorrowingRequestDetail detail, DateOnly dueDateExtend)
+    {
+        detail.ExtendDueDate = dueDateExtend;
+        detail.ExtendDueDateTimes += 1;
+    }
 }
