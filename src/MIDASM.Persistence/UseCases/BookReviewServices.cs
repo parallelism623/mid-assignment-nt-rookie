@@ -50,8 +50,8 @@ public class BookReviewServices(IBookReviewRepository bookReviewRepository,
                                            bookReviewCreateRequest.Content,
                                            bookReviewCreateRequest.DateReview,
                                            bookReviewCreateRequest.Rating);
-        bookReviewRepository.Add(bookReview);
-        await bookReviewRepository.SaveChangesAsync();
+
+        await AddBookReviewIntoStorageAsync(bookReview);
 
         await HandleAuditLogBookReviewCreate(bookReview);
         return BookReviewCommandMessages.CreateSuccess;
@@ -85,7 +85,7 @@ public class BookReviewServices(IBookReviewRepository bookReviewRepository,
                 executionContext.GetUserName(),
                 "book review",
                 $"with rating {bookReview.Rating} stars",
-                bookReview.CreatedAt.ToString()
+                bookReview.CreatedAt.ToShortTime()
                 ),
             GetChangedBookReviewProperties(bookReview));
     }
@@ -115,6 +115,13 @@ public class BookReviewServices(IBookReviewRepository bookReviewRepository,
         return changes;
     }
 
+
+    private async Task AddBookReviewIntoStorageAsync(BookReview bookReview)
+    {
+        bookReviewRepository.Add(bookReview);
+        await bookReviewRepository.SaveChangesAsync();
+
+    }
 
 
 }

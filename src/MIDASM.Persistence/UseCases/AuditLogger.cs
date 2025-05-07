@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using MIDASM.Application.Commons.Models.Auditlogs;
@@ -9,27 +10,21 @@ using MIDASM.Application.Services.Authentication;
 using MIDASM.Contract.SharedKernel;
 using MIDASM.Domain.Entities;
 using MIDASM.Persistence.Specifications;
+using System.Net;
 
 
 namespace MIDASM.Persistence.UseCases;
 
-public class AuditLogger : IAuditLogger
+public class AuditLogger(AuditLogDbContext auditDbContext,
+    IExecutionContext executionContext,
+    IHttpContextAccessor httpContextAccessor) : IAuditLogger
 {
-    private readonly AuditLogDbContext _auditDbContext;
-    private readonly IExecutionContext _executionContext;
-    private readonly IHttpContextAccessor _httpContextAccessor;
-    public AuditLogger(AuditLogDbContext auditDbContext, IExecutionContext executionContext,
-         IHttpContextAccessor httpContextAccessor)
-    {
-        _httpContextAccessor = httpContextAccessor;
-        _executionContext = executionContext;
-        _auditDbContext = auditDbContext;
-    }
+
     public async Task<Result<PaginationResult<AuditLogResponse>>> GetActivitiesAsync(AuditLogQueryParameters queryParameters)
     {
-        var query = _auditDbContext.AuditLogs.AsQueryable();
+        var query = auditDbContext.AuditLogs!.AsQueryable();
         var querySpecification = new AuditLogByQueryParametersSpecification(queryParameters);
-        var queryAuditLogData = _auditDbContext.AuditLogDatas.AsQueryable();
+        var queryAuditLogData = auditDbContext.AuditLogDatas!.AsQueryable();
         query = querySpecification.GetQuery(query);
 
         var totalCount = await query.CountAsync();
@@ -65,7 +60,7 @@ public class AuditLogger : IAuditLogger
 
     public async Task<Result<PaginationResult<UserAuditLogResponse>>> GetUserActivitiesAsync(Guid userId, UserAuditLogQueryParameters queryParameters)
     {
-        var query = _auditDbContext.AuditLogs.AsQueryable();
+        var query = auditDbContext.AuditLogs!.AsQueryable();
         var querySpecification = new UserAuditLogByQueryParametersSpecification(userId, queryParameters);
 
         query = querySpecification.GetQuery(query);
@@ -90,30 +85,33 @@ public class AuditLogger : IAuditLogger
 
     public async Task LogAsync(string entityId, string entityName, string desciption, Dictionary<string, (string?, string?)>? changedProperties = default)
     {
-        var httpContext = _httpContextAccessor.HttpContext;
+        var httpContext = httpContextAccessor.HttpContext;
         var routeData = httpContext?.GetRouteData();
         var auditLog = new AuditLog()
         {
             Id = Guid.NewGuid(),
-            UserId = _executionContext.GetUserId(),
-            BrowserInfo = httpContext?.Request.Headers["User-Agent"].ToString(),
+            UserId = executionContext.GetUserId(),
+            BrowserInfo = httpContext?
+                .Request
+                .Headers[nameof(HttpRequestHeader.UserAgent)]
+                .ToString(),
             HttpMethod = httpContext?.Request.Method,
-            Username = _executionContext.GetUserName(),
+            Username = executionContext.GetUserName(),
             Url = httpContext?.Request.Path.ToString(),
             ServiceName = routeData?.Values["controller"]?.ToString(),
-            MethodName = routeData?.Values["action"]?.ToString()?.Replace("Asycn", ""),
+            MethodName = routeData?.Values["action"]?.ToString()?.Replace("Async", ""),
             EntityId = entityId,
             EntityName = entityName,
             TimeStamp = DateTime.UtcNow,
             Description = desciption,
         };
-        _auditDbContext.Add(auditLog);
+        auditDbContext.Add(auditLog);
         var auditLogDatas = GetAuditLogDataFromChangedProperties(auditLog.Id, changedProperties);
         if (auditLogDatas.Count > 0)
         {
-            _auditDbContext.AddRange(auditLogDatas);
+            auditDbContext.AddRange(auditLogDatas);
         }
-        await _auditDbContext.SaveChangesAsync();
+        await auditDbContext.SaveChangesAsync();
     }
 
 
@@ -124,13 +122,14 @@ public class AuditLogger : IAuditLogger
         {
             foreach (var it in changedProperties)
             {
-                var auditLogData = new AuditLogData();
-                auditLogData.Id = Guid.NewGuid();
-
-                auditLogData.AuditLogId = auditLogId;
-                auditLogData.PropertyName = it.Key;
-                auditLogData.OriginalValue = it.Value.Item1;
-                auditLogData.NewValue = it.Value.Item2;
+                var auditLogData = new AuditLogData()
+                {
+                    Id = Guid.NewGuid(),
+                    AuditLogId = auditLogId,
+                    PropertyName = it.Key,
+                    OriginalValue = it.Value.Item1,
+                    NewValue = it.Value.Item2,
+                };
                 auditLogDatas.Add(auditLogData);
             }
         }
@@ -139,8 +138,8 @@ public class AuditLogger : IAuditLogger
 
     public async Task<List<UserActiveDaysAuditLog>> GetUserActivitiesReportAsync(UserActivitiesQueryParameters userActivitiesQueryParameters)
     {
-        var tmp = await _auditDbContext.AuditLogs.CountAsync();
-        return await _auditDbContext.AuditLogs.Where(ad => userActivitiesQueryParameters.UserIds.Contains(ad.UserId)
+        var tmp = await auditDbContext.AuditLogs!.CountAsync();
+        return await auditDbContext.AuditLogs.Where(ad => userActivitiesQueryParameters.UserIds.Contains(ad.UserId)
                                                     && DateOnly.FromDateTime(ad.TimeStamp.Date) <= userActivitiesQueryParameters.ToDate
                                                     && DateOnly.FromDateTime(ad.TimeStamp.Date) >= userActivitiesQueryParameters.FromDate)
                                               .GroupBy(ad => new

@@ -584,7 +584,8 @@ BookBorrowingRequestDetail newDetail, BookBorrowingRequestDetail? oldDetail = de
 
     private async Task DeleteUserFromStorageAsync(User user)
     {
-        userRepository.Delete(user);
+        user.IsDeleted = true;
+        userRepository.Update(user);
         await userRepository.SaveChangesAsync();
     }
 }

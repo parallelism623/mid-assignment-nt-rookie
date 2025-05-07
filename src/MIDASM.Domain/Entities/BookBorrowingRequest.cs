@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace MIDASM.Domain.Entities;
 
-public class BookBorrowingRequest : AuditableEntity, IEntity<Guid>
+public class BookBorrowingRequest : AuditableEntity, IEntity<Guid>, ISoftDeleteEntity
 {
     public Guid Id { get; set; }
     public Guid RequesterId { get; set; }

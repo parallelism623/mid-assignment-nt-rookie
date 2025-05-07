@@ -1,8 +1,6 @@
-﻿using Amazon.Runtime.Internal.Transform;
-using Mapster;
+﻿using Mapster;
 using Microsoft.EntityFrameworkCore;
 using MIDASM.Application.Commons.Mapping;
-using MIDASM.Application.Commons.Models;
 using MIDASM.Application.Commons.Models.Categories;
 using MIDASM.Application.Services.AuditLogServices;
 using MIDASM.Application.Services.Authentication;
@@ -57,18 +55,18 @@ public class CategoryServices(ICategoryRepository categoryRepository,
     {
         var category = await categoryRepository.GetByIdAsync(id);
 
-        return category.Adapt<CategoryResponse>();
+        return category?.ToCategoryResponse() ?? default!;
     }
 
     public async Task<Result<string>> CreateCategoryAsync(CategoryCreateRequest createRequest)
     {
         if (await IsCategoryNameExists(createRequest.Name))
         {
-            return Result<string>.Failure(400, CategoryErrors.CategoryNameExists);
+            return Result<string>.Failure(CategoryErrors.CategoryNameExists);
         }
         var category = Category.Create(createRequest.Name, createRequest.Description);
-        categoryRepository.Add(category);
-        await categoryRepository.SaveChangesAsync();
+
+        await AddCategoryIntoStorageAsync(category);
 
         await HandleAuditLogCreateCategory(category);
 
@@ -84,9 +82,10 @@ public class CategoryServices(ICategoryRepository categoryRepository,
             return Result<string>.Failure(400, CategoryErrors.CategoryNotFound);
         }
         var oldCategory = Category.Copy(category);
-        Category.Update(category, updateRequest.Name, updateRequest.Description);
 
+        Category.Update(category, updateRequest.Name, updateRequest.Description);
         await categoryRepository.SaveChangesAsync();
+
         await HandleAuditLogUpdateCategory(category, oldCategory);
         return CategoryCommandMessages.CategoryUpdatedSuccess;
     }
@@ -97,21 +96,22 @@ public class CategoryServices(ICategoryRepository categoryRepository,
 
         if (category == null)
         {
-            return Result<string>.Failure(400, CategoryErrors.CategoryNotFound);
+            return Result<string>.Failure(CategoryErrors.CategoryNotFound);
         }
 
         if (category.Books?.Count > 0)
         {
-            return Result<string>.Failure(400, CategoryErrors.CategoryCanNotDelete);
+            return Result<string>.Failure(CategoryErrors.CategoryCanNotDelete);
         }
         try
         {
             await transactionManager.BeginTransactionAsync();
-            await DeleteBookOfCategory(category);
+
+            await DeleteBooksOfCategoryAsync(category);
+
             var oldCategory = Category.Copy(category);
-            category.IsDeleted = true;
-            categoryRepository.Update(category);
-            await categoryRepository.SaveChangesAsync();
+
+            await SoftDeleteCategoryFromStorageAsync(category);
 
             await transactionManager.CommitTransactionAsync();
             transactionManager.DisposeTransaction();
@@ -124,7 +124,7 @@ public class CategoryServices(ICategoryRepository categoryRepository,
         {
             await transactionManager.RollbackAsync();
             transactionManager.DisposeTransaction();
-            return Result<string>.Failure(400, CategoryErrors.CategoryDeleteFail);
+            return Result<string>.Failure(CategoryErrors.CategoryDeleteFail);
         }
     }
 
@@ -134,7 +134,7 @@ public class CategoryServices(ICategoryRepository categoryRepository,
         var category = await categoryRepository.GetByNameAsync(categoryName);
         return category != null;
     }
-    private async Task DeleteBookOfCategory(Category category)
+    private async Task DeleteBooksOfCategoryAsync(Category category)
     {
         var books = await bookRepository.GetQueryable().Where(b => b.CategoryId == category.Id).ToListAsync();
         books.ForEach(book => book.IsDeleted = true);
@@ -153,7 +153,7 @@ public class CategoryServices(ICategoryRepository categoryRepository,
                 executionContext.GetUserName(),
                 nameof(Category).ToLower(),
                 category.Name,
-                category.CreatedAt.ToString()
+                category.CreatedAt.ToShortTime()
             ),
             GetChangingProperties(category)
             );
@@ -170,7 +170,7 @@ public class CategoryServices(ICategoryRepository categoryRepository,
                 executionContext.GetUserName(),
                 nameof(Category).ToLower(),
                 category.Name,
-                category.ModifiedAt!.ToString() ?? string.Empty, 
+                category.ModifiedAt!.ToShortTime(), 
                 StringHelper.SerializePropertiesChanges(changingProperties)
             ),
             changingProperties
@@ -187,7 +187,7 @@ public class CategoryServices(ICategoryRepository categoryRepository,
                 executionContext.GetUserName(),
                 nameof(Category).ToLower(),
                 category.Name,
-                category.ModifiedAt!.ToString() ?? string.Empty
+                category.ModifiedAt.ToShortTime()
             ),
             GetChangingProperties(category, oldCategory)
             );
@@ -212,4 +212,17 @@ public class CategoryServices(ICategoryRepository categoryRepository,
     }
 
 
+    private async Task AddCategoryIntoStorageAsync(Category category)
+    {
+        categoryRepository.Add(category);
+        await categoryRepository.SaveChangesAsync();
+    }
+
+    private async Task SoftDeleteCategoryFromStorageAsync(Category category)
+    {
+        category.IsDeleted = true;
+        categoryRepository.Update(category);
+        await categoryRepository.SaveChangesAsync();
+
+    }
 }

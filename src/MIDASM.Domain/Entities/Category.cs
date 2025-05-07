@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace MIDASM.Domain.Entities;
 
-public class Category : AuditableEntity, IEntity<Guid>
+public class Category : AuditableEntity, IEntity<Guid>, ISoftDeleteEntity
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = default!;
@@ -37,5 +37,9 @@ public class Category : AuditableEntity, IEntity<Guid>
             IsDeleted = category.IsDeleted,
         };
     }
-    
+
+    public static void Delete(Category category)
+    {
+        category.IsDeleted = true;
+    }
 }

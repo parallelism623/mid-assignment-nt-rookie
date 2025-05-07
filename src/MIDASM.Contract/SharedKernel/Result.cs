@@ -58,6 +58,10 @@ public class Result<T> : Result
     {
         return new(statusCode, errors);
     }
+    public static Result<T> Failure(params Error[] errors)
+    {
+        return new(400, errors);
+    }
     public static implicit operator Result<T>(T data) => Success(data);
 }
 

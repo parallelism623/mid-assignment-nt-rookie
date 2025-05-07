@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace MIDASM.Domain.Entities;
 
-public class BookReview : AuditableEntity, IEntity<Guid>
+public class BookReview : AuditableEntity, IEntity<Guid>, ISoftDeleteEntity
 {
     public Guid Id { get; set; }
     public Guid ReviewerId { get; set; }

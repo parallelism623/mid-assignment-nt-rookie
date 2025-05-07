@@ -3,13 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MIDASM.Application.Services.AuditLogServices;
-using MIDASM.Application.Services.Authentication;
 using MIDASM.Application.UseCases;
 using MIDASM.Domain.Abstract;
 using MIDASM.Domain.Repositories;
 using MIDASM.Persistence.Interceptors;
 using MIDASM.Persistence.Repositories;
-using MIDASM.Persistence.UseCases;
 using MIDASM.Persistence.UseCases;
 
 namespace MIDASM.Persistence;
@@ -20,27 +18,9 @@ public static class DependencyInjection
     {
         var config = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
 
-        services.ConfigureApplicationDbContext(config);
-        services.AddScoped<ICategoryRepository, CategoryRepository>();
-        services.AddScoped<ICategoryServices, CategoryServices>();
-        services.AddScoped<IBookServices, BookServices>();
-        services.AddScoped<IBookRepository, BookRepository>();
-        services.AddScoped<IUserServices, UserServices>();
-        services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IBookBorrowingRequestRepository, BookBorrowingRequestRepository>();
-        services.AddScoped<ITransactionManager, TransactionManager>();
-        services.AddScoped<IBookBorrowingRequestServices, BookBorrowingRequestServices>();
-        services.AddScoped<IBookBorrowingRequestRepository, BookBorrowingRequestRepository>();
-        services.AddScoped<IRoleRepository, RoleRepository>();
-        services.AddScoped<IBookBorrowingRequestDetailRepository, BookBorrowingRequestDetailRepository>();
-        services.AddScoped<IBookBorrowingRequestDetailServices, BookBorrowingRequestDetailServices>();
-        services.AddScoped<IBookReviewRepository, BookReviewRepository>();
-        services.AddScoped<IBookReviewServices, BookReviewServices>();
-        services.AddScoped<IEmailRecordRepository, EmailRecordRepository>();
-        services.AddScoped<IRoleServices, RoleServices>();
-        services.AddScoped<IAuditLogger, AuditLogger>();
-        services.AddScoped<IReportServices, ReportServices>();
-        return services;
+        return services.ConfigureApplicationDbContext(config)
+            .ConfigureRepositories()
+            .ConfigureServices();
     }
 
     public static IServiceCollection ConfigureApplicationDbContext(this IServiceCollection services,
@@ -53,9 +33,39 @@ public static class DependencyInjection
         });
         return services.AddDbContext<ApplicationDbContext>((sp, options) =>
         {
-            var interceptorAuditablEntity = sp.GetRequiredService<AuditableEntitiesInterceptor>();
+            var interceptorAuditableEntity = sp.GetRequiredService<AuditableEntitiesInterceptor>();
             options.UseSqlServer(config.GetConnectionString("Default"));
-            options.AddInterceptors(interceptorAuditablEntity);
+            options.AddInterceptors(interceptorAuditableEntity);
         });
+    }
+
+    public static IServiceCollection ConfigureRepositories(this IServiceCollection services)
+    {
+
+        services.AddScoped<ICategoryRepository, CategoryRepository>()
+                .AddScoped<IBookRepository, BookRepository>()
+                .AddScoped<IUserRepository, UserRepository>()
+                .AddScoped<IBookBorrowingRequestRepository, BookBorrowingRequestRepository>()
+                .AddScoped<IBookBorrowingRequestRepository, BookBorrowingRequestRepository>()
+                .AddScoped<IRoleRepository, RoleRepository>()
+                .AddScoped<IBookBorrowingRequestDetailRepository, BookBorrowingRequestDetailRepository>()
+                .AddScoped<IBookReviewRepository, BookReviewRepository>()
+                .AddScoped<IEmailRecordRepository, EmailRecordRepository>();
+        return services;
+    }
+
+    public static IServiceCollection ConfigureServices(this IServiceCollection services)
+    {
+        services.AddScoped<ICategoryServices, CategoryServices>()
+                .AddScoped<IBookServices, BookServices>()
+                .AddScoped<IUserServices, UserServices>()
+                .AddScoped<ITransactionManager, TransactionManager>()
+                .AddScoped<IBookBorrowingRequestServices, BookBorrowingRequestServices>()
+                .AddScoped<IBookBorrowingRequestDetailServices, BookBorrowingRequestDetailServices>()
+                .AddScoped<IBookReviewServices, BookReviewServices>()
+                .AddScoped<IRoleServices, RoleServices>()
+                .AddScoped<IAuditLogger, AuditLogger>()
+                .AddScoped<IReportServices, ReportServices>();
+        return services;
     }
 }

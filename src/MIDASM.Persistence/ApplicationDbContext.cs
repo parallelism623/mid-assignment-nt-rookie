@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using MIDASM.Contract.Messages.ExceptionMessages;
 using MIDASM.Domain.Entities;
 using System.Data;
 using System.Reflection;
@@ -28,8 +29,6 @@ public class ApplicationDbContext : DbContext
     }
     private IDbContextTransaction? _transaction;
 
-    public IDbContextTransaction? GetCurrentTransaction() => _transaction;
-
     private bool HasActiveTransaction => _transaction != null;
     public async Task<IDbContextTransaction?> BeginTransactionAsync()
     {
@@ -45,11 +44,11 @@ public class ApplicationDbContext : DbContext
     {
         if (_transaction == null)
         {
-            throw new ArgumentException("Current transaction in dbcontext is null");
+            throw new ArgumentException(ApplicationExceptionMessages.CurrentTransactionNull);
         }
         if (_transaction != transaction)
         {
-            throw new ArgumentException("Current transaction not match");
+            throw new ArgumentException(ApplicationExceptionMessages.TransactionWhenCommitNotMatchCurrentTransaction);
         }
         try
         {

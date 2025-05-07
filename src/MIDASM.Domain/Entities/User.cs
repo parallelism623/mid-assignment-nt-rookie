@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace MIDASM.Domain.Entities;
 
-public class User : AuditableEntity, IEntity<Guid>
+public class User : AuditableEntity, IEntity<Guid>, ISoftDeleteEntity
 {
     public Guid Id { get; set; }
     public string Username { get; set; } = default!;

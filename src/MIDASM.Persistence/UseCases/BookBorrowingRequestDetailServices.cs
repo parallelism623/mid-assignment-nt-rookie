@@ -30,33 +30,33 @@ public class BookBorrowingRequestDetailServices(
 {
     public async Task<Result<string>> AdjustExtendDueDateAsync(Guid id, int status)
     {
-        var bookBorrowedDetail = await bookBorrowingRequestDetailRepository.GetByIdAsync(id, "BookBorrowingRequest", "Book");
-        if(bookBorrowedDetail == null)
-        {
+        var bookBorrowedDetail = await bookBorrowingRequestDetailRepository.GetByIdAsync(id, 
+            nameof(BookBorrowingRequestDetail.BookBorrowingRequest), 
+            nameof(BookBorrowingRequestDetail.Book));
+        if(bookBorrowedDetail == null){
             return Result<string>.Failure(400, BookBorrowingRequestDetailErrors.BookBorrowedDetailNotFound);
         }
-        if(bookBorrowedDetail.BookBorrowingRequest.Status == (int)BookBorrowingStatus.Rejected)
-        {
+        if(bookBorrowedDetail.BookBorrowingRequest.Status == (int)BookBorrowingStatus.Rejected){
             return Result<string>.Failure(400, BookBorrowingRequestDetailErrors.BookBorrowReject);
         }
-        if(bookBorrowedDetail.ExtendDueDate == null)
-        {
+        if(bookBorrowedDetail.ExtendDueDate == null){
             return Result<string>.Failure(400, BookBorrowingRequestDetailErrors.BookBorrowedExtendDueDateInvalid);
         }
 
         var oldBookBorrowedDetail = BookBorrowingRequestDetail.Copy(bookBorrowedDetail);
+
         if (status == 1)
         {
             bookBorrowedDetail.DueDate = (DateOnly)bookBorrowedDetail.ExtendDueDate;
         }
-
         
         bookBorrowedDetail.ExtendDueDate = null;
-        bookBorrowingRequestDetailRepository.Update(bookBorrowedDetail);
-        await bookBorrowingRequestDetailRepository.SaveChangesAsync();
+
+        await UpdateBookBorrowingRequestlDetailInStorageAsync(bookBorrowedDetail);
 
 
         await HandleSendMailExtendDueDateStatusChange(oldBookBorrowedDetail, status);
+
         await HandleAuditLogAdjustExtendDueDate(bookBorrowedDetail, oldBookBorrowedDetail);
 
         return BookBorrowingRequestDetailCommandMessages.AdjustExtendDueDateRequestSuccess;
@@ -180,6 +180,12 @@ public class BookBorrowingRequestDetailServices(
             changes[nameof(newDetail.ExtendDueDate)] = (oldDetail?.ExtendDueDate?.ToString(), newDetail.ExtendDueDate?.ToString());
 
         return changes;
+    }
+
+    private async Task UpdateBookBorrowingRequestlDetailInStorageAsync(BookBorrowingRequestDetail bookBorrowingDetail)
+    {
+        bookBorrowingRequestDetailRepository.Update(bookBorrowingDetail);
+        await bookBorrowingRequestDetailRepository.SaveChangesAsync();
     }
 
 }

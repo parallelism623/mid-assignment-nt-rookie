@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace MIDASM.Domain.Entities;
 
-public class BookBorrowingRequestDetail : AuditableEntity, IEntity<Guid>
+public class BookBorrowingRequestDetail : AuditableEntity, IEntity<Guid>, ISoftDeleteEntity
 {
     public Guid Id { get; set; }
     public Guid BookBorrowingRequestId { get; set; }

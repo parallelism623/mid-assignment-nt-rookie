@@ -50,7 +50,10 @@ public class BookBorrowingRequestServices(
 
     public async Task<Result<string>> ChangeStatusAsync(BookBorrowingStatusUpdateRequest statusUpdateRequest)
     {
-        var bookBorrowingRequest = await bookBorrowingRequestRepository.GetByIdAsync(statusUpdateRequest.Id, "BookBorrowingRequestDetails", "Requester");
+        var bookBorrowingRequest = await bookBorrowingRequestRepository
+            .GetByIdAsync(statusUpdateRequest.Id, 
+            nameof(BookBorrowingRequest.BookBorrowingRequestDetails), 
+            nameof(BookBorrowingRequest.Requester));
 
         if (bookBorrowingRequest == null)
         {
@@ -69,12 +72,13 @@ public class BookBorrowingRequestServices(
         var oldBookBorrowingRequest = BookBorrowingRequest.Copy(bookBorrowingRequest);
 
         BookBorrowingRequest.AdjustingStatus(bookBorrowingRequest, statusUpdateRequest.Status, executionContext.GetUserId());
-        bookBorrowingRequestRepository.Update(bookBorrowingRequest);
 
-        await bookBorrowingRequestRepository.SaveChangesAsync();
+        await UpdateBookBorrowingRequestInStorage(bookBorrowingRequest);
+
         await HandleSendMailChangeStatusRequest(bookBorrowingRequest);
 
         await HandleAuditLogBookBorrowingRequestChangeStatus(bookBorrowingRequest, oldBookBorrowingRequest);
+
         return BookBorrowingRequestCommandMessages.ChangeStatusSuccess;
     }
 
@@ -135,6 +139,11 @@ public class BookBorrowingRequestServices(
                 propertiesChanged);
     }
 
+    private async Task UpdateBookBorrowingRequestInStorage(BookBorrowingRequest bookBorrowingRequest)
+    {
+        bookBorrowingRequestRepository.Update(bookBorrowingRequest);
+        await bookBorrowingRequestRepository.SaveChangesAsync();
+    }
     private static Dictionary<string, (string?, string?)> GetChangedBookBorrowingRequestProperties(
     BookBorrowingRequest newRequest, BookBorrowingRequest? oldRequest = default)
     {

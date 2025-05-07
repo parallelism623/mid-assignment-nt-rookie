@@ -21,8 +21,10 @@ public class ReportServices(IBookRepository bookRepository,
         var bookQuery = bookRepository.GetQueryable();
         var bookBorrowingRequestDetailQuery = 
             bookBorrowingRequestDetailRepository
-                            .GetQueryable().Where(bbd => bbd.BookBorrowingRequest.DateRequested >= queryParameters.FromDate 
-                                                        && bbd.BookBorrowingRequest.DateRequested <= queryParameters.ToDate);
+                            .GetQueryable()
+                            .Where(bbd =>
+                                bbd.BookBorrowingRequest.DateRequested >= queryParameters.FromDate 
+                                && bbd.BookBorrowingRequest.DateRequested <= queryParameters.ToDate);
 
         var data = await bookQuery
             .GroupJoin(
@@ -144,10 +146,16 @@ public class ReportServices(IBookRepository bookRepository,
 
     public async Task<Result<PaginationResult<UserReportResponse>>> GetUserReportAsync(UserEngagementReportQueryParameters queryParameters)
     {
-        var userQuery = userRepository.GetQueryable().Where(u => u.Role.Name != RoleName.Admin.ToString());
+        var userQuery = userRepository
+            .GetQueryable()
+            .Where(u => u.Role.Name != nameof(RoleName.Admin));
 
-        var bookBorrowingRequestQuery = bookBorrowingRequestRepository.GetQueryable().Where(bbd => bbd.DateRequested >= queryParameters.FromDate
-                                                && bbd.DateRequested <= queryParameters.ToDate);
+        var bookBorrowingRequestQuery = 
+            bookBorrowingRequestRepository
+            .GetQueryable()
+            .Where(bbd => 
+                bbd.DateRequested >= queryParameters.FromDate
+                && bbd.DateRequested <= queryParameters.ToDate);
         
         var data = await userQuery
             .GroupJoin(bookBorrowingRequestQuery, 
@@ -166,7 +174,9 @@ public class ReportServices(IBookRepository bookRepository,
                            BookReviews = d.BookReviews,
                            BookBorrowingRequest = bb
                        })
-            .OrderByDescending(b => b.BookBorrowingRequest == null ? DateOnly.MinValue : b.BookBorrowingRequest.DateRequested)
+            .OrderByDescending(b => 
+                b.BookBorrowingRequest == null ? 
+                DateOnly.MinValue : b.BookBorrowingRequest.DateRequested)
             .GroupBy(d => new
             {
                 d.User.Id,

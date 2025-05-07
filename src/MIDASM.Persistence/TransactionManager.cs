@@ -1,30 +1,26 @@
 ﻿
 using Microsoft.EntityFrameworkCore.Storage;
+using MIDASM.Contract.Messages.ExceptionMessages;
 using MIDASM.Domain.Abstract;
 
 namespace MIDASM.Persistence;
 
-public class TransactionManager : ITransactionManager
+public class TransactionManager(ApplicationDbContext context) : ITransactionManager
 {
-    private readonly ApplicationDbContext _context;
-    public TransactionManager(ApplicationDbContext context)
-    {
-        _context = context;
-    }
     private IDbContextTransaction? _transaction;
 
     public async Task BeginTransactionAsync()
     {
-        _transaction = await _context.BeginTransactionAsync();
+        _transaction = await context.BeginTransactionAsync();
     }
 
     public Task CommitTransactionAsync()
     {
         if (_transaction == null)
         {
-            throw new ArgumentException("Transaction (in Transaction Manager) null, can not commit");
+            throw new ArgumentException(ApplicationExceptionMessages.CanNotCommitNullTransaction);
         }
-        return _context.CommitTransactionAsync(_transaction);
+        return context.CommitTransactionAsync(_transaction);
     }
 
     public void DisposeTransaction()
@@ -37,7 +33,7 @@ public class TransactionManager : ITransactionManager
     {
         if (_transaction == null)
         {
-            throw new ArgumentException("Transaction (in Transaction Manager) null, can not commit");
+            throw new ArgumentException(ApplicationExceptionMessages.CanNotRollBackNullTransaction);
         }
         return _transaction.RollbackAsync();
     }

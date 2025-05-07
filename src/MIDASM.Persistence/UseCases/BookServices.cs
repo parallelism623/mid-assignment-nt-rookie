@@ -77,18 +77,23 @@ public class BookServices(IBookRepository bookRepository,
 
     public async Task<Result<BookDetailResponse>> GetByIdAsync(Guid id)
     {
-        var book = await bookRepository.GetByIdAsync(id, "Category", "BookReviews");
+        var book = await bookRepository
+            .GetByIdAsync(id,
+            nameof(Book.Category),
+            nameof(Book.BookReviews));
+
         var bookResponse = book!.ToBookDetailResponse();
-        if(bookResponse.SubImagesUrl != null && bookResponse.SubImagesUrl.Count != 0)
+
+        if(IsBookHasSubImages(bookResponse))
         {
-            bookResponse.SubImagesUrlSigned = (await Task
-                .WhenAll(bookResponse.SubImagesUrl.Select(GetSignedUrlSubImage)))
-                .ToList();
+            await GetBookSignedSubImagesAsync(bookResponse);
         }
+
         if(string.IsNullOrEmpty(bookResponse.ImageUrl))
         {
             bookResponse.ImageUrl = DefaultBookImage;
         }
+
         bookResponse.ImageUrlSigned = await GetSignedUrlSubImage(bookResponse.ImageUrl);
         return bookResponse;
     }
@@ -101,7 +106,7 @@ public class BookServices(IBookRepository bookRepository,
         {
             return Result<string>.Failure(400, BookErrors.BookCanNotCreateDueToInvalidCategory);
         }
-        List<string>? imagesSubUrl = new();
+        List<string> imagesSubUrl = new();
         if(request.SubImagesUrl != null && request.SubImagesUrl.Count != 0)
         {
             imagesSubUrl = (await Task.WhenAll(request.SubImagesUrl.Select(b => imageStorageServices.UploadImageAsync(b))))!.ToList();
@@ -121,15 +126,15 @@ public class BookServices(IBookRepository bookRepository,
 
     public async Task<Result<string>> UpdateAsync(BookUpdateRequest request)
     {
-        var book = await bookRepository.GetByIdAsync(request.Id, "Category");
+        var book = await bookRepository.GetByIdAsync(request.Id, nameof(Book.Category));
         if (book == null)
         {
-            return Result<string>.Failure(400, BookErrors.BookCanNotFound);
+            return Result<string>.Failure(BookErrors.BookCanNotFound);
         }
 
         if (book.Available + request.AddedQuantity < 0)
         {
-            return Result<string>.Failure(400, BookErrors.BookQuantityAddedInvalid);
+            return Result<string>.Failure(BookErrors.BookQuantityAddedInvalid);
         }
 
         if (book.Category.Id != request.CategoryId)
@@ -138,7 +143,7 @@ public class BookServices(IBookRepository bookRepository,
 
             if (category == null)
             {
-                return Result<string>.Failure(400, BookErrors.BookCanNotUpdateDueToInvalidCategory);
+                return Result<string>.Failure(BookErrors.BookCanNotUpdateDueToInvalidCategory);
             }
         }
 
@@ -200,7 +205,7 @@ public class BookServices(IBookRepository bookRepository,
 
     public async Task<Result<string>> DeleteAsync(Guid id)
     {
-        var book = await bookRepository.GetByIdAsync(id, "BookBorrowingRequestDetails");
+        var book = await bookRepository.GetByIdAsync(id, nameof(Book.BookBorrowingRequestDetails));
         if (book == null)
         {
             return Result<string>.Failure(400, BookErrors.BookCanNotFound);
@@ -256,7 +261,7 @@ public class BookServices(IBookRepository bookRepository,
                     executionContext.GetUserName(),
                     nameof(Book).ToLower(),
                     $"{newBook.Title} (#{newBook.Id})",
-                    newBook.CreatedAt.ToString()
+                    newBook.CreatedAt.ToShortTime()
                     ),
                 propertiesChanged
             );
@@ -273,7 +278,7 @@ public class BookServices(IBookRepository bookRepository,
                     executionContext.GetUserName(),
                     nameof(Book).ToLower(),
                     $"{newBook.Title} (#{newBook.Id})",
-                    newBook.ModifiedAt!.ToString() ?? string.Empty,
+                    newBook.ModifiedAt!.ToShortTime(),
                     StringHelper.SerializePropertiesChanges(propertiesChanged)
                     ),
                 propertiesChanged
@@ -292,7 +297,7 @@ public class BookServices(IBookRepository bookRepository,
                     executionContext.GetUserName(),
                     nameof(Book).ToLower() ,
                     $"{newBook.Title} (#{newBook.Id})",
-                    newBook.ModifiedAt!.ToString() ?? string.Empty
+                    newBook.ModifiedAt!.ToShortTime()
                     ),
                 propertiesChanged
             );
@@ -336,4 +341,20 @@ public class BookServices(IBookRepository bookRepository,
         return changes;
     }
 
+
+    private static bool IsBookHasSubImages(BookDetailResponse bookResponse)
+    {
+        return bookResponse.SubImagesUrl != null && bookResponse.SubImagesUrl.Count != 0;
+    }
+
+    private async Task GetBookSignedSubImagesAsync(BookDetailResponse bookResponse)
+    {
+        if (bookResponse.SubImagesUrl != null)
+        {
+            bookResponse.SubImagesUrlSigned = (await Task
+                    .WhenAll(bookResponse.SubImagesUrl
+                        .Select(GetSignedUrlSubImage)))
+                .ToList();
+        }
+    }
 }
