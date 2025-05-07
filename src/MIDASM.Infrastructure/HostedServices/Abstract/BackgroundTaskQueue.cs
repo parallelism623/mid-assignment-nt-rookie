@@ -8,10 +8,10 @@ public class BackgroundTaskQueue<T> : IBackgroundTaskQueue<T>
 {
 
     private readonly Channel<T> _queue;
-    private const int Default_Capacity = 100;
+    private const int DefaultCapacity = 100;
     public BackgroundTaskQueue()
     {
-        var options = new BoundedChannelOptions(Default_Capacity)
+        var options = new BoundedChannelOptions(DefaultCapacity)
         {
             FullMode = BoundedChannelFullMode.DropNewest,
         };

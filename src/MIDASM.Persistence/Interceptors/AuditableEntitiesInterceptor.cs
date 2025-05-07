@@ -7,15 +7,8 @@ using MIDASM.Domain.Abstract;
 
 namespace MIDASM.Persistence.Interceptors;
 
-public class AuditableEntitiesInterceptor: SaveChangesInterceptor
+public class AuditableEntitiesInterceptor(IExecutionContext executionContext) : SaveChangesInterceptor
 {
-    private readonly IExecutionContext _executionContext;
-
-    public AuditableEntitiesInterceptor(IExecutionContext executionContext)
-    {
-        _executionContext = executionContext;
-    }
-
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
         InterceptionResult<int> result,
@@ -40,13 +33,13 @@ public class AuditableEntitiesInterceptor: SaveChangesInterceptor
         {
             if (entityEntry.State == EntityState.Added)
             {
-                entityEntry.Property(a => a.CreatedBy).CurrentValue = _executionContext.GetUserId();
+                entityEntry.Property(a => a.CreatedBy).CurrentValue = executionContext.GetUserId();
                 entityEntry.Property(a => a.CreatedAt).CurrentValue = DateTime.UtcNow;
             } 
 
             if (entityEntry.State == EntityState.Modified)
             {
-                entityEntry.Property(a => a.ModifiedBy).CurrentValue = _executionContext.GetUserId();
+                entityEntry.Property(a => a.ModifiedBy).CurrentValue = executionContext.GetUserId();
                 entityEntry.Property(a => a.ModifiedAt).CurrentValue = DateTime.UtcNow;
             }
         }

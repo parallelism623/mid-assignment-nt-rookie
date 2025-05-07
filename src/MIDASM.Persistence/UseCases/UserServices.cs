@@ -131,10 +131,9 @@ public class UserServices(IUserRepository userRepository,
 
         var booksBorrowingRequest = bookBorrowingRequest.ToBookBorrowingRequest();
         user.BookBorrowingLimit -= 1;
-        if(user.BookBorrowingRequests is null)
-        {
-            user.BookBorrowingRequests = new List<BookBorrowingRequest>();
-        }    
+
+        user.BookBorrowingRequests ??= new List<BookBorrowingRequest>();
+            
         user.BookBorrowingRequests.Add(booksBorrowingRequest);
         userRepository.Update(user);
 

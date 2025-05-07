@@ -5,12 +5,8 @@ using MIDASM.Domain.Repositories;
 
 namespace MIDASM.Persistence.Repositories;
 
-public class BookBorrowingRequestDetailRepository
-    : RepositoryBase<BookBorrowingRequestDetail, Guid>,
+public class BookBorrowingRequestDetailRepository(ApplicationDbContext context)
+    : RepositoryBase<BookBorrowingRequestDetail, Guid>(context),
     IBookBorrowingRequestDetailRepository
 {
-    public BookBorrowingRequestDetailRepository(ApplicationDbContext context) : base(context)
-    {
-    }
-
 }

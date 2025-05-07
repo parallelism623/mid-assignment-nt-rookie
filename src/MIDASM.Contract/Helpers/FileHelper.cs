@@ -1,7 +1,4 @@
-﻿
-using Microsoft.AspNetCore.Hosting;
-
-namespace MIDASM.Contract.Helpers;
+﻿namespace MIDASM.Contract.Helpers;
 
 public static class FileHelper
 {

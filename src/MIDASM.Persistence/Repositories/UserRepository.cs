@@ -5,11 +5,9 @@ using MIDASM.Domain.Repositories;
 
 namespace MIDASM.Persistence.Repositories;
 
-public class UserRepository : RepositoryBase<User, Guid>, IUserRepository
+public class UserRepository(ApplicationDbContext context) 
+    : RepositoryBase<User, Guid>(context), IUserRepository
 {
-    public UserRepository(ApplicationDbContext context) : base(context)
-    {
-    }
 
     public Task<User?> GetByUsernameAsync(string userName, params string[] includes)
     {

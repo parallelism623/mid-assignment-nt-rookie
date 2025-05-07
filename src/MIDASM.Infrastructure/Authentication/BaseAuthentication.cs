@@ -1,4 +1,4 @@
-﻿using Amazon.Runtime.Internal.Transform;
+﻿using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using MIDASM.Application.Commons.Models.Authentication;
@@ -6,15 +6,19 @@ using MIDASM.Application.Commons.Options;
 using MIDASM.Application.Services.AuditLogServices;
 using MIDASM.Application.Services.Authentication;
 using MIDASM.Application.Services.Crypto;
+using MIDASM.Contract.Enums;
 using MIDASM.Contract.Errors;
 using MIDASM.Contract.Helpers;
 using MIDASM.Contract.Messages.AuditLogMessage;
 using MIDASM.Contract.Messages.Commands;
+using MIDASM.Contract.Messages.ExceptionMessages;
 using MIDASM.Contract.SharedKernel;
 using MIDASM.Domain.Entities;
 using MIDASM.Domain.Repositories;
 using Rookies.Contract.Exceptions;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
+using System.Security.Claims;
 using LoginRequest = MIDASM.Application.Commons.Models.Authentication.LoginRequest;
 using RegisterRequest = MIDASM.Application.Commons.Models.Authentication.RegisterRequest;
 
@@ -41,7 +45,7 @@ public abstract class BaseAuthentication : IBaseAuthentication
         _userRepository = userRepository;
         _jwtTokenOptions = jwtTokenOptions.Value;
         _jwtTokenServices = jwtTokenServices;
-        _cryptoService = cryptoServiceFactory.SetCryptoAlgorithm("RSA");
+        _cryptoService = cryptoServiceFactory.SetCryptoAlgorithm(nameof(CryptoAlgorithmType.RSA));
         _executionContext = executionContext;
         _auditLogger = auditLogger;
         _httpContextAccessor = httpContextAccessor;
@@ -50,61 +54,56 @@ public abstract class BaseAuthentication : IBaseAuthentication
     public async Task<Result<LoginResponse>> LoginAsync(LoginRequest loginRequest)
     {
         User user = await ProcessLogIn(loginRequest);
+
         if(!user.IsVerifyCode)
         {
-            return new LoginResponse() { AccessToken = "", RefreshToken = "" };
+            return LoginResponse.CreateDefault();
         }
-        string token = _jwtTokenServices.GenerateAccessToken(user);
+
+        string accessToken = _jwtTokenServices.GenerateAccessToken(user);
         string refreshToken = _jwtTokenServices.GenerateRefreshToken();
+
         await SaveUserRefreshToken(user, refreshToken);
-        _executionContext.SetUser(new()
-        {
-            Username = user.Username,
-            Id = user.Id
-        });
+
+        InitialExecutionContextValue(user);
+
         await HandleAuditLogUserLogin(user);
-        return new LoginResponse{ AccessToken = token, RefreshToken = refreshToken };
+
+        return LoginResponse.Create(accessToken, refreshToken);
     }
     public async Task<Result<string>> ChangePasswordAsync(UserPasswordChangeRequest userPasswordChangeRequest)
     {
-        var userId = _executionContext.GetUserId();
-
-        var user = await _userRepository.GetByIdAsync(userId);
+        var user = await _userRepository.GetByIdAsync(_executionContext.GetUserId());
 
         if (user == null)
         {
-            return Result<string>.Failure(400, UserErrors.UserNotFound);
+            return Result<string>.Failure(UserErrors.UserNotFound);
         }
 
         if (userPasswordChangeRequest.OldPassword != _cryptoService.Decrypt(user.Password))
         {
-            return Result<string>.Failure(400, UserErrors.PasswordNotCorrect);
+            return Result<string>.Failure(UserErrors.PasswordNotCorrect);
         }
 
 
- 
         User.UpdatePassword(user, _cryptoService.Encrypt(userPasswordChangeRequest.Password));
 
         await _userRepository.SaveChangesAsync();
+
         return AuthenticationMessages.PasswordChangeSuccessFully;
     }
     public async Task<Result<string>> LogoutAsync()
     {
         var userId = _executionContext.GetUserId();
-        if (userId == Guid.Empty)
-        {
-            throw new UnAuthorizedException("User does not login, can not logout");
-        }
+
+        ValidateUserIdNotEmpty(userId);
+
         var user = await _userRepository.GetByIdAsync(userId);
-        if (user == null)
-        {
-            throw new UnAuthorizedException("User does not login, can not logout");
-        }
-        user.RefreshToken = null;
-        user.RefreshTokenExpireTime = DateTime.MinValue;
-        _jwtTokenServices.RecallAccessToken();
-        await _userRepository.SaveChangesAsync();
-        await HandleAuditLogUserLogout(user);
+
+        ValidateUserNotNull(user);
+
+        await RecallUserAccessAndRefreshTokenAsync(user!);
+
         return AuthenticationMessages.LogoutSuccessfully;
     }
     public async Task<Result<string>> RegisterAsync(RegisterRequest registerRequest)
@@ -121,7 +120,8 @@ public abstract class BaseAuthentication : IBaseAuthentication
     private async Task SaveUserRefreshToken(User user, string refreshToken)
     {
         user.RefreshToken = EncryptData(refreshToken);
-        user.RefreshTokenExpireTime = DateTime.UtcNow.AddDays(_jwtTokenOptions.ExpireRefreshTokenDays);
+        user.RefreshTokenExpireTime = DateTime.UtcNow
+            .AddDays(_jwtTokenOptions.ExpireRefreshTokenDays);
 
         _userRepository.Update(user);
         await _userRepository.SaveChangesAsync();
@@ -142,27 +142,20 @@ public abstract class BaseAuthentication : IBaseAuthentication
     {
         var claimsPrincipal = _jwtTokenServices.ValidateAndDecode(refreshTokenRequest.AccessToken);
 
-        Guid.TryParse(claimsPrincipal.FindFirst(JwtRegisteredClaimNames.Sid)!.Value, out Guid userId);
-        var user = await _userRepository.GetByIdAsync(userId, "Role");
-        if(user == null)
-        {
-            throw new UnAuthorizedException("Invalid session");
-        }
-        if(user.RefreshToken == null || DecryptData(user.RefreshToken) != refreshTokenRequest.RefreshToken ||
-            user.RefreshTokenExpireTime < DateTime.UtcNow)
-        {
-            throw new UnAuthorizedException("Invalid refresh token");
-        }
+        var userId = GetUserIdFromTokenClaims(claimsPrincipal);
+
+        var user = await _userRepository.GetByIdAsync(userId, nameof(User.Role));
+
+        ValidateUserNotNull(user);
+
+        ValidateRefreshToken(user!, refreshTokenRequest.RefreshToken);
 
         var accessToken = _jwtTokenServices.GenerateAccessToken(user);
         var refreshToken = _jwtTokenServices.GenerateRefreshToken();
 
         await SaveUserRefreshToken(user, refreshToken);
-        return new RefreshTokenResponse
-        {
-            AccessToken = accessToken,
-            RefreshToken = refreshToken
-        };
+
+        return RefreshTokenResponse.Create(accessToken, refreshToken);
     }
 
 
@@ -176,8 +169,9 @@ public abstract class BaseAuthentication : IBaseAuthentication
             StringHelper.ReplacePlaceholders(
                 AuditLogMessageTemplate.UserLogin,
                 user.Username,
-                user.ModifiedAt?.ToString() ?? string.Empty,
-                _httpContextAccessor.HttpContext?.Request.Headers["User-Agent"].ToString() ?? string.Empty
+                user.ModifiedAt.ToShortTime(),
+                _httpContextAccessor.HttpContext?
+                    .Request.Headers[nameof(HttpRequestHeader.UserAgent)].ToString() ?? string.Empty
                 ), changedProperties);
     }
 
@@ -191,8 +185,60 @@ public abstract class BaseAuthentication : IBaseAuthentication
             StringHelper.ReplacePlaceholders(
                 AuditLogMessageTemplate.UserLogout,
                 user.Username,
-                user.ModifiedAt?.ToString() ?? string.Empty,
+                user.ModifiedAt.ToShortTime(),
                 _executionContext.GetUserAgent()
                 ), changedProperties);
+    }
+
+    private void InitialExecutionContextValue(User user)
+    {
+        _executionContext.SetUser(new()
+        {
+            Username = user.Username,
+            Id = user.Id
+        });
+    }
+
+    private async Task RecallUserAccessAndRefreshTokenAsync(User user)
+    {
+        user.RefreshToken = null;
+        user.RefreshTokenExpireTime = DateTime.MinValue;
+        _jwtTokenServices.RecallAccessToken();
+        await _userRepository.SaveChangesAsync();
+        await HandleAuditLogUserLogout(user);
+    }
+
+    private static void ValidateUserIdNotEmpty(Guid userId)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new UnAuthorizedException(ApplicationExceptionMessages.UserNull);
+        }
+    }
+
+    private static void ValidateUserNotNull(User? user)
+    {
+        if (user == null)
+        {
+            throw new UnAuthorizedException(ApplicationExceptionMessages.UserNull);
+        }
+    }
+
+    private static Guid GetUserIdFromTokenClaims(ClaimsPrincipal claimsPrincipal)
+    {
+        if (Guid.TryParse(claimsPrincipal.FindFirst(JwtRegisteredClaimNames.Sid)!.Value, out Guid userId))
+        {
+            throw new BadRequestException(ApplicationExceptionMessages.UserIdInExecutionContextInvalid);
+        }
+        return userId;
+    }
+
+    private void ValidateRefreshToken(User user, string refreshToken)
+    {
+        if (user.RefreshToken == null || DecryptData(user.RefreshToken) != refreshToken ||
+            user.RefreshTokenExpireTime < DateTime.UtcNow)
+        {
+            throw new UnAuthorizedException(ApplicationExceptionMessages.InvalidRefreshToken);
+        }
     }
 }

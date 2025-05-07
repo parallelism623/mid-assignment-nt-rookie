@@ -5,12 +5,9 @@ using MIDASM.Domain.Repositories;
 
 namespace MIDASM.Persistence.Repositories;
 
-public class BookRepository : RepositoryBase<Book,Guid>, IBookRepository
+public class BookRepository(ApplicationDbContext context) 
+    : RepositoryBase<Book,Guid>(context), IBookRepository
 {
-    public BookRepository(ApplicationDbContext context) : base(context)
-    {
-    }
-
     public Task<List<Book>> GetByIdsAsync(IEnumerable<Guid> ids)
     {
         return _context.Books.Where(b => ids.Contains(b.Id))

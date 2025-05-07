@@ -4,9 +4,7 @@ using MIDASM.Domain.Repositories;
 
 namespace MIDASM.Persistence.Repositories;
 
-public class EmailRecordRepository : RepositoryBase<EmailRecord, Guid>, IEmailRecordRepository
+public class EmailRecordRepository(ApplicationDbContext context)
+    : RepositoryBase<EmailRecord, Guid>(context), IEmailRecordRepository
 {
-    public EmailRecordRepository(ApplicationDbContext context) : base(context)
-    {
-    }
 }

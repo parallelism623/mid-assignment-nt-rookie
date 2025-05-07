@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using MIDASM.Application.Commons.Options;
 using MIDASM.Application.Services.Authentication;
 using MIDASM.Contract.Constants;
+using MIDASM.Contract.Messages.ExceptionMessages;
 using MIDASM.Domain.Entities;
 using Rookies.Contract.Exceptions;
 using System.IdentityModel.Tokens.Jwt;
@@ -72,6 +73,7 @@ public class JwtTokenServices : IJwtTokenServices
     {
         
         RSA rsa = RSA.Create();
+
         rsa.ImportRSAPublicKey(Convert.FromBase64String(_jwtOptions.PublicKey), out _);
 
         var key = new RsaSecurityKey(rsa);
@@ -94,14 +96,14 @@ public class JwtTokenServices : IJwtTokenServices
             var principal = tokenHandler.ValidateToken(accessToken, tokenValidationParameters, out SecurityToken validatedToken);
             if (validatedToken is JwtSecurityToken jwtToken && !jwtToken.Header.Alg.Equals(SecurityAlgorithms.RsaSha256, StringComparison.OrdinalIgnoreCase))
             {
-                throw new SecurityTokenException("Invalid token algorithm");
+                throw new SecurityTokenException(ApplicationExceptionMessages.SignatureAlgorithmJwtTokenInvalid);
             
             }
             return principal;
         }
         catch
         {
-            throw new BadRequestException("Access token invalid");
+            throw new BadRequestException(ApplicationExceptionMessages.InvalidAccessToken);
         }
     }
 }

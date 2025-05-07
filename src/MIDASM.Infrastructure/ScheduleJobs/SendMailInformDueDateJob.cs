@@ -37,7 +37,6 @@ public class SendMailInformDueDateJob(IMailServices mailServices,
         {
             consumers.Add(Task.Run(async () =>
             {
-
                 using var client = await mailServices.GetSmtpClient();
                 await foreach (var message in channel.Reader.ReadAllAsync())
                 {

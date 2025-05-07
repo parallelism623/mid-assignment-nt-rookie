@@ -7,8 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="NewFolder\**" />
     <Compile Remove="Servicse\**" />
+    <EmbeddedResource Remove="NewFolder\**" />
     <EmbeddedResource Remove="Servicse\**" />
+    <None Remove="NewFolder\**" />
     <None Remove="Servicse\**" />
   </ItemGroup>
 

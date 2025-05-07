@@ -6,12 +6,9 @@ using MIDASM.Domain.Repositories;
 
 namespace MIDASM.Persistence.Repositories;
 
-public class BookBorrowingRequestRepository : RepositoryBase<BookBorrowingRequest, Guid>, IBookBorrowingRequestRepository
+public class BookBorrowingRequestRepository(ApplicationDbContext context) 
+    : RepositoryBase<BookBorrowingRequest, Guid>(context), IBookBorrowingRequestRepository
 {
-    public BookBorrowingRequestRepository(ApplicationDbContext context) : base(context)
-    {
-    }
-
     public Task<BookBorrowingRequest?> FindByBookBorrowedOfUserAsync(Guid userId, Guid bookId)
     {
         return _dbSet.FirstOrDefaultAsync(bq => bq.RequesterId == userId

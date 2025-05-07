@@ -138,8 +138,7 @@ public class AuditLogger(AuditLogDbContext auditDbContext,
 
     public async Task<List<UserActiveDaysAuditLog>> GetUserActivitiesReportAsync(UserActivitiesQueryParameters userActivitiesQueryParameters)
     {
-        var tmp = await auditDbContext.AuditLogs!.CountAsync();
-        return await auditDbContext.AuditLogs.Where(ad => userActivitiesQueryParameters.UserIds.Contains(ad.UserId)
+        return await auditDbContext.AuditLogs!.Where(ad => userActivitiesQueryParameters.UserIds.Contains(ad.UserId)
                                                     && DateOnly.FromDateTime(ad.TimeStamp.Date) <= userActivitiesQueryParameters.ToDate
                                                     && DateOnly.FromDateTime(ad.TimeStamp.Date) >= userActivitiesQueryParameters.FromDate)
                                               .GroupBy(ad => new

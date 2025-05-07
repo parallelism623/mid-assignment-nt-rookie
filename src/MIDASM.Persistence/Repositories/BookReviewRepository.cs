@@ -4,9 +4,7 @@ using MIDASM.Domain.Repositories;
 
 namespace MIDASM.Persistence.Repositories;
 
-public class BookReviewRepository : RepositoryBase<BookReview, Guid>, IBookReviewRepository
+public class BookReviewRepository(ApplicationDbContext context) 
+    : RepositoryBase<BookReview, Guid>(context), IBookReviewRepository
 {
-    public BookReviewRepository(ApplicationDbContext context) : base(context)
-    {
-    }
 }

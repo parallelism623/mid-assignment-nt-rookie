@@ -19,7 +19,6 @@ public class RsaCryptoService : ICryptoService
     {
         byte[] privateKey = Convert.FromBase64String(_rsaOptions.PrivateKey);
         using RSA rsa = RSA.Create();
-
         rsa.ImportRSAPrivateKey(privateKey, out _);
         return Encoding.UTF8.GetString(rsa.Decrypt(Convert.FromBase64String(encryptedData),
             RSAEncryptionPadding.OaepSHA256));
@@ -29,7 +28,6 @@ public class RsaCryptoService : ICryptoService
     {
         byte[] publicKey = Convert.FromBase64String(_rsaOptions.PublicKey);
         using RSA rsa = RSA.Create();
-
         rsa.ImportRSAPublicKey(publicKey, out _);
         return Convert.ToBase64String(rsa.Encrypt(Encoding.UTF8.GetBytes(data), RSAEncryptionPadding.OaepSHA256));
     }

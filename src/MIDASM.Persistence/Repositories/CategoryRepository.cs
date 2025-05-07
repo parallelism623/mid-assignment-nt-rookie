@@ -4,11 +4,8 @@ using MIDASM.Domain.Repositories;
 
 namespace MIDASM.Persistence.Repositories;
 
-public class CategoryRepository : RepositoryBase<Category, Guid>, ICategoryRepository
+public class CategoryRepository(ApplicationDbContext context): RepositoryBase<Category, Guid>(context), ICategoryRepository
 {
-    public CategoryRepository(ApplicationDbContext context) : base(context)
-    {
-    }
 
     public Task<Category?> GetByNameAsync(string name)
     {

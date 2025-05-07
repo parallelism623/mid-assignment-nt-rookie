@@ -1,5 +1,6 @@
-﻿using Hangfire.Storage.Monitoring;
+﻿using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -11,13 +12,14 @@ using MIDASM.Application.Services.Crypto;
 using MIDASM.Application.Services.HostedServices.Abstract;
 using MIDASM.Application.Services.Mail;
 using MIDASM.Contract.Constants;
-using MIDASM.Contract.Errors;
 using MIDASM.Contract.Helpers;
 using MIDASM.Contract.Messages.Commands;
+using MIDASM.Contract.Messages.ExceptionMessages;
 using MIDASM.Contract.SharedKernel;
 using MIDASM.Domain.Entities;
 using MIDASM.Domain.Enums;
 using MIDASM.Domain.Repositories;
+using Org.BouncyCastle.Operators;
 using Rookies.Contract.Exceptions;
 using System.Security.Cryptography;
 using LoginRequest = MIDASM.Application.Commons.Models.Authentication.LoginRequest;
@@ -54,66 +56,44 @@ public class ApplicationAuthentication : BaseAuthentication, IApplicationAuthent
         var user = await _userRepository.GetByUsernameAsync(emailConfirmRequest.Username);
         if (user == null || user.Email == null)
         {
-            throw new BadRequestException("Username invalid");
+            throw new BadRequestException(ApplicationExceptionMessages.UserNameInvalid);
         }
-        var codeInMem = _memoryCache.Get(string.Format(CacheKey.RegisterVerifyCode, user.Id))?.ToString() ?? string.Empty;
-        if(string.IsNullOrEmpty(codeInMem) || codeInMem != emailConfirmRequest.Code)
-        {
-            throw new BadRequestException("Email confirm code invalid");
-        }
-        user.IsVerifyCode = true;
-        _userRepository.Update(user);
-        await _userRepository.SaveChangesAsync();
+
+        var codeInMemory = GetVerifyCodeUserInMemory(user);
+
+        ValidateVerifyCode(codeInMemory, emailConfirmRequest.Code);
+
+        await UpdateUserVerifiedStatusAsync(user);
+
         return AuthenticationMessages.SendVerifyCodeSuccess;
     }
 
     public override async Task<User> ProcessLogIn(LoginRequest loginRequest)
     {
         var user = await GetUserOfLoginRequestAsync(loginRequest);
-        if (user == null)
-        {
-            throw new BadRequestException("Username or email incorrect");
-        }
 
-        var password = DecryptData(user.Password);
-        if (password != loginRequest.Password)
-        {
-            throw new BadRequestException("Password incorrect");
-        }
-        if(!user.IsVerifyCode)
-        {
-            await SendEmailConfirmCode(user);
-        }
+        ValidateUserNotNull(user);
+
+        ComparePasswordWithRequestPassword(user.Password, loginRequest.Password);
+
+        await CheckUserVerifyAsync(user);
+
         return user;
     }
 
-
     public override async Task<User> ProcessRegister(RegisterRequest userRegisterModel)
     {
-        var user = await _userRepository.GetByUsernameAsync(userRegisterModel.Username, "Role");
-        if (user != null)
-        {
-            throw new BadRequestException("Username already exists");
-        }
+        await ValidateUserExists(userRegisterModel.Username, userRegisterModel.Email);
 
-        var userByEmail = await _userRepository.GetByEmailAsync(userRegisterModel.Email);
+        var userRole = await _roleRepository.GetByNameAsync(nameof(RoleName.User));
 
-        if (userByEmail != null)
-        {
-            throw new BadRequestException("Email already exists");
-        }
-        var userRole = await _roleRepository.GetByNameAsync(RoleName.User.ToString());
-        if (userRole == null)
-        {
-            throw new BadRequestException("Role user does not exists");
-        }
+        ValidateRoleUserNotNull(userRole);
 
         var newUser = User.Create(userRegisterModel.Email, userRegisterModel.Username, EncryptData(userRegisterModel.Password),
-            userRegisterModel.FirstName, userRegisterModel.LastName, userRegisterModel.PhoneNumber, userRole.Id);
+            userRegisterModel.FirstName, userRegisterModel.LastName, userRegisterModel.PhoneNumber, userRole!.Id);
 
-        _userRepository.Add(newUser);
-        await _userRepository.SaveChangesAsync();
- 
+        await AddUserIntoStorageAsync(newUser);
+
         await SendEmailConfirmCode(newUser!);
         
         return newUser;
@@ -122,19 +102,20 @@ public class ApplicationAuthentication : BaseAuthentication, IApplicationAuthent
     private async Task SendEmailConfirmCode(User user)
     {
         var code = GenerateVerificationCode();
+
         var body = await GetMailVerifyCodeTemplate(user, code);
-        var subject = $"Verify account #{user.Username}";
+
+        var subject = GetTitleOfVerifyCodeMail(user.Username);
+
         await HandleSendVerifyCodeMail(user.Email, subject, body);
-        _memoryCache.Set(string.Format(CacheKey.RegisterVerifyCode, user.Id), code, absoluteExpiration: DateTimeOffset.Now.AddMinutes(5));
+
+        SetVerifyCodeIntoMemoryCache(user.Id, code);
     }
     private Task<User?> GetUserOfLoginRequestAsync(LoginRequest loginRequest)
     {
-        if (!string.IsNullOrEmpty(loginRequest.Username))
-        {
-            return _userRepository.GetByUsernameAsync(loginRequest.Username, "Role");
-        }
+        VerifyUsernameNotNull(loginRequest.Username);
 
-        throw new BadRequestException("Username or email should be provided");
+        return _userRepository.GetByUsernameAsync(loginRequest.Username!, nameof(User.Role));
     }
 
     private static string GenerateVerificationCode()
@@ -173,4 +154,99 @@ public class ApplicationAuthentication : BaseAuthentication, IApplicationAuthent
         return AuthenticationMessages.RefreshEmailConfirmSuccess;
     }
 
+
+    private async Task UpdateUserVerifiedStatusAsync(User user)
+    {
+        user.IsVerifyCode = true;
+        _userRepository.Update(user);
+        await _userRepository.SaveChangesAsync();
+    }
+
+    private string GetVerifyCodeUserInMemory(User user)
+    {
+        return _memoryCache.Get(string.Format(CacheKey.RegisterVerifyCode, user.Id))?
+            .ToString() ?? string.Empty;
+    }
+
+    private static void ValidateVerifyCode(string verifyCodeInMemory, string requestCodeVerify)
+    {
+        if (string.IsNullOrEmpty(verifyCodeInMemory) || verifyCodeInMemory != requestCodeVerify)
+        {
+            throw new BadRequestException(ApplicationExceptionMessages.EmailConfirmCodeInvalid);
+        }
+    }
+
+    private void ComparePasswordWithRequestPassword(string password, string requestPassword)
+    {
+        if (DecryptData(password) != requestPassword)
+        {
+            throw new BadRequestException(ApplicationExceptionMessages.PasswordIncorrect);
+        }
+    }
+
+    private async Task CheckUserVerifyAsync(User user)
+    {
+        if (!user.IsVerifyCode)
+        {
+            await SendEmailConfirmCode(user);
+        }
+    }
+
+    private static void ValidateUserNotNull(User? user)
+    {
+        if (user == null)
+        {
+            throw new BadRequestException(ApplicationExceptionMessages.EmailOrUsernameIncorrect);
+        }
+    }
+
+    private async Task ValidateUserExists(string userName, string email)
+    {
+        var userByUsername = await _userRepository.GetByUsernameAsync(userName, nameof(User.Role));
+        if (userByUsername != null)
+        {
+            throw new BadRequestException(ApplicationExceptionMessages.UsernameAlreadyExists);
+        }
+
+        var userByEmail = await _userRepository.GetByEmailAsync(email);
+
+        if (userByEmail != null)
+        {
+            throw new BadRequestException(ApplicationExceptionMessages.EmailAlreadyExists);
+        }
+    }
+
+    private static void ValidateRoleUserNotNull(Role? userRole)
+    {
+        if (userRole == null)
+        {
+            throw new BadRequestException(ApplicationExceptionMessages.RoleUserDoesNotExists);
+        }
+    }
+
+    private async Task AddUserIntoStorageAsync(User user)
+    {
+        _userRepository.Add(user);
+        await _userRepository.SaveChangesAsync();
+    }
+
+    private void SetVerifyCodeIntoMemoryCache(Guid userId, string code)
+    {
+        _memoryCache.Set(string.Format(CacheKey.RegisterVerifyCode, userId), code, absoluteExpiration: DateTimeOffset.Now.AddMinutes(5));
+    }
+
+    private static string GetTitleOfVerifyCodeMail(string userName)
+    {
+        return $"Verify account #{userName}";
+    }
+
+    private static void VerifyUsernameNotNull(string? userName)
+    {
+
+        if (string.IsNullOrEmpty(userName))
+        {
+            throw new BadRequestException(ApplicationExceptionMessages.UserOrEmailMustBeProvided);
+        }
+        
+    }
 }
