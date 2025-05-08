@@ -13,6 +13,7 @@ namespace MIDASM.Infrastructure.ScheduleJobs;
 public class SendMailInformDueDateJob(IMailServices mailServices, 
     IEmailRecordRepository mailRecordRepository) : IJob
 {
+    public static readonly JobKey Key = new(nameof(SendMailInformDueDateJob), "emailGroup");
     public async Task Execute(IJobExecutionContext context)
     {
         var mailRecords = await mailRecordRepository

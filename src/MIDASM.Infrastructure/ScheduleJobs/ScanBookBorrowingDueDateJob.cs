@@ -15,6 +15,7 @@ public class ScanBookBorrowingDueDateJob(
     IEmailRecordRepository emailRecordRepository) 
     : IJob
 {
+    public static readonly JobKey Key = new (nameof(ScanBookBorrowingDueDateJob), "scanDbGroup");
     public async Task Execute(IJobExecutionContext context)
     {
         var targetDate = DateOnly.FromDateTime(DateTime.Today.AddDays(7));

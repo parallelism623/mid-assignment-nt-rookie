@@ -15,4 +15,9 @@ public static class DateTimeHelper
         }
         return ((DateTime)dateTime).ToString("g");
     }
+
+    public static DateTimeOffset ToDateTimeOffSet(this DateTime dateTime)
+    {
+        return new DateTimeOffset(dateTime);
+    }
 }

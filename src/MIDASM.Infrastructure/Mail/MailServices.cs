@@ -66,9 +66,11 @@ namespace MIDASM.Infrastructure.Mail
 
             var message = GetMimeMessage(mailAttachmentData);
 
-            using var client = await GetSmtpClient();
-            await client.SendAsync(message);
-            await client.DisconnectAsync(true);
+            using (var client = await GetSmtpClient())
+            {
+                await client.SendAsync(message);
+                await client.DisconnectAsync(true);
+            }
         }
 
         public async Task<SmtpClient> GetSmtpClient()

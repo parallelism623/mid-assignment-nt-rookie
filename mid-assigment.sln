@@ -8,6 +8,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 		.env = .env
 		.gitignore = .gitignore
+		quartz_jobStore.sql = quartz_jobStore.sql
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{19C6FF6F-E781-461E-992D-8A873B5EDB60}"

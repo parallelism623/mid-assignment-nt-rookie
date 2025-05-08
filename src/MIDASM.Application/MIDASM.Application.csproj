@@ -13,7 +13,6 @@
 
   <ItemGroup>
     <Folder Include="Services\Authorization\" />
-    <Folder Include="Services\ScheduleJobs\" />
   </ItemGroup>
 
   <ItemGroup>

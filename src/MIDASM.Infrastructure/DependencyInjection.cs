@@ -8,6 +8,7 @@ using MIDASM.Application.Services.FileServices;
 using MIDASM.Application.Services.HostedServices.Abstract;
 using MIDASM.Application.Services.ImportExport;
 using MIDASM.Application.Services.Mail;
+using MIDASM.Application.Services.ScheduleJobs;
 using MIDASM.Infrastructure.Authentication;
 using MIDASM.Infrastructure.Crypto;
 using MIDASM.Infrastructure.Files;
@@ -64,27 +65,39 @@ public static class DependencyInjection
 
     public static IServiceCollection ConfigureScheduleJobs(this IServiceCollection services, IConfiguration config)
     {
+        services.AddScoped<IScheduleJobServices, ScheduleJobServices>();
         services.Configure<ScheduleJobSettings>(config.GetRequiredSection(nameof(ScheduleJobSettings)));
         services.AddQuartz(q =>
         {
+            q.UsePersistentStore(store =>
+            {
+                store.UseProperties = true;
+                store.UseSystemTextJsonSerializer();
+                store.UseSqlServer(options =>
+                {
+                    options.ConnectionString = config.GetRequiredSection("QuartzSettings:SqlStore:ConnectionStrings").Value ?? string.Empty;
+                    options.TablePrefix = config.GetRequiredSection("QuartzSettings:SqlStore:TablePrefix").Value ??
+                                          string.Empty;
+                });
+            });
             q.AddJob<SendMailInformDueDateJob>(opts => opts
-                .WithIdentity("sendMailInformDueDateJob", "emailGroup")
+                .WithIdentity(SendMailInformDueDateJob.Key)
                 .StoreDurably()
             );
 
             q.AddTrigger(opts => opts
-                .ForJob("sendMailInformDueDateJob", "emailGroup")
+                .ForJob(SendMailInformDueDateJob.Key)
                 .WithIdentity("sendMailInformDueDateTrigger", "emailGroup")
                 .WithCronSchedule("0 33 10 * * ? *")
             );
 
             q.AddJob<ScanBookBorrowingDueDateJob>(opts => opts
-                .WithIdentity("scanBookBorrowingDueDateJob", "scanDbGroup")
+                .WithIdentity(ScanBookBorrowingDueDateJob.Key)
                 .StoreDurably()
             );
 
             q.AddTrigger(opts => opts
-                .ForJob("scanBookBorrowingDueDateJob", "scanDbGroup")
+                .ForJob(ScanBookBorrowingDueDateJob.Key)
                 .WithIdentity("scanBookBorrowingDueDateTrigger", "scanDbGroup")
                 .WithCronSchedule("0 31 10 * * ? *")
             );
