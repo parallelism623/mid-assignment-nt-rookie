@@ -18,16 +18,6 @@ public class SchedulersController(IScheduleJobServices scheduleJobServices): Api
         return ProcessResult(result);
     }
 
-    [HttpPut]
-    [Route("cron-triggers")]
-    public async Task<IActionResult> UpdateCronTriggerAsync(
-        [FromBody] CronTriggerUpdateRequest cronTriggerUpdateRequest)
-    {
-        var result = await scheduleJobServices.UpdateCronTriggerJobAsync(cronTriggerUpdateRequest);
-
-        return ProcessResult(result);
-    }
-
     [HttpGet]
     [Route("jobs")]
     public async Task<IActionResult> GetJobDetailAsync([FromQuery] string jobName, [FromQuery] string? jobGroup)

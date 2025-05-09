@@ -12,6 +12,7 @@ public static class SchedulerErrorMessages
     public static string TriggerBeNotRegistered => "Trigger is not registered in job store";
 
     public static string TriggerDeleteFailure => "Delete trigger failure";
+    public static string TriggerNotFound => "Trigger not found";
 }
 public static class SchedulerErrors 
 {
@@ -26,4 +27,7 @@ public static class SchedulerErrors
         SchedulerErrorMessages.TriggerBeNotRegistered);
     public static Error TriggerDeleteFailure => new (nameof(SchedulerErrorMessages.TriggerDeleteFailure), 
         SchedulerErrorMessages.TriggerDeleteFailure);
+
+    public static Error TriggerNotFound =>
+        new(nameof(SchedulerErrors.TriggerNotFound), SchedulerErrorMessages.TriggerNotFound);
 }

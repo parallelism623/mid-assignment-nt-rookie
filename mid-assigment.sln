@@ -9,6 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.env = .env
 		.gitignore = .gitignore
 		quartz_jobStore.sql = quartz_jobStore.sql
+		.gitlab-ci.yml = .gitlab-ci.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{19C6FF6F-E781-461E-992D-8A873B5EDB60}"
@@ -32,6 +33,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MIDARM.Persistence.Tests", "tests\MIDARM.Persistence.Tests\MIDARM.Persistence.Tests.csproj", "{D29792E3-5715-4DAD-8AF0-008EE133F043}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MISARM.API.Tests", "tests\MISARM.API.Tests\MISARM.API.Tests.csproj", "{83880668-F315-4671-9CC0-CEA8A667B337}"
+EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{6C6F7526-FF10-4858-8D68-2BEAB94E0969}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -75,6 +78,10 @@ Global
 		{83880668-F315-4671-9CC0-CEA8A667B337}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{83880668-F315-4671-9CC0-CEA8A667B337}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{83880668-F315-4671-9CC0-CEA8A667B337}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C6F7526-FF10-4858-8D68-2BEAB94E0969}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C6F7526-FF10-4858-8D68-2BEAB94E0969}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C6F7526-FF10-4858-8D68-2BEAB94E0969}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C6F7526-FF10-4858-8D68-2BEAB94E0969}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -89,5 +96,6 @@ Global
 		{095B07DC-006C-4340-BF14-DFE07AC8BA84} = {8F7C0E48-8DA7-4EA2-A7AB-8C371962A71B}
 		{D29792E3-5715-4DAD-8AF0-008EE133F043} = {8F7C0E48-8DA7-4EA2-A7AB-8C371962A71B}
 		{83880668-F315-4671-9CC0-CEA8A667B337} = {8F7C0E48-8DA7-4EA2-A7AB-8C371962A71B}
+		{6C6F7526-FF10-4858-8D68-2BEAB94E0969} = {EA786244-CD55-4B6D-83FA-7ED1D0246FDE}
 	EndGlobalSection
 EndGlobal

@@ -48,7 +48,7 @@ builder.Services.AddAuthentication(options =>
 }).AddJwtBearer(options =>
 {
     var jwtTokenOptions = new JwtTokenOptions();
-    builder.Configuration.GetRequiredSection("JwtTokenOptions").Bind(jwtTokenOptions);
+    builder.Configuration.GetRequiredSection(nameof(JwtTokenOptions)).Bind(jwtTokenOptions);
     var rsa = RSA.Create();
     rsa.ImportRSAPublicKey(Convert.FromBase64String(jwtTokenOptions.PublicKey), out _);
 

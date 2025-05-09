@@ -1,0 +1,6 @@
+services:
+  midasm.api:
+    image: ${DOCKER_REGISTRY-}midasmapi
+    build:
+      context: .
+      dockerfile: src/MIDASM.API/Dockerfile

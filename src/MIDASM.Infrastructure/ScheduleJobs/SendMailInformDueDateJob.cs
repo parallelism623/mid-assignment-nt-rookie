@@ -10,6 +10,8 @@ using System.Threading.Channels;
 
 namespace MIDASM.Infrastructure.ScheduleJobs;
 
+[DisallowConcurrentExecution]
+[PersistJobDataAfterExecution]
 public class SendMailInformDueDateJob(IMailServices mailServices, 
     IEmailRecordRepository mailRecordRepository) : IJob
 {

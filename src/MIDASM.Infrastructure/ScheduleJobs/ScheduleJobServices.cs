@@ -52,13 +52,6 @@ public class ScheduleJobServices(ISchedulerFactory schedulerFactory,
 
         return SchedulerCommandMessages.CreateTriggerSuccess;
     }
-
-    public Task<Result<string>> UpdateCronTriggerJobAsync(CronTriggerUpdateRequest cronTriggerUpdateRequest,
-        CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
-
     public async Task<Result<string>> RemoveTriggerJobAsync(TriggerJobDeleteRequest triggerJobDelete,
         CancellationToken cancellationToken = default)
     {

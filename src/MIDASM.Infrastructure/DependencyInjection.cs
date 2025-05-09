@@ -9,6 +9,7 @@ using MIDASM.Application.Services.HostedServices.Abstract;
 using MIDASM.Application.Services.ImportExport;
 using MIDASM.Application.Services.Mail;
 using MIDASM.Application.Services.ScheduleJobs;
+using MIDASM.Contract.Enums;
 using MIDASM.Infrastructure.Authentication;
 using MIDASM.Infrastructure.Crypto;
 using MIDASM.Infrastructure.Files;
@@ -21,6 +22,7 @@ using MIDASM.Infrastructure.Mail;
 using MIDASM.Infrastructure.Options;
 using MIDASM.Infrastructure.ScheduleJobs;
 using Quartz;
+using Quartz.Impl.Matchers;
 
 namespace MIDASM.Infrastructure;
 
@@ -31,7 +33,7 @@ public static class DependencyInjection
 
         var config = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
 
-        services.AddCryptoService<RsaCryptoService, RsaCryptoOptions>("RSA");
+        services.AddCryptoService<RsaCryptoService, RsaCryptoOptions>(nameof(CryptoAlgorithmType.RSA));
         services.AddScoped<IExecutionContext, ApplicationExecutionContext>();
         services.AddScoped<IJwtTokenServices, JwtTokenServices>();
         services.AddScoped<ICryptoServiceFactory, CryptoServiceFactory>();
@@ -83,23 +85,16 @@ public static class DependencyInjection
             q.AddJob<SendMailInformDueDateJob>(opts => opts
                 .WithIdentity(SendMailInformDueDateJob.Key)
                 .StoreDurably()
+                .RequestRecovery()
             );
-
-            q.AddTrigger(opts => opts
-                .ForJob(SendMailInformDueDateJob.Key)
-                .WithIdentity("sendMailInformDueDateTrigger", "emailGroup")
-                .WithCronSchedule("0 33 10 * * ? *")
-            );
-
             q.AddJob<ScanBookBorrowingDueDateJob>(opts => opts
                 .WithIdentity(ScanBookBorrowingDueDateJob.Key)
                 .StoreDurably()
+                .RequestRecovery()
             );
 
-            q.AddTrigger(opts => opts
-                .ForJob(ScanBookBorrowingDueDateJob.Key)
-                .WithIdentity("scanBookBorrowingDueDateTrigger", "scanDbGroup")
-                .WithCronSchedule("0 31 10 * * ? *")
+            q.AddJobListener<JobHandlingExceptionListener>(
+                KeyMatcher<JobKey>.KeyEquals(SendMailInformDueDateJob.Key)
             );
         });
         services.AddQuartzHostedService(opt =>

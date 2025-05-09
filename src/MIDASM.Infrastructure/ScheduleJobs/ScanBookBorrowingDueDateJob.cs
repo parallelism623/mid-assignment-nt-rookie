@@ -9,6 +9,8 @@ using Quartz;
 
 namespace MIDASM.Infrastructure.ScheduleJobs;
 
+[DisallowConcurrentExecution]
+[PersistJobDataAfterExecution]
 public class ScanBookBorrowingDueDateJob(
     IBookBorrowingRequestDetailRepository bookBorrowingRequestDetailRepository,
     IExportFactory exportFactory,
@@ -19,7 +21,6 @@ public class ScanBookBorrowingDueDateJob(
     public async Task Execute(IJobExecutionContext context)
     {
         var targetDate = DateOnly.FromDateTime(DateTime.Today.AddDays(7));
-
         var query = bookBorrowingRequestDetailRepository.GetQueryable()
             .Where(bd => bd.DueDate == targetDate)
             .Select(bd => new
