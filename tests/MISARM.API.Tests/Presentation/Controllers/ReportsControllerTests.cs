@@ -2,12 +2,11 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-
-using MIDASM.API.Presentation.Controllers;
-using MIDASM.Application.UseCases;
 using MIDASM.Application.Commons.Models.Report;
 using MIDASM.Contract.SharedKernel;
 using MISARM.API.Tests.TestHelpers;
+using MIDASM.Application.UseCases.Interfaces;
+using MIDASS.Presentation.Controllers;
 
 namespace MIDASM.API.Tests.Controllers
 {

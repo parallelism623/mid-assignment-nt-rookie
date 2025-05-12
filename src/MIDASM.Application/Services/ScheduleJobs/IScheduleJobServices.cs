@@ -1,6 +1,6 @@
 ﻿
 using MIDASM.Application.Commons.Models.SchedulerJobs;
-using MIDASM.Contract.SharedKernel;
+using MIDASM.Domain.SharedKernel;
 
 namespace MIDASM.Application.Services.ScheduleJobs;
 

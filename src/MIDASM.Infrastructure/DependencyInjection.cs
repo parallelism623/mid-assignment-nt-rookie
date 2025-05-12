@@ -10,19 +10,22 @@ using MIDASM.Application.Services.ImportExport;
 using MIDASM.Application.Services.Mail;
 using MIDASM.Application.Services.ScheduleJobs;
 using MIDASM.Contract.Enums;
+using MIDASM.Domain.Infrastructure.MessageBrokers;
 using MIDASM.Infrastructure.Authentication;
 using MIDASM.Infrastructure.Crypto;
 using MIDASM.Infrastructure.Files;
+using MIDASM.Infrastructure.HostedServices;
 using MIDASM.Infrastructure.HostedServices.Abstract;
 using MIDASM.Infrastructure.HostedServices.MailSenderBackgroundService;
 using MIDASM.Infrastructure.ImportExport.Export;
 using MIDASM.Infrastructure.ImportExport.Export.Excels;
 using MIDASM.Infrastructure.ImportExport.Export.Pdfs;
-using MIDASM.Infrastructure.Mail;
+using MIDASM.Infrastructure.ImportExport.Mail;
 using MIDASM.Infrastructure.Options;
 using MIDASM.Infrastructure.ScheduleJobs;
 using Quartz;
 using Quartz.Impl.Matchers;
+using System.Reflection;
 
 namespace MIDASM.Infrastructure;
 
@@ -101,6 +104,14 @@ public static class DependencyInjection
         {
             opt.WaitForJobsToComplete = true;
         });
+        return services;
+    }
+
+    public static IServiceCollection ConfigureMessageBroker(this IServiceCollection services)
+    {
+        services.AddMessageBusConsumers(Assembly.GetExecutingAssembly());
+
+
         return services;
     }
 }

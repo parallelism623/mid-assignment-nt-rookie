@@ -4,12 +4,11 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Xunit;
-
-using MIDASM.API.Presentation.Controllers;
 using MIDASM.Application.Services.Authentication;
 using MIDASM.Application.Commons.Models.Authentication;
 using MIDASM.Contract.SharedKernel;
 using Azure.Core;
+using MIDASS.Presentation.Controllers;
 
 namespace MIDASM.API.Tests.Controllers
 {

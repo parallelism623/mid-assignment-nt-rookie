@@ -12,6 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Books\Commands\" />
+    <Folder Include="Books\Events\" />
     <Folder Include="Services\Authorization\" />
   </ItemGroup>
 

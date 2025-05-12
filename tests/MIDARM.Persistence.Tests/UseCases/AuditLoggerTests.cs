@@ -5,8 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using MIDASM.Application.Commons.Models.Auditlogs;
 using MIDASM.Application.Commons.Models.Users;
 using MIDASM.Application.Services.Authentication;
+using MIDASM.Application.UseCases.Implements;
 using MIDASM.Domain.Entities;
-using MIDASM.Persistence.UseCases;
 using Moq;
 
 namespace MIDASM.Persistence.Services.Tests

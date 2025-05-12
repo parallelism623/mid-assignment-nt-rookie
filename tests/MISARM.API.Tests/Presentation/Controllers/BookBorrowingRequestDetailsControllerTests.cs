@@ -4,13 +4,11 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-
-
-using MIDASM.API.Presentation.Controllers;
-using MIDASM.Application.UseCases;
 using MIDASM.Application.Commons.Models;
 using MIDASM.Application.Commons.Models.BookBorrowingRequestDetails;
 using MIDASM.Contract.SharedKernel;
+using MIDASM.Application.UseCases.Interfaces;
+using MIDASS.Presentation.Controllers;
 
 namespace MIDASM.API.Tests.Controllers
 {

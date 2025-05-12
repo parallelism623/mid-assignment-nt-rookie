@@ -3,12 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using MIDASM.Contract.Messages.ExceptionMessages;
 using MIDASM.Domain.Entities;
+using MIDASM.Domain.Repositories;
 using System.Data;
 using System.Reflection;
 
 namespace MIDASM.Persistence;
 
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext : DbContext, IUnitOfWork
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
@@ -30,25 +31,39 @@ public class ApplicationDbContext : DbContext
     private IDbContextTransaction? _transaction;
 
     private bool HasActiveTransaction => _transaction != null;
-    public async Task<IDbContextTransaction?> BeginTransactionAsync()
+
+
+
+    public async Task BeginTransactionAsync()
     {
-        if (_transaction != null)
-        {
-            return null;
-        }
         _transaction = await Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
-        return _transaction;
     }
 
-    public async Task CommitTransactionAsync(IDbContextTransaction transaction)
+    public async Task RollbackAsync()
+    {
+        if (_transaction == null)
+        {
+            throw new ArgumentException("Cannot roll back empty transaction!");
+        }
+        try
+        {
+            await _transaction!.RollbackAsync();
+        }
+        finally
+        {
+            if (HasActiveTransaction)
+            {   
+                _transaction!.Dispose();
+                _transaction = null;
+            }
+        }
+    }
+
+    public async Task CommitTransactionAsync()
     {
         if (_transaction == null)
         {
             throw new ArgumentException(ApplicationExceptionMessages.CurrentTransactionNull);
-        }
-        if (_transaction != transaction)
-        {
-            throw new ArgumentException(ApplicationExceptionMessages.TransactionWhenCommitNotMatchCurrentTransaction);
         }
         try
         {
@@ -56,7 +71,7 @@ public class ApplicationDbContext : DbContext
         }
         catch
         {
-            Rollback();
+            await RollbackAsync();
             throw;
         }
         finally
@@ -69,19 +84,4 @@ public class ApplicationDbContext : DbContext
         }
     }
 
-    public void Rollback()
-    {
-        try
-        {
-            _transaction?.Rollback();
-        }
-        finally
-        {
-            if (HasActiveTransaction)
-            {
-                _transaction!.Dispose();
-                _transaction = null;
-            }
-        }
-    }
 }

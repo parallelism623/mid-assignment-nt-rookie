@@ -7,9 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MIDASM.Application\MIDASS.Application.csproj" />
-    <ProjectReference Include="..\MIDASM.Infrastructure\MIDASS.Infrastructure.csproj" />
-    <ProjectReference Include="..\MIDASM.Persistence\MIDASS.Persistence.csproj" />
+    <ProjectReference Include="..\MIDASM.Application\MIDASM.Application.csproj" />
   </ItemGroup>
 
 </Project>

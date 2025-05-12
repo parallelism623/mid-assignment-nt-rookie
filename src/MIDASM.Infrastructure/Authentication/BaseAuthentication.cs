@@ -1,13 +1,13 @@
 ﻿using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
+using MIDASM.Application.Commons.Errors;
 using MIDASM.Application.Commons.Models.Authentication;
 using MIDASM.Application.Commons.Options;
 using MIDASM.Application.Services.AuditLogServices;
 using MIDASM.Application.Services.Authentication;
 using MIDASM.Application.Services.Crypto;
 using MIDASM.Contract.Enums;
-using MIDASM.Contract.Errors;
 using MIDASM.Contract.Helpers;
 using MIDASM.Contract.Messages.AuditLogMessage;
 using MIDASM.Contract.Messages.Commands;

@@ -2,13 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using MIDASM.Application.Services.AuditLogServices;
-using MIDASM.Application.UseCases;
-using MIDASM.Domain.Abstract;
 using MIDASM.Domain.Repositories;
 using MIDASM.Persistence.Interceptors;
 using MIDASM.Persistence.Repositories;
-using MIDASM.Persistence.UseCases;
 
 namespace MIDASM.Persistence;
 
@@ -19,8 +15,7 @@ public static class DependencyInjection
         var config = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
 
         return services.ConfigureApplicationDbContext(config)
-            .ConfigureRepositories()
-            .ConfigureServices();
+            .ConfigureRepositories();
     }
 
     public static IServiceCollection ConfigureApplicationDbContext(this IServiceCollection services,
@@ -50,22 +45,10 @@ public static class DependencyInjection
                 .AddScoped<IRoleRepository, RoleRepository>()
                 .AddScoped<IBookBorrowingRequestDetailRepository, BookBorrowingRequestDetailRepository>()
                 .AddScoped<IBookReviewRepository, BookReviewRepository>()
-                .AddScoped<IEmailRecordRepository, EmailRecordRepository>();
+                .AddScoped<IEmailRecordRepository, EmailRecordRepository>()
+                .AddScoped<IAuditLoggerRepository, AuditLoggerRepository>()
+                .AddScoped<IUnitOfWork>(serviceProvider => serviceProvider.GetRequiredService<ApplicationDbContext>());
         return services;
     }
 
-    public static IServiceCollection ConfigureServices(this IServiceCollection services)
-    {
-        services.AddScoped<ICategoryServices, CategoryServices>()
-                .AddScoped<IBookServices, BookServices>()
-                .AddScoped<IUserServices, UserServices>()
-                .AddScoped<ITransactionManager, TransactionManager>()
-                .AddScoped<IBookBorrowingRequestServices, BookBorrowingRequestServices>()
-                .AddScoped<IBookBorrowingRequestDetailServices, BookBorrowingRequestDetailServices>()
-                .AddScoped<IBookReviewServices, BookReviewServices>()
-                .AddScoped<IRoleServices, RoleServices>()
-                .AddScoped<IAuditLogger, AuditLogger>()
-                .AddScoped<IReportServices, ReportServices>();
-        return services;
-    }
 }

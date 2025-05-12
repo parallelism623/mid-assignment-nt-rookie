@@ -1,7 +1,7 @@
 ﻿using DocumentFormat.OpenXml.Spreadsheet;
+using MIDASM.Application.Commons.Errors;
 using MIDASM.Application.Commons.Models.SchedulerJobs;
 using MIDASM.Application.Services.ScheduleJobs;
-using MIDASM.Contract.Errors;
 using MIDASM.Contract.Messages.Commands;
 using MIDASM.Contract.SharedKernel;
 using Newtonsoft.Json;

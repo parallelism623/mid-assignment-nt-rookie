@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace MIDASM.Domain.Repositories;
 
-public interface IRepositoryBase<TEntity, TKey>
+public interface IRepositoryBase<TEntity, TKey> : IConcurrencyHandler<TEntity>
     where TEntity : IEntity<TKey>
     where TKey : notnull
 {
@@ -18,4 +18,8 @@ public interface IRepositoryBase<TEntity, TKey>
     IQueryable<TEntity> GetQueryable();
 
     Task<List<TEntity>> GetAll();
+    Task<int> CountAsync(IQueryable<TEntity> queryable);
+    Task<int> CountAsync<T>(IQueryable<T> queryable);
+    Task<List<TEntity>> ToListAsync(IQueryable<TEntity> queryable);
+    Task<List<T>> ToListAsync<T>(IQueryable<T> queryable);
 }

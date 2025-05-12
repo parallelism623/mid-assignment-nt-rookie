@@ -1,19 +1,19 @@
 ﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using MIDASM.Application.Commons.Errors;
 using MIDASM.Application.Commons.Models;
 using MIDASM.Application.Commons.Models.BookBorrowingRequestDetails;
 using MIDASM.Application.Commons.Models.Users;
 using MIDASM.Application.Services.AuditLogServices;
 using MIDASM.Application.Services.Authentication;
 using MIDASM.Application.Services.Crypto;
-using MIDASM.Contract.Errors;
+using MIDASM.Application.UseCases.Implements;
 using MIDASM.Contract.Messages.Commands;
 using MIDASM.Contract.SharedKernel;
 using MIDASM.Domain.Abstract;
 using MIDASM.Domain.Entities;
 using MIDASM.Domain.Enums;
 using MIDASM.Domain.Repositories;
-using MIDASM.Persistence.UseCases;
 using MockQueryable;
 using Moq;
 

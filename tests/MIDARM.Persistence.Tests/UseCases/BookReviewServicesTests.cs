@@ -1,12 +1,12 @@
 ﻿using FluentAssertions;
+using MIDASM.Application.Commons.Errors;
 using MIDASM.Application.Commons.Models.BookReviews;
 using MIDASM.Application.Services.AuditLogServices;
 using MIDASM.Application.Services.Authentication;
-using MIDASM.Contract.Errors;
+using MIDASM.Application.UseCases.Implements;
 using MIDASM.Contract.Messages.Commands;
 using MIDASM.Domain.Entities;
 using MIDASM.Domain.Repositories;
-using MIDASM.Persistence.UseCases;
 using MockQueryable;
 using Moq;
 

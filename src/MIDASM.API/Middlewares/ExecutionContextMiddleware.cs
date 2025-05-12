@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
+using MIDASM.Application.Commons.Errors;
 using MIDASM.Application.Commons.Models.Users;
 using MIDASM.Application.Services.Authentication;
 using MIDASM.Contract.Constants;
-using MIDASM.Contract.Errors;
 using MIDASM.Domain.Entities;
 using MIDASM.Domain.Repositories;
 using Rookies.Contract.Exceptions;

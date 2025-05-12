@@ -1,5 +1,5 @@
 ﻿using MIDASM.Application.Commons.Models.Authentication;
-using MIDASM.Contract.SharedKernel;
+using MIDASM.Domain.SharedKernel;
 
 namespace MIDASM.Application.Services.Authentication;
 

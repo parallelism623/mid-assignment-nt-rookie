@@ -1,10 +1,10 @@
 ﻿
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
-using MIDASM.API.Presentation.Controllers;
 using MIDASM.Application.Commons.Models.BookReviews;
-using MIDASM.Application.UseCases;
+using MIDASM.Application.UseCases.Interfaces;
 using MIDASM.Contract.SharedKernel;
+using MIDASS.Presentation.Controllers;
 using Moq;
 
 namespace MISARM.API.Tests.Presentation.Controllers;

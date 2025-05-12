@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -27,6 +27,7 @@
     <ProjectReference Include="..\MIDASM.Contract\MIDASM.Contract.csproj" />
     <ProjectReference Include="..\MIDASM.Infrastructure\MIDASM.Infrastructure.csproj" />
     <ProjectReference Include="..\MIDASM.Persistence\MIDASM.Persistence.csproj" />
+    <ProjectReference Include="..\MIDASM.Presentation\MIDASS.Presentation.csproj" />
   <Content Include="EmailTemplates\**\*.*">
 	  <CopyToPublishDirectory>EmailTemplates</CopyToPublishDirectory>
   </Content>
